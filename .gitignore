@@ -1,9 +1,19 @@
-# MoonMark .gitignore
+# Dependencies
+node_modules/
 
-# MoonBit build output
-target/
-moon.mod
-moon.pkg
+# Tree-sitter generated (don't commit parser.c - it's generated from grammar.js)
+src/parser.c
+src/tree_sitter/parser.h
+
+# Build artifacts
+build/
+*.o
+*.so
+*.dylib
+
+# OS files
+.DS_Store
+Thumbs.db
 
 # IDE
 .idea/
@@ -11,18 +21,5 @@ moon.pkg
 *.swp
 *.swo
 
-# OS
-.DS_Store
-Thumbs.db
-desktop.ini
-
-# Test output
-test/output/
-
-# Coverage
-coverage/
-
-# Temporary files
-*.tmp
-*.bak
-*.log
+# Temp files
+.gitmsg

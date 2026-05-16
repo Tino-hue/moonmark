@@ -1,0 +1,21 @@
+# MoonHighlight — Helix editor configuration
+# Add to ~/.config/helix/languages.toml or runtime languages.toml
+
+[[language]]
+name = "moonbit"
+scope = "source.moonbit"
+file-types = ["mbt"]
+roots = []
+comment-token = "//"
+indent = { tab-width = 2, unit = "  " }
+
+[language.auto-pairs]
+'(' = ')'
+'[' = ']'
+'{' = '}'
+'"' = '"'
+"'" = "'"
+"`" = "`"
+
+[language.grammar]
+source = { git = "https://github.com/Tino-hue/moonmark.git", subpath = "src", rev = "main" }

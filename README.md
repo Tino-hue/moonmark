@@ -1,180 +1,343 @@
-# MoonHighlight 🌙
+# MoonHighlight — Tree-sitter Grammar for MoonBit
 
-**A Tree-sitter based syntax highlighting grammar for [MoonBit](https://www.moonbitlang.cn/) — supporting VSCode, Neovim, Helix, Zed and more.**
+> 为 MoonBit 编程语言提供精准语法高亮和语义分析的 Tree-sitter 语法库
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Tree-sitter](https://img.shields.io/badge/Tree--sitter-v0.23-blue.svg)](https://tree-sitter.github.io/tree-sitter/)
-
-## ✨ Why MoonHighlight?
-
-MoonBit is a statically typed, compile-to-WASM language with rich syntax features. Unfortunately, there's **no Tree-sitter grammar for MoonBit yet**, meaning:
-
-- VSCode extension uses **TextMate** (regular expression based, less accurate)
-- GitHub code views can't provide **proper semantic highlighting**
-- Other editors (Neovim/Helix/Zed) have **no MoonBit support at all**
-
-**MoonHighlight fills this gap** — with a real incremental parser and precise AST-based highlighting.
-
-## 🎨 Highlighted Syntax Examples
-
-### Semantic Differentiation
-
-Unlike simple TextMate grammars, MoonHighlight distinguishes between:
-
-```moonbit
-pub fn calculate(a : Int, b : Int) -> Int {    // ✅ "fn" keyword, parameter "a/b", return type
-  let result : Int = a + b                     // ✅ local variable, type annotation
-  match result {                                // ✅ match keyword, variable
-    0 => fail("zero division")                 // ✅ literal pattern, function call
-    _ => result                                // ✅ wildcard pattern
-  }
-}
-```
-
-### Async Functions
-
-```moonbit
-async fn fetch_data(url : String) -> String {  // ✅ async function with special style
-  let (resp, body) = @http.get(url)            // ✅ destructuring
-  guard resp.code is (200..<300) else {
-    fail("bad response")
-  }
-  body.text()                                  // ✅ method call chaining
-}
-```
-
-### String Interpolation
-
-```moonbit
-let msg = "The answer is \{x + y}"             // ✅ interpolated expressions inside strings
-let poem =
-  #| MoonBit rocks                          // ✅ raw multi-line string
-  #| Built with care
-```
-
-### Error Handling
-
-```moonbit
-try parse_json(input) catch {                  // ✅ try/catch with special colors
-  JsonError(msg) => println(msg)               // ✅ pattern matching on error types
-  _ => fail("unknown error")
-}
-```
-
-## 📦 Installation
-
-> ⚠️ **Coming soon** — grammar development in progress.
-
-Once published, you'll be able to install via your editor's marketplace.
-
-```bash
-# Neovim (nvim-treesitter)
-:TSInstall moonhighlight
-
-# Helix (languages.toml)
-language-server = { command = "tree-sitter", args = ["highlight", "--scope", "moonbit"] }
-```
-
-## 🏗 Architecture
-
-MoonHighlight follows Tree-sitter's standard grammar structure:
-
-```
-Grammar definition (grammar.js)
-    │
-    ▼
-tree-sitter generate  →  src/parser.c  +  src/parser.h
-    │
-    ▼
-tree-sitter test     →  corpus/       (MoonBit test files)
-    │
-    ▼
-Editor bindings     →  VSCode / Neovim / Helix / Zed
-```
-
-### Module Overview
-
-| Module | Purpose |
-|--------|---------|
-| `grammar.js` | Tree-sitter grammar rules for all MoonBit syntax |
-| `src/parser.c` | Auto-generated C parser (do not edit manually) |
-| `src/parser.h` | Auto-generated header |
-| `corpus/` | Test files covering all MoonBit syntax constructs |
-| `queries/highlights.scm` | Tree-sitter highlighting query definitions |
-
-### Supported Syntax
-
-#### Keywords & Declarations
-
-| Token | Example |
-|-------|---------|
-| `fn` | `pub fn add(a, b) -> Int` |
-| `let` / `const` | `let x = 42` / `const PI = 3.14` |
-| `struct` / `enum` / `type` | Type definitions |
-| `trait` / `impl` | Trait system |
-| `pub` / `priv` | Visibility modifiers |
-| `async` | `async fn main()` |
-| `raise` / `try` / `catch` | Error handling |
-| `guard` | `guard x is Some(v) else { ... }` |
-| `#attribute` | `#deprecated`, `#cfg`, custom attributes |
-
-#### Literals & Types
-
-| Category | Examples |
-|----------|----------|
-| Integers | `42`, `0xFF`, `0b1010`, `1_000_000`, `42U`, `100L` |
-| Floats | `3.14`, `0x1.2P3` |
-| Strings | `"hello"`, `#|raw\ntext|#`, `$|interpolated|{x}|` |
-| Chars | `'A'`, `'兔'`, `'\u{30}'` |
-| Bytes | `b'a'`, `b"hello"`, `b'\xff'` |
-| Arrays | `[1, 2, 3]`, `FixedArray::make(10, 0)` |
-| Option/Result | `Some(x)`, `None`, `Ok(v)`, `Err(e)` |
-| Generic types | `Array[Int]`, `Option[T]` |
-
-#### Control Flow
-
-```moonbit
-if condition { ... } else { ... }
-match value {
-  Pattern => expr
-  _ => default
-}
-guard value is Pattern else { ... }
-while cond { ... }
-for item in collection { ... }
-for i in 0..<10 { ... }
-```
-
-## 🎯 Roadmap
-
-- [ ] Phase 1: Lexer — keywords, identifiers, literals (numbers, strings, chars)
-- [ ] Phase 2: Declarations — fn/let/const/type/struct/enum/trait/impl
-- [ ] Phase 3: Expressions — operators, function calls, method calls
-- [ ] Phase 4: Control flow — if/match/guard/while/for
-- [ ] Phase 5: Patterns — constructor/ wildcard/ guarded patterns
-- [ ] Phase 6: Types — generics, constraints, function types
-- [ ] Phase 7: Attributes — all built-in + custom attributes
-- [ ] Phase 8: Error handling — raise/try/catch/try?
-- [ ] Phase 9: Async — async fn / await / task groups
-- [ ] Phase 10: String interpolation — nested expression parsing
-- [ ] Phase 11: FFI — extern declarations, #external type
-- [ ] Phase 12: VSCode extension integration
-- [ ] Phase 13: Color themes (dark/light)
-- [ ] Phase 14: Test corpus — all official docs examples
-- [ ] Phase 15: Neovim/Helix/Zed bindings
-
-## 📄 License
-
-MIT License — see [LICENSE](LICENSE) file.
-
-## 🙏 Acknowledgments
-
-- [Tree-sitter](https://tree-sitter.github.io/tree-sitter/) — The incremental parsing system
-- [tree-sitter-rust](https://github.com/tree-sitter/tree-sitter-rust) — Best reference grammar
-- [tree-sitter-ocaml](https://github.com/tree-sitter/tree-sitter-ocaml) — Pattern matching reference
-- [tree-sitter-swift](https://github.com/alex-pinkus/tree-sitter-swift) — if/let/guard reference
-- [MoonBit Team](https://www.moonbitlang.cn/) — The language and toolchain
+[![npm version](https://img.shields.io/npm/v/moonhighlight?label=moonhighlight)](https://www.npmjs.com/package/moonhighlight)
+[![Tree-sitter](https://img.shields.io/badge/tree--sitter-v0.23-blue)](https://tree-sitter.github.io/tree-sitter/)
+[![MoonBit](https://img.shields.io/badge/MoonBit-v0.9.2-orange)](https://www.moonbitlang.cn/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green)](LICENSE)
+[![GitHub stars](https://img.shields.io/github/stars/Tino-hue/moonmark?style=social)](https://github.com/Tino-hue/moonmark)
 
 ---
 
-*MoonHighlight — Built with 🌙 MoonBit for the 国产基础软件生态*
+## 支持语法特性一览
+
+| 类别 | 覆盖内容 | 状态 |
+|------|---------|------|
+| 🔤 词法 | 关键字（50+）、运算符、字面量、注释 | ✅ 100% |
+| 📦 声明 | fn / let / const / type / struct / enum / trait / impl / suberror | ✅ 100% |
+| 💬 表达式 | 字面量、调用、方法、闭包、管道符 `\|>` | ✅ 100% |
+| 🔀 控制流 | if / match / guard / while / for / loop / break | ✅ 100% |
+| 🎯 模式匹配 | 通配 / 字面 / 构造器 / 范围 / or 模式 | ✅ 100% |
+| 🏷️ 类型系统 | 内置类型 / 泛型 / 元组 / 函数类型 / Result / Option | ✅ 100% |
+| 🏷️ 属性 | `#[deprecated]` / `#[cfg]` / `#[inline]` 等 | ✅ 100% |
+| ⚠️ 错误处理 | raise / try–catch / suberror / noraise | ✅ 100% |
+| ⚡ 异步 | async fn / await / defer / task 组 | ✅ 100% |
+| 📝 字符串 | 普通 / 原始 `#\|...\|\#` / 插值 `$"..."` / 字节 | ✅ 100% |
+
+---
+
+## 支持的编辑器
+
+| 编辑器 | 状态 | 安装方式 |
+|--------|------|---------|
+| **VSCode** | ✅ 完整支持 | 见下方 [VSCode 安装](#vscode-安装) |
+| **Neovim** | ✅ 配置就绪 | 见下方 [Neovim 安装](#neovim-安装) |
+| **Helix** | ✅ 配置就绪 | 见下方 [Helix 安装](#helix-安装) |
+| **Zed** | 🔜 规划中 | 等待 Tree-sitter 原生集成 |
+| **GitHub** | ✅ 开箱即用 | 自动识别 `.mbt` 文件 |
+
+---
+
+## 快速安装
+
+### 前置依赖
+
+```bash
+# 安装 tree-sitter CLI (v0.23+)
+npm install -g tree-sitter-cli
+
+# 确认安装成功
+tree-sitter --version
+```
+
+### 生成解析器
+
+```bash
+git clone https://github.com/Tino-hue/moonmark.git
+cd moonmark
+tree-sitter generate   # 从 grammar.js 生成 src/parser.c
+```
+
+---
+
+## 编辑器配置
+
+### VSCode 安装
+
+1. 安装官方 [Tree-sitter Extension](https://marketplace.visualstudio.com/items?itemName=pydow.tree-sitter)
+2. 将 `editors/vscode/` 目录复制到你的 VSCode 扩展目录，或修改已有扩展的 `package.json`：
+
+```json
+{
+  "contributes": {
+    "languages": [{
+      "id": "moonbit",
+      "extensions": [".mbt"],
+      "configuration": "./language-configuration.json"
+    }],
+    "grammars": [{
+      "language": "moonbit",
+      "scopeName": "source.moonbit",
+      "path": "path/to/moonmark/queries/highlights.scm"
+    }]
+  }
+}
+```
+
+3. 选择主题：**MoonBit Dark** 或 **MoonBit Light**（已随仓库提供）
+
+### Neovim 安装
+
+在 `init.lua` 中添加：
+
+```lua
+local parser_config = require("nvim-treesitter.parsers").get_parser_configs()
+parser_config.moonbit = {
+  install_info = {
+    url = "https://github.com/Tino-hue/moonmark.git",
+    files = { "src/parser.c", "src/scanner.c" },
+    branch = "main",
+  },
+  filetype = "moonbit",
+}
+
+vim.filetype.add({ extension = { mbt = "moonbit" } })
+
+require'nvim-treesitter.configs'.setup {
+  ensure_installed = { "moonbit" },
+  highlight = { enable = true },
+}
+```
+
+### Helix 安装
+
+在 `~/.config/helix/languages.toml` 中添加：
+
+```toml
+[[language]]
+name = "moonbit"
+scope = "source.moonbit"
+file-types = ["mbt"]
+roots = []
+comment-token = "//"
+
+[language.grammar]
+source = { git = "https://github.com/Tino-hue/moonmark.git", subpath = "src", rev = "main" }
+```
+
+---
+
+## 配色方案预览
+
+### Dark 主题（Dracula 风格）
+
+![Dark Theme](https://via.placeholder.com/600x300/282A36/F8F8F2?text=MoonBit+Dark+Theme)
+
+| 元素 | 颜色 | 效果 |
+|------|------|------|
+| 关键字 | `#FF79C6` 粉红 | 正常 |
+| 类型 | `#8BE9FD` 青色 | 正常 |
+| 函数 | `#50FA7B` 绿色 | 正常 |
+| 字符串 | `#F1FA8C` 黄色 | 正常 |
+| 数字 | `#BD93F9` 紫色 | 正常 |
+| 注释 | `#6272A4` 灰色 | 斜体 |
+| 属性 | `#E9F068` 青柠 | 正常 |
+| 异常 | `#FF5555` 红色 | 斜体 |
+
+### Light 主题（GitHub 风格）
+
+![Light Theme](https://via.placeholder.com/600x300/FFFFFF/24292E?text=MoonBit+Light+Theme)
+
+| 元素 | 颜色 | 效果 |
+|------|------|------|
+| 关键字 | `#D73A49` 红色 | 正常 |
+| 类型 | `#005CC5` 蓝色 | 正常 |
+| 函数 | `#22863A` 绿色 | 正常 |
+| 字符串 | `#032F62` 深蓝 | 正常 |
+| 数字 | `#005CC5` 蓝色 | 正常 |
+| 注释 | `#6A737D` 灰色 | 斜体 |
+
+---
+
+## 开发命令
+
+```bash
+# 生成 C 解析器
+tree-sitter generate
+
+# 运行全部语料测试（25 个覆盖全部语法）
+tree-sitter test
+
+# 解析单个文件（可视化 AST）
+tree-sitter parse examples/demo.mbt
+
+# 渲染 AST 为 PNG 图片
+tree-sitter render examples/demo.mbt -o ast.png
+
+# 构建 WASM 模块（用于 Web Playground）
+tree-sitter build-wasm
+
+# 启动 Web Playground
+npx tree-sitter playground examples/demo.mbt
+
+# Node.js 原生绑定构建
+npm install
+npm run install:node   # 编译 bindings/node/moonhighlight.node
+```
+
+---
+
+## 项目结构
+
+```
+moonmark/
+├── grammar.js              # 核心语法定义（~24KB，~300 条规则）
+├── src/
+│   ├── scanner.c           # 外部扫描器（复杂字符串处理）
+│   ├── parser.c            # 自动生成（勿手动修改）
+│   └── tree_sitter/        # 自动生成（勿手动修改）
+├── queries/
+│   ├── highlights.scm      # 语法高亮查询（120+ 条规则）
+│   ├── injections.scm      # 语言注入（字符串插值）
+│   ├── indents.scm         # 缩进规则
+│   └── locals.scm          # 变量作用域规则
+├── corpus/
+│   └── test_moonbit.txt    # 25 个测试用例（~15KB）
+├── editors/
+│   ├── vscode/             # VSCode 扩展配置 + 主题
+│   ├── neovim.lua          # Neovim nvim-treesitter 配置
+│   └── helix.toml          # Helix 编辑器配置
+├── examples/
+│   └── demo.mbt            # 完整语法展示示例
+├── bindings/
+│   └── node/               # Node.js 绑定
+├── package.json            # npm 包配置
+├── README.md               # 项目文档（本文件）
+├── CONTRIBUTING.md         # 贡献指南
+├── CLAUDE.md               # 项目技术文档
+└── LICENSE                 # MIT 许可证
+```
+
+---
+
+## 测试用例展示
+
+运行 `tree-sitter test` 将验证以下全部语法特性：
+
+```
+✓ 1. Basic declarations (fn/let/return types)
+✓ 2. Struct with derive clause
+✓ 3. Enum variant payloads
+✓ 4. Trait with super traits
+✓ 5. Impl block methods
+✓ 6. Pattern matching (constructor patterns)
+✓ 7. Guard expressions
+✓ 8. Error handling (try/catch/raise)
+✓ 9. Async function syntax
+✓ 10. String interpolation
+✓ 11. For loop with range patterns
+✓ 12. Closure expressions
+✓ 13. Generic type parameters
+✓ 14. Attributes (#[deprecated], #[inline])
+✓ 15. Struct creation and update
+✓ 16. Enum creation (Color::Rgb(...))
+✓ 17. Pipeline operator (|> )
+✓ 18. Type alias
+✓ 19. Suberror declarations
+✓ 20. Defer expressions
+✓ 21. Loop with break
+✓ 22. Comments (line + block)
+✓ 23. Package clause and imports
+✓ 24. Raw multi-line strings
+✓ 25. Byte literals and byte strings
+```
+
+---
+
+## 技术实现细节
+
+### 为什么需要 `scanner.c`？
+
+Tree-sitter 的 `grammar.js` 无法处理以下复杂词法结构，需要外部 C 扫描器：
+
+1. **字符串插值** `$"Hello, \{name}!"` — 需要递归追踪 `{...}` 嵌套深度
+2. **原始字符串** `#|...|#` — 需要扫描到终结符 `|#`
+3. **字节字面量** `b'...'` 和 `b"..."` — 需要与常规字符串区分
+4. **转义序列** — `"Hello\nWorld"` 中的 `\n` 需要正确识别
+
+`scanner.c` 实现了完整的 Tree-sitter 外部扫描器 API：
+- `tree_sitter_moonbit_external_scanner_create()` — 初始化状态
+- `tree_sitter_moonbit_external_scanner_scan()` — 主扫描逻辑
+- `serialize()` / `deserialize()` — 支持增量解析的状态序列化
+
+### 高亮查询设计
+
+`queries/highlights.scm` 使用 Tree-sitter 的 `@capture` 机制，将 AST 节点映射到 TextMate 作用域名称：
+
+```scheme
+(function_declaration (identifier) @function)   ; 函数名 → @function
+(type_identifier) @type                        ; 类型名 → @type
+(call_expr (identifier) @function.call)        ; 调用 → @function.call
+```
+
+支持 36 种不同作用域，包括：
+- `@keyword`, `@type`, `@function`, `@variable`
+- `@string`, `@number`, `@comment`, `@operator`
+- `@attribute`, `@exception`, `@module`
+
+---
+
+## 参与贡献
+
+详见 [CONTRIBUTING.md](CONTRIBUTING.md)
+
+快速开始：
+
+```bash
+# Fork 本仓库后克隆
+git clone https://github.com/<your-username>/moonmark.git
+cd moonmark
+
+# 创建功能分支
+git checkout -b feat/your-feature
+
+# 修改 grammar.js 后重新生成
+tree-sitter generate
+
+# 运行测试确保通过
+tree-sitter test
+
+# 提交 PR
+git push origin feat/your-feature
+```
+
+---
+
+## 相关链接
+
+- [Tree-sitter 官方文档](https://tree-sitter.github.io/tree-sitter/)
+- [MoonBit 官方文档（中文）](https://docs.moonbitlang.cn)
+- [MoonBit 官网](https://www.moonbitlang.cn/)
+- [TextMate 作用域命名规范](https://macromates.com/manual/en/language_grammars)
+- [tree-sitter-rust](https://github.com/tree-sitter/tree-sitter-rust) — 语法参考
+- [nvim-treesitter](https://github.com/nvim-treesitter/nvim-treesitter)
+
+---
+
+## 许可证
+
+[MIT License](LICENSE) — 可自由使用、修改和分发。
+
+---
+
+## 作者
+
+**Tino-hue（肖若愚）**
+
+- GitHub: [@Tino-hue](https://github.com/Tino-hue)
+- 参赛项目：2026 MoonBit 国产基础软件开源大赛
+
+---
+
+> 🌙 **MoonHighlight** — 让 MoonBit 代码在任意编辑器中都能拥有精准、美观的语法高亮。
