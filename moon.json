@@ -1,1 +1,12 @@
-{"name": "moonmark", "version": "0.1.0", "description": "A CommonMark-compliant Markdown parser and HTML renderer written in MoonBit", "readme": "README.md", "license": "MIT", "keywords": ["markdown", "parser", "html", "commonmark"], "repository": {"type": "git", "url": "https://github.com/Tino-hue/moonmark.git"}}
+{
+  "name": "moonhighlight",
+  "version": "0.1.0",
+  "description": "A Tree-sitter based syntax highlighting grammar for MoonBit — supporting VSCode, Neovim, Helix, Zed and more",
+  "readme": "README.md",
+  "license": "MIT",
+  "keywords": ["tree-sitter", "syntax-highlighting", "moonbit", "parser", "ide-plugin"],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Tino-hue/moonmark.git"
+  }
+}
