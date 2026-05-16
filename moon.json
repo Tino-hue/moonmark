@@ -1,0 +1,1 @@
+{"name": "moonmark", "version": "0.1.0", "description": "A CommonMark-compliant Markdown parser and HTML renderer written in MoonBit", "readme": "README.md", "license": "MIT", "keywords": ["markdown", "parser", "html", "commonmark"], "repository": {"type": "git", "url": "https://github.com/Tino-hue/moonmark.git"}}
