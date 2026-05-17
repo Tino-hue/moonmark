@@ -33,7 +33,6 @@ Thumbs.db
 # Generated files (regenerable)
 src/grammar.json
 src/node-types.json
-package-lock.json
 package/
 tree-sitter.exe.gz
 temp.zip
