@@ -7,6 +7,7 @@
 //   - Byte string literals (b"..." / b#|"..."|#)
 
 #include <tree_sitter/parser.h>
+#include <wctype.h>
 
 // Token types (must match externals order in grammar.js)
 enum TokenType {
@@ -65,7 +66,7 @@ static bool is_escape(TSLexer *lexer) {
   lexer->advance(lexer, false);
   switch (lexer->lookahead) {
     case 'n': case 't': case 'r': case '\\':
-    case '\'': case '"': case '0': case '\\':
+    case '\'': case '"': case '0':
     case 'x': case 'u': case '{':
       return true;
     default:
