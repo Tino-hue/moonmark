@@ -4,7 +4,7 @@
 ;; ============================================================
 
 ;; Function parameters are local definitions
-(param (name: (identifier) @definition.var))
+(param (identifier) @definition.var)
 
 ;; Let/const bindings
 (value_declaration (ident_pattern (identifier) @definition.var))

@@ -33,7 +33,7 @@
 "in" @keyword.repeat
 "loop" @keyword.repeat
 "break" @keyword.repeat
-"continue" @keyword.repeat
+(continue_expr) @keyword.repeat
 "return" @keyword.return
 "defer" @keyword
 "import" @keyword.import
@@ -81,13 +81,12 @@
 (call_expr (identifier) @function.call)
 
 ;; Method calls via field access + call pattern
-(method_call (method: (identifier) @method.call))
-(field_access (field: (identifier) @property))
+(method_call (identifier) @method.call)
+(field_access (identifier) @property)
 
 ;; ---- VARIABLES & PARAMETERS ----
 (value_declaration (ident_pattern (identifier) @variable))
-(param (name: (identifier) @variable.parameter))
-(param (label: (identifier) @variable.parameter))
+(param (identifier) @variable.parameter)
 
 ;; Pattern variables in match/guard
 (match_arm (pattern (ident_pattern (identifier) @variable)))
@@ -95,9 +94,9 @@
 (for_expr (pattern (ident_pattern (identifier) @variable)))
 
 ;; ---- FIELDS ----
-(field_def (name: (identifier) @property))
-(enum_variant (name: (identifier) @type.enum.variant))
-(struct_expr (name: (identifier) @property))
+(field_def (identifier) @property)
+(enum_variant (identifier) @type.enum.variant)
+(struct_expr (identifier) @property)
 
 ;; ---- OPERATORS ----
 "=" @operator
@@ -128,7 +127,6 @@
 "&" @operator
 "|" @operator
 "^" @operator
-"~" @operator
 "<<" @operator
 ">>" @operator
 "=>" @operator
@@ -136,8 +134,6 @@
 "::" @operator
 "|>" @operator
 ".." @operator
-"... " @operator
-"..<" @operator
 "is" @operator
 "as" @operator
 
@@ -154,12 +150,12 @@
 "." @punctuation.delimiter
 
 ;; ---- ATTRIBUTES ----
-(attribute (name: (identifier) @attribute))
-(attr_arg (key: (identifier) @attribute))
+(attribute (identifier) @attribute)
+(attr_arg (identifier) @attribute)
 
 ;; Special attribute highlighting
-((attribute (name: (identifier) @_attr)) (#eq? @_attr "deprecated")) @attribute.deprecated
-((attribute (name: (identifier) @_attr)) (#eq? @_attr "cfg")) @attribute.preprocessor
+((attribute (identifier) @_attr) (#eq? @_attr "deprecated")) @attribute.deprecated
+((attribute (identifier) @_attr) (#eq? @_attr "cfg")) @attribute.preprocessor
 
 ;; ---- COMMENTS ----
 (line_comment) @comment
@@ -181,7 +177,6 @@
 
 ;; ---- PACKAGE & IMPORT ----
 (package_clause (package_name) @module)
-(import_declaration (path: (package_name) @module))
-(import_from_declaration (path: (package_name) @module))
-(import_member (name: (identifier) @variable))
-(import_member (alias: (identifier) @variable))
+(import_declaration (package_name) @module)
+(import_from_declaration (package_name) @module)
+(import_member (identifier) @variable)
