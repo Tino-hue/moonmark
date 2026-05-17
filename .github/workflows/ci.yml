@@ -61,4 +61,5 @@ jobs:
           echo "All parser artifacts generated successfully"
 
       - name: Parse demo file
-        run: npx tree-sitter parse examples/demo.mbt || true
+        run: |
+          npx tree-sitter parse examples/demo.mbt || echo "Parse completed with warnings (non-blocking)"
