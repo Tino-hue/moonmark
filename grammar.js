@@ -1,4 +1,4 @@
-// MoonHighlight — Tree-sitter Grammar for MoonBit
+// MoonHighlight 鈥?Tree-sitter Grammar for MoonBit
 // Phase 1: Lexer Foundation (keywords, identifiers, literals, comments, operators)
 //
 // Reference:
@@ -7,6 +7,24 @@
 
 module.exports = grammar({
   name: 'moonbit',
+
+  conflicts: ($) => [
+    [$.ident_pattern, $.constructor_pattern],
+    [$.import_declaration, $.import_from_declaration],
+    [$.expression, $.type_param],
+    [$.fn_type, $.option_type],
+    [$.tuple_expr, $.paren_expr],
+    [$.enum_expr],
+    [$.named_type, $.generic_type],
+    [$.expression, $.arg],
+    [$.field_access, $.method_call],
+    [$.variant_field, $.tuple_type, $.fn_type],
+    [$.raises_clause, $.option_type],
+    [$.fn_type],
+    [$.constructor_pattern],
+    [$.raises_clause],
+    [$.range_pattern],
+  ],
 
   extras: ($) => [
     $.line_comment,
@@ -18,11 +36,11 @@ module.exports = grammar({
 
   externals: ($) => [
     // Complex string literals handled by external scanner (scanner.c)
-    $_string_literal,           // "..." with escape sequences
-    $_raw_string_literal,       #|"..."|# (multi-line raw)
-    $_interpolated_string_literal, // $"..." or $|"..."|{expr}| (with interpolation)
-    $_byte_literal,             // b'...'
-    $_bytes_literal,            // b"..." / b#|"..."|#
+    $.string_literal,
+    $.raw_string_literal,
+    $.interpolated_string_literal,
+    $.byte_literal,
+    $.bytes_literal,
   ],
 
   supertypes: ($) => [
@@ -30,18 +48,15 @@ module.exports = grammar({
     $.declaration,
     $.pattern,
     $.type,
-    $.attribute,
   ],
 
   inline: ($) => [
-    $.source_file,
-    $.block,
   ],
 
   rules: {
 
     //======================================================================
-    // SOURCE FILE — Entry point
+    // SOURCE FILE 鈥?Entry point
     //======================================================================
     source_file: ($) => seq(
       optional($.shebang),
@@ -85,7 +100,7 @@ module.exports = grammar({
     ),
 
     //======================================================================
-    // DECLARATIONS — Top-level items
+    // DECLARATIONS 鈥?Top-level items
     //======================================================================
     declaration: ($) => choice(
       $.function_declaration,
@@ -121,9 +136,9 @@ module.exports = grammar({
 
     param: ($) => seq(
       optional('mut'),
-      optional(field('label', $.identifier)),
-      optional(seq(field('name', $.identifier), ':')),
-      optional(field('type', $.type)),
+      field('name', $.identifier),
+      ':',
+      field('type', $.type),
       optional(seq('=', field('default', $.expression))),
     ),
 
@@ -272,6 +287,7 @@ module.exports = grammar({
 
     impl_method: ($) => seq(
       repeat($.attribute),
+      optional($.visibility),
       'fn',
       field('name', $.identifier),
       optional($.type_params),
@@ -298,13 +314,13 @@ module.exports = grammar({
     //----------------------------------------------------------------------
     extern_fn_declaration: ($) => seq(
       'extern',
-      optional($_string_literal),
+      optional($.string_literal),
       'fn',
       field('name', $.identifier),
       optional($.type_params),
       field('params', $.param_list),
       optional(seq('->', field('return_type', $.type))),
-      optional(seq('=', field('body', $_string_literal))),
+      optional(seq('=', field('body', $.string_literal))),
     ),
 
     //----------------------------------------------------------------------
@@ -331,11 +347,11 @@ module.exports = grammar({
       $.float_literal,
       $.boolean_literal,
       $.char_literal,
-      $_string_literal,
-      $_raw_string_literal,
-      $_interpolated_string_literal,
-      $_byte_literal,
-      $_bytes_literal,
+      $.string_literal,
+      $.raw_string_literal,
+      $.interpolated_string_literal,
+      $.byte_literal,
+      $.bytes_literal,
 
       // Compound literals
       $.unit_literal,
@@ -480,13 +496,13 @@ module.exports = grammar({
       seq(field('label', $.identifier), '=', field('value', $.expression)),
     ),
 
-    closure_expr: ($) => seq(
+    closure_expr: ($) => prec.right(1, seq(
       optional($.type_params),
       field('params', $.param_list),
       optional(seq('->', field('return_type', $.type))),
       '=>',
       field('body', $.expression),
-    ),
+    )),
 
     pipeline_expr: ($) => prec.left(seq(
       field('value', $.expression),
@@ -514,12 +530,12 @@ module.exports = grammar({
       '}',
     ),
 
-    match_arm: ($) => seq(
+    match_arm: ($) => prec.right(1, seq(
       field('pattern', $.pattern),
       optional(seq('if', field('guard', $.expression))),
       '=>',
       field('body', $.expression),
-    ),
+    )),
 
     guard_expr: ($) => seq(
       'guard',
@@ -550,13 +566,13 @@ module.exports = grammar({
       field('body', $.block_expr),
     ),
 
-    break_expr: ($) => seq('break', optional($.expression)),
+    break_expr: ($) => prec.right(1, seq('break', optional($.expression))),
 
     continue_expr: ($) => 'continue',
 
-    return_expr: ($) => seq('return', optional($.expression)),
+    return_expr: ($) => prec.right(1, seq('return', optional($.expression))),
 
-    raise_expr: ($) => seq('raise', $.expression),
+    raise_expr: ($) => prec.right(1, seq('raise', $.expression)),
 
     //----------------------------------------------------------------------
     // Error handling
@@ -568,19 +584,19 @@ module.exports = grammar({
       optional(seq('noraise', '{', $.expression, '}')),
     ),
 
-    catch_arm: ($) => seq(
+    catch_arm: ($) => prec.right(1, seq(
       field('pattern', $.pattern),
       optional(seq('=', field('bind', $.identifier))),
       '=>',
       field('handler', $.expression),
-    ),
+    )),
 
     //----------------------------------------------------------------------
     // Async
     //----------------------------------------------------------------------
     await_expr: ($) => prec.right(seq('await', $.expression)),
 
-    defer_expr: ($) => seq('defer', $.expression),
+    defer_expr: ($) => prec.right(1, seq('defer', $.expression)),
 
     //----------------------------------------------------------------------
     // Type operations
@@ -674,10 +690,10 @@ module.exports = grammar({
       $.float_literal,
       $.boolean_literal,
       $.char_literal,
-      $_string_literal,
+      $.string_literal,
     ),
 
-    ident_pattern: ($) => seq(optional('mut'), field('name', $.identifier), optional(seq('=', $.expression))),
+    ident_pattern: ($) => seq(optional('mut'), field('name', $.identifier)),
 
     constructor_pattern: ($) => seq(
       optional(seq(field('enum_type', $.type_identifier), '::')),
@@ -699,7 +715,7 @@ module.exports = grammar({
 
     or_pattern: ($) => prec.left(seq(field('left', $.pattern), '|', field('right', $.pattern))),
 
-    guarded_pattern: ($) => seq(field('pattern', $.pattern), 'if', field('condition', $.expression)),
+    guarded_pattern: ($) => prec.right(1, seq(field('pattern', $.pattern), 'if', field('condition', $.expression))),
 
     //======================================================================
     // TYPES
@@ -768,13 +784,14 @@ module.exports = grammar({
     // ATTRIBUTES
     //======================================================================
     attribute: ($) => seq(
-      '#',
+      '#[',
       field('name', $.identifier),
       optional(seq('(', commaSep($.attr_arg), ')')),
+      ']',
     ),
 
     attr_arg: ($) => choice(
-      $_string_literal,
+      $.string_literal,
       $.boolean_literal,
       $.identifier,
       seq(field('key', $.identifier), '=', field('val', $.expression)),
