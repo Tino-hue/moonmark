@@ -54,6 +54,17 @@
     "url": "https://github.com/Tino-hue/moonmark/issues"
   },
   "homepage": "https://github.com/Tino-hue/moonmark#readme",
+  "tree-sitter": [
+    {
+      "scope": "source.moonbit",
+      "injection-regex": "^(moonbit|mbt)$",
+      "file-types": ["mbt"],
+      "highlights": ["queries/highlights.scm"],
+      "injections": ["queries/injections.scm"],
+      "indents": ["queries/indents.scm"],
+      "locals": ["queries/locals.scm"]
+    }
+  ],
   "directories": {
     "example": "examples",
     "test": "test"
