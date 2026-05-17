@@ -1,4 +1,3 @@
-/// <reference types="tree-sitter-cli" />
 // MoonHighlight — Tree-sitter Grammar for MoonBit
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 Tino-hue (肖若愚)

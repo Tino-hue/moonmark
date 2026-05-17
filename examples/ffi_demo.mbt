@@ -1,11 +1,12 @@
 // FFI and interop examples for MoonHighlight grammar testing
 
-extern "js" fn console_log(msg : String) = "console.log"
-extern "wasm" fn memory_size() -> Int = "memory.size"
-extern "c" fn strlen(s : RawPtr) -> Int
+extern "c" fn console_log(msg : String) -> Unit
 
-pub fn main() -> Unit {
+extern "c" fn strlen(s : Bytes) -> Int
+
+fn main {
   console_log("Hello from MoonBit!")
-  let size = memory_size()
-  println(size)
+  let s = b"hello"
+  let len = strlen(s)
+  println(len)
 }
