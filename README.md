@@ -2,11 +2,11 @@
 
 > 为 MoonBit 编程语言提供精准语法高亮和语义分析的 Tree-sitter 语法库
 
+[![CI](https://github.com/Tino-hue/moonmark/actions/workflows/ci.yml/badge.svg)](https://github.com/Tino-hue/moonmark/actions/workflows/ci.yml)
 [![npm version](https://img.shields.io/npm/v/moonhighlight?label=moonhighlight)](https://www.npmjs.com/package/moonhighlight)
-[![Tree-sitter](https://img.shields.io/badge/tree--sitter-v0.23-blue)](https://tree-sitter.github.io/tree-sitter/)
+[![Tree-sitter](https://img.shields.io/badge/tree--sitter-v0.26-blue)](https://tree-sitter.github.io/tree-sitter/)
 [![MoonBit](https://img.shields.io/badge/MoonBit-v0.9.2-orange)](https://www.moonbitlang.cn/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green)](LICENSE)
-[![GitHub stars](https://img.shields.io/github/stars/Tino-hue/moonmark?style=social)](https://github.com/Tino-hue/moonmark)
 
 ---
 
