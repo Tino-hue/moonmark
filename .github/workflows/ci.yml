@@ -1,0 +1,26 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    name: Grammar Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install tree-sitter CLI
+        run: npm install -g tree-sitter-cli
+
+      - name: Generate parser
+        run: tree-sitter generate
+
+      - name: Run corpus tests
+        run: tree-sitter test
+
+      - name: Verify parse demo
+        run: tree-sitter parse examples/demo.mbt
