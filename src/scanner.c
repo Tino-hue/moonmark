@@ -1,4 +1,7 @@
 // MoonHighlight — External Scanner for MoonBit
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 Tino-hue (肖若愚)
+//
 // Handles complex lexical constructs that can't be expressed in grammar.js:
 //   - String literals with escape sequences
 //   - Raw multi-line strings (#|"..."|#)
