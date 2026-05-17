@@ -1,4 +1,11 @@
 /// <reference types="tree-sitter-cli" />
+// MoonHighlight — Tree-sitter Grammar for MoonBit
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 Tino-hue (肖若愚)
+//
+// Complete grammar definition for MoonBit v0.9.2 syntax.
+// Supports: declarations, expressions, control flow, pattern matching,
+// types, generics, async, error handling, string interpolation, and more.
 
 // ==================== 辅助函数 ====================
 function commaSep(rule) {
