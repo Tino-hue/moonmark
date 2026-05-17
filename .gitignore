@@ -57,3 +57,14 @@ xmind_update2.js
 # Planning docs (not source code)
 14天计划创建.md
 MoonBit-十四计划创建.xmind
+14天三步走计划.md
+MoonBit-三步走计划.xmind
+*.xmind
+
+# XMind/temp scripts
+build_xmind.js
+content.json
+update_xmind2.js
+
+# Misc temp
+CLAUDE.md
