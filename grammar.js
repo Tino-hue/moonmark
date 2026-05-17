@@ -1,5 +1,70 @@
 /// <reference types="tree-sitter-cli" />
 
+// ==================== 辅助函数 ====================
+function commaSep(rule) {
+  return optional(commaSep1(rule));
+}
+
+function commaSep1(rule) {
+  return seq(rule, repeat(seq(',', rule)));
+}
+
+function commaSep2(rule) {
+  return seq(rule, ',', commaSep1(rule));
+}
+
+function sep1(sep, rule) {
+  return seq(rule, repeat(seq(sep, rule)));
+}
+
+// ==================== 优先级常量 ====================
+const PREC = {
+  OR: 1,
+  AND: 2,
+  EQ: 3,
+  CMP: 4,
+  BOR: 5,
+  BXOR: 6,
+  BAND: 7,
+  SHIFT: 8,
+  RANGE: 8,
+  ADD: 9,
+  MUL: 10,
+  POW: 11,
+  UNARY: 12,
+  CALL: 13,
+  FIELD: 14,
+  PIPE: 5,
+  ASSIGN: 1,
+  FN_TYPE: 1,
+  BREAK: 1,
+  CONTINUE: 1,
+  RETURN: 1,
+  RAISE: 1,
+};
+
+const OR = PREC.OR;
+const AND = PREC.AND;
+const EQ = PREC.EQ;
+const CMP = PREC.CMP;
+const BOR = PREC.BOR;
+const BXOR = PREC.BXOR;
+const BAND = PREC.BAND;
+const SHIFT = PREC.SHIFT;
+const RANGE = PREC.RANGE;
+const ADD = PREC.ADD;
+const MUL = PREC.MUL;
+const POW = PREC.POW;
+const UNARY = PREC.UNARY;
+const PIPE = PREC.PIPE;
+const ASSIGN = PREC.ASSIGN;
+const FN_TYPE = PREC.FN_TYPE;
+const BREAK = PREC.BREAK;
+const CONTINUE = PREC.CONTINUE;
+const RETURN = PREC.RETURN;
+const RAISE = PREC.RAISE;
+
+// ==================== Grammar ====================
 module.exports = grammar({
   name: 'moonbit',
 
@@ -16,10 +81,45 @@ module.exports = grammar({
     /\s/,
   ],
 
-  conflicts: [
+  conflicts: $ => [
     [$._type, $._expression],
     [$._pattern, $._expression],
     [$._type, $.function_type],
+    [$._expression, $.function_call],
+    [$.struct_expr],
+    [$.method_call, $.field_access, $.closure_expr],
+    [$.index_access, $.closure_expr],
+    [$.binary_expr, $.closure_expr],
+    [$.pipe_expr, $.closure_expr],
+    [$.assign_expr, $.closure_expr],
+    [$.unary_expr, $.closure_expr],
+    [$._expression, $.closure_expr],
+    [$.method_call, $.field_access, $.try_expr],
+    [$.index_access, $.try_expr],
+    [$.method_call, $.field_access, $.guard_expr],
+    [$.index_access, $.guard_expr],
+    [$.method_call, $.field_access, $.if_expr],
+    [$.index_access, $.if_expr],
+    [$.method_call, $.field_access, $.match_expr],
+    [$.method_call, $.field_access, $.raise_expr],
+    [$.method_call, $.field_access, $.return_expr],
+    [$.method_call, $.field_access, $.break_expr],
+    [$.try_expr],
+    [$.method_call, $.field_access],
+    [$.constructor, $.struct_expr],
+    [$.tuple_type],
+    [$._expression, $.literal_pattern],
+    [$._expression, $.constructor_pattern],
+    [$._expression, $.tuple_pattern],
+    [$._expression, $.record_pattern],
+    [$._expression, $.wildcard_pattern],
+    [$._expression, $.identifier_pattern],
+    [$.constructor, $.struct_expr, $.record_pattern],
+    [$.struct_expr, $.record_pattern],
+    [$.param_list, $.unit_literal],
+    [$.if_expr],
+    [$.index_access, $.match_arm],
+    [$._expression, $.match_arm],
   ],
 
   rules: {
@@ -308,6 +408,7 @@ module.exports = grammar({
         [prec.left(BXOR, seq($._expression, '^', $._expression))],
         [prec.left(BAND, seq($._expression, '&', $._expression))],
         [prec.left(SHIFT, seq($._expression, choice('<<', '>>'), $._expression))],
+        [prec.left(RANGE, seq($._expression, choice('..', '..=', '..<', '..>'), $._expression))],
         [prec.left(ADD, seq($._expression, choice('+', '-'), $._expression))],
         [prec.left(MUL, seq($._expression, choice('*', '/', '%'), $._expression))],
         [prec.right(POW, seq($._expression, '**', $._expression))],
@@ -461,16 +562,22 @@ module.exports = grammar({
 
     catch_clause: $ => seq(
       'catch',
-      $.pattern,
+      $._pattern,
       $.block_expr,
     ),
 
-    // Guard 表达式
+    // Guard 表达式（支持 is 模式匹配）
+    guard_pattern: $ => seq(
+      $._expression,
+      'is',
+      $._pattern,
+    ),
+
     guard_expr: $ => seq(
       'guard',
-      $.if_condition,
+      $.guard_pattern,
       'else',
-      $.block_expr,
+      $._expression,
     ),
 
     // 代码块（关键：正确设计避免 GLR 冲突）
@@ -504,6 +611,13 @@ module.exports = grammar({
       $.constructor_pattern,
       $.tuple_pattern,
       $.record_pattern,
+      $.range_pattern,
+    ),
+
+    range_pattern: $ => seq(
+      optional($._expression),
+      choice('..', '..=', '..<', '..>'),
+      $._expression,
     ),
 
     wildcard_pattern: $ => '_',
@@ -616,69 +730,7 @@ module.exports = grammar({
     // ==================== 注释 ====================
     comment: $ => choice(
       token(seq('//', /.*/)),
-      seq('/*', /[^*]*\*+([^/*][^*]*\*+)*/', '/'),
+      seq('/*', /[^*]*\*+([^\/\*][^*]*\*+)*\//),
     ),
   },
 });
-
-// ==================== 辅助函数 ====================
-function commaSep(rule) {
-  return optional(commaSep1(rule));
-}
-
-function commaSep1(rule) {
-  return seq(rule, repeat(seq(',', rule)));
-}
-
-function commaSep2(rule) {
-  return seq(rule, ',', commaSep1(rule));
-}
-
-function sep1(sep, rule) {
-  return seq(rule, repeat(seq(sep, rule)));
-}
-
-// ==================== 优先级常量 ====================
-const PREC = {
-  OR: 1,
-  AND: 2,
-  EQ: 3,
-  CMP: 4,
-  BOR: 5,
-  BXOR: 6,
-  BAND: 7,
-  SHIFT: 8,
-  ADD: 9,
-  MUL: 10,
-  POW: 11,
-  UNARY: 12,
-  CALL: 13,
-  FIELD: 14,
-  PIPE: 5,
-  ASSIGN: 1,
-  FN_TYPE: 1,
-  BREAK: 1,
-  CONTINUE: 1,
-  RETURN: 1,
-  RAISE: 1,
-};
-
-const OR = PREC.OR;
-const AND = PREC.AND;
-const EQ = PREC.EQ;
-const CMP = PREC.CMP;
-const BOR = PREC.BOR;
-const BXOR = PREC.BXOR;
-const BAND = PREC.BAND;
-const SHIFT = PREC.SHIFT;
-const ADD = PREC.ADD;
-const MUL = PREC.MUL;
-const POW = PREC.POW;
-const UNARY = PREC.UNARY;
-const PIPE = PREC.PIPE;
-const ASSIGN = PREC.ASSIGN;
-const FN_TYPE = PREC.FN_TYPE;
-const BREAK = PREC.BREAK;
-const CONTINUE = PREC.CONTINUE;
-const RETURN = PREC.RETURN;
-const RAISE = PREC.RAISE;
