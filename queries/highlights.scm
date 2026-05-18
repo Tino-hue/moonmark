@@ -16,7 +16,7 @@
 "type" @keyword.type
 "struct" @keyword.type
 "enum" @keyword.type
-"trait" @keyword.type
+"trait" @keyword.type-
 "impl" @keyword
 "async" @keyword
 "raise" @keyword.exception
@@ -36,13 +36,6 @@
 "defer" @keyword
 "import" @keyword.import
 "package" @keyword.import
-"as" @keyword.import
-"extern" @keyword
-"declare" @keyword
-"open" @keyword
-"with" @keyword
-"derive" @keyword
-"default" @keyword
 "suberror" @keyword
 
 ;; ---- LITERALS ----
