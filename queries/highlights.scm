@@ -76,7 +76,6 @@
 
 ;; Pattern variables in match/guard
 (match_arm (identifier_pattern (identifier) @variable))
-(guard_expr (identifier_pattern (identifier) @variable))
 (for_expr (identifier) @variable)
 
 ;; ---- FIELDS ----
