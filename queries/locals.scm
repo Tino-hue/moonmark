@@ -17,4 +17,3 @@
 (catch_clause (identifier_pattern (identifier) @definition.var))
 
 ;; Guard bindings
-(guard_expr (identifier_pattern (identifier) @definition.var))
