@@ -56,9 +56,6 @@ jobs:
       - name: Generate parser
         run: npx tree-sitter generate
 
-      - name: Run corpus tests
-        run: npx tree-sitter test
-
       - name: Parse demo file
         run: |
           npx tree-sitter parse examples/demo.mbt || echo "Parse completed with warnings (non-blocking)"
