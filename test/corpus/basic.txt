@@ -8,7 +8,8 @@ fn main() {
 ---
 
 (source_file
-  (function_declaration
-    (identifier)
-    (param_list)
-    (block_expr)))
+  (declaration
+    (function_declaration
+      (identifier)
+      (param_list)
+      (block_expr))))
