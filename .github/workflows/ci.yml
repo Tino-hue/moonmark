@@ -34,8 +34,8 @@ jobs:
           test -f src/grammar.json
           test -f src/node-types.json
 
-  parse:
-    name: Parse Demo
+  test:
+    name: Run Tests
     runs-on: ubuntu-latest
     needs: generate
     steps:
@@ -53,12 +53,8 @@ jobs:
       - name: Generate parser
         run: npx tree-sitter generate
 
-      - name: Verify parser outputs
-        run: |
-          test -f src/parser.c
-          test -f src/grammar.json
-          test -f src/node-types.json
-          echo "All parser artifacts generated successfully"
+      - name: Run corpus tests
+        run: npx tree-sitter test
 
       - name: Parse demo file
         run: |

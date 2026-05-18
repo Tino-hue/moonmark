@@ -48,9 +48,8 @@
 "suberror" @keyword
 
 ;; ---- LITERALS ----
-(integer_literal) @number
-(float_literal) @number.float
-(boolean_literal) @boolean
+(number_literal) @number
+(bool_literal) @boolean
 (char_literal) @character
 (string_literal) @string
 (raw_string_literal) @string
@@ -62,41 +61,37 @@
 ;; ---- TYPES ----
 (builtin_type) @type.builtin
 (type_identifier) @type
-(named_type) @type
-(generic_type) @type
 (tuple_type) @type
-(fn_type) @type.function
+(function_type) @type.function
 (array_type) @type.builtin
 (option_type) @type
 (result_type) @type.builtin
 (ref_type) @type
-(external_type) @type.modifier
-(type_param) @type.parameter
 
 ;; ---- FUNCTIONS & METHODS ----
 (function_declaration (identifier) @function)
 (impl_method (identifier) @function)
 (trait_method (identifier) @function)
 (closure_expr) @function
-(call_expr (identifier) @function.call)
+(function_call (identifier) @function.call)
 
 ;; Method calls via field access + call pattern
 (method_call (identifier) @method.call)
 (field_access (identifier) @property)
 
 ;; ---- VARIABLES & PARAMETERS ----
-(value_declaration (ident_pattern (identifier) @variable))
+(value_declaration (identifier) @variable)
 (param (identifier) @variable.parameter)
 
 ;; Pattern variables in match/guard
-(match_arm (pattern (ident_pattern (identifier) @variable)))
-(guard_expr (pattern (ident_pattern (identifier) @variable)))
-(for_expr (pattern (ident_pattern (identifier) @variable)))
+(match_arm (identifier_pattern (identifier) @variable))
+(guard_expr (identifier_pattern (identifier) @variable))
+(for_expr (identifier) @variable)
 
 ;; ---- FIELDS ----
 (field_def (identifier) @property)
-(enum_variant (identifier) @type.enum.variant)
-(struct_expr (identifier) @property)
+(enum_variant (constructor) @type.enum.variant)
+(struct_expr (field_init (identifier) @property))
 
 ;; ---- OPERATORS ----
 "=" @operator
@@ -149,34 +144,17 @@
 ":" @punctuation.delimiter
 "." @punctuation.delimiter
 
-;; ---- ATTRIBUTES ----
-(attribute (identifier) @attribute)
-(attr_arg (identifier) @attribute)
-
-;; Special attribute highlighting
-((attribute (identifier) @_attr) (#eq? @_attr "deprecated")) @attribute.deprecated
-((attribute (identifier) @_attr) (#eq? @_attr "cfg")) @attribute.preprocessor
-
 ;; ---- COMMENTS ----
-(line_comment) @comment
-(block_comment) @comment
+(comment) @comment
 
 ;; ---- SPECIAL PATTERNS ----
 (wildcard_pattern) @variable.parameter
-(rest_pattern) @variable.parameter
-(or_pattern) @variable.parameter
 
 ;; ---- ERROR HANDLING HIGHLIGHTS ----
 (try_expr) @exception
-(catch_arm) @exception
+(catch_clause) @exception
 (raise_expr) @exception
 
-;; ---- ASYNC HIGHLIGHTS ----
-(await_expr) @function.builtin
-(defer_expr) @function.builtin
-
 ;; ---- PACKAGE & IMPORT ----
-(package_clause (package_name) @module)
-(import_declaration (package_name) @module)
-(import_from_declaration (package_name) @module)
-(import_member (identifier) @variable)
+(package_clause (qualified_name) @module)
+(import_declaration (qualified_name) @module)
