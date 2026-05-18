@@ -139,6 +139,7 @@ module.exports = grammar({
     import_declaration: $ => seq(
       'import',
       $.qualified_name,
+      optional(seq('as', $.identifier)),
       optional(seq(
         '{',
         commaSep1($.identifier),
@@ -274,6 +275,7 @@ module.exports = grammar({
       'trait',
       $.type_identifier,
       optional($.type_parameters),
+      optional(seq('with', $.type_identifier, 'as', $.type_identifier)),
       '{',
       repeat($.trait_method),
       '}',
@@ -575,8 +577,9 @@ module.exports = grammar({
       'try',
       $._expression,
       optional(seq(
+        'catch',
         '{',
-        repeat($.catch_clause),
+        repeat($.match_arm),
         '}',
       )),
     ),
