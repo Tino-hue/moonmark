@@ -19,7 +19,6 @@
 "trait" @keyword.type
 "impl" @keyword
 "async" @keyword
-"await" @keyword
 "raise" @keyword.exception
 "try" @keyword.exception
 "catch" @keyword.exception
