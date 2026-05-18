@@ -13,3 +13,85 @@ fn main() {
       (identifier)
       (param_list)
       (block_expr))))
+
+==================
+Struct declaration
+==================
+
+pub struct Point[T] {
+  x : T
+  y : T
+}
+
+---
+
+(source_file
+  (declaration
+    (struct_declaration
+      (type_identifier)
+      (type_parameters (type_identifier))
+      (field_def (identifier) (type_identifier))
+      (field_def (identifier) (type_identifier)))))
+
+==================
+Enum declaration
+==================
+
+pub enum Color {
+  Red
+  Green
+  Rgb(Int, Int, Int)
+}
+
+---
+
+(source_file
+  (declaration
+    (enum_declaration
+      (type_identifier)
+      (enum_variant (constructor))
+      (enum_variant (constructor))
+      (enum_variant (constructor) (type_identifier) (type_identifier) (type_identifier)))))
+
+==================
+Type alias
+==================
+
+pub type IntAlias = Int
+
+---
+
+(source_file
+  (declaration
+    (type_alias
+      (type_identifier)
+      (type_identifier))))
+
+==================
+Value declaration
+==================
+
+let answer = 42
+
+---
+
+(source_file
+  (value_declaration
+    (identifier)
+    (integer_literal)))
+
+==================
+Suberror declaration
+==================
+
+pub suberror JsonError {
+  InvalidSyntax(String)
+}
+
+---
+
+(source_file
+  (declaration
+    (suberror_declaration
+      (type_identifier)
+      (enum_variant (constructor) (type_identifier)))))
