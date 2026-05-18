@@ -73,6 +73,7 @@ const RAISE = PREC.RAISE;
 // ==================== Grammar ====================
 module.exports = grammar({
   name: 'moonbit',
+  word: $ => $.identifier,
 
   externals: $ => [
     $.string_literal,
@@ -187,7 +188,7 @@ module.exports = grammar({
     ),
 
     type_parameter: $ => seq(
-      $.identifier,
+      choice($.identifier, $.type_identifier),
       optional(seq(':', $.type_constraint)),
     ),
 
@@ -685,14 +686,9 @@ module.exports = grammar({
 
     // ==================== 类型 ====================
     _type: $ => choice(
-      $.builtin_type,
-      $.type_identifier,
+      seq(choice($.builtin_type, $.type_identifier), optional($.type_arguments)),
       $.tuple_type,
       $.function_type,
-      $.array_type,
-      $.ref_type,
-      $.option_type,
-      $.result_type,
       seq('(', $._type, ')'),
     ),
 
@@ -706,6 +702,10 @@ module.exports = grammar({
       'Char', 'Byte',
       'String',
       'Bytes',
+      'Array',
+      'Option',
+      'Result',
+      'Ref',
     ),
 
     tuple_type: $ => seq(
@@ -721,35 +721,6 @@ module.exports = grammar({
       '->',
       $._type,
     )),
-
-    array_type: $ => seq(
-      'Array',
-      '<',
-      $._type,
-      '>',
-    ),
-
-    ref_type: $ => seq(
-      'Ref',
-      '<',
-      $._type,
-      '>',
-    ),
-
-    option_type: $ => seq(
-      'Option',
-      '<',
-      $._type,
-      '>',
-    ),
-
-    result_type: $ => seq(
-      'Result',
-      '<',
-      $._type,
-      ',',
-      $._type,
-      '>',
     ),
 
     // ==================== 标识符 ====================
