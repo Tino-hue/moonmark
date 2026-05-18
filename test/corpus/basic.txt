@@ -28,6 +28,7 @@ pub struct Point[T] {
 (source_file
   (declaration
     (struct_declaration
+      (visibility)
       (type_identifier)
       (type_parameters (type_identifier))
       (field_def (identifier) (type_identifier))
@@ -48,10 +49,11 @@ pub enum Color {
 (source_file
   (declaration
     (enum_declaration
+      (visibility)
       (type_identifier)
-      (enum_variant (constructor))
-      (enum_variant (constructor))
-      (enum_variant (constructor) (type_identifier) (type_identifier) (type_identifier)))))
+      (enum_variant (constructor (type_identifier)))
+      (enum_variant (constructor (type_identifier)))
+      (enum_variant (constructor (type_identifier)) (builtin_type) (builtin_type) (builtin_type)))))
 
 ==================
 Type alias
@@ -64,8 +66,9 @@ pub type IntAlias = Int
 (source_file
   (declaration
     (type_alias
+      (visibility)
       (type_identifier)
-      (type_identifier))))
+      (builtin_type))))
 
 ==================
 Value declaration
@@ -78,7 +81,7 @@ let answer = 42
 (source_file
   (value_declaration
     (identifier)
-    (integer_literal)))
+    (number_literal)))
 
 ==================
 Suberror declaration
@@ -93,5 +96,6 @@ pub suberror JsonError {
 (source_file
   (declaration
     (suberror_declaration
+      (visibility)
       (type_identifier)
-      (enum_variant (constructor) (type_identifier)))))
+      (enum_variant (constructor (type_identifier)) (builtin_type)))))
