@@ -1,0 +1,9 @@
+{
+  "source_dir": "D:\\MoonHighlight",
+  "name": "moonhighlight",
+  "packages": [],
+  "deps": [],
+  "backend": "wasm-gc",
+  "opt_level": "debug",
+  "source": null
+}

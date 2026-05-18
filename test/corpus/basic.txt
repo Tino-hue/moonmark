@@ -1,592 +1,206 @@
-;; ============================================================
-;; MoonHighlight — Test Corpus for MoonBit Grammar
-;; Based on official MoonBit documentation examples
-;; ============================================================
+==================
+Package declaration
+==================
 
-;; ============================================================
-;; 1. Basic declarations
-;; ============================================================
+package hello
 
-(declaration
-  (function_declaration
-    visibility: (visibility)
-    name: (identifier)
-    params: (param_list
-      (param
-        label: (identifier)
-        name: (identifier)
-        type: (builtin_type))
-      (param
-        label: (identifier)
-        name: (identifier)
-        type: (builtin_type)))
-    return_type: (builtin_type)
-    body: (block_expr
-      (binary_expr
-        left: (identifier)
-        right: (identifier)))))
+---
 
-============================================================
+(source_file [0, 0] - [1, 0]
+  (package_clause [0, 0] - [0, 12]
+    (qualified_name [0, 8] - [0, 12]
+      (identifier [0, 8] - [0, 12]))))
 
-pub fn add(a : Int, b : Int) -> Int { a + b }
+==================
+Import declaration
+==================
 
-===========================================================
+import hello.world
 
-;; ============================================================
-;; 2. Struct declaration with derive
-;; ============================================================
+---
 
-(declaration
-  (struct_declaration
-    visibility: (visibility)
-    name: (identifier)
-    type_params: (type_params (type_param (identifier)))
-    derive_clause: (derive_clause (identifier) (identifier))
-    body: (field_def
-      name: (identifier)
-      type: (generic_type
-        name: (type_identifier))))))
+(source_file [0, 0] - [1, 0]
+  (import_declaration [0, 0] - [0, 18]
+    (qualified_name [0, 7] - [0, 18]
+      (identifier [0, 7] - [0, 12])
+      (identifier [0, 13] - [0, 18]))))
 
-============================================================
+==================
+Function declaration
+==================
 
-#[derive(Debug, Show)]
-pub struct Point[T] {
-  x : T
-  y : T
+fn main() {
 }
 
-===========================================================
+---
 
-;; ============================================================
-;; 3. Enum declaration with variants
-;; ============================================================
+(source_file [0, 0] - [2, 0]
+  (function_declaration [0, 0] - [1, 1]
+    (identifier [0, 3] - [0, 7])
+    (param_list [0, 7] - [0, 9])
+    (block_expr [0, 10] - [1, 1])))
 
-(declaration
-  (enum_declaration
-    visibility: (visibility)
-    name: (identifier)
-    body: (enum_variant
-      name: (identifier)
-      payload: (variant_field
-        type: (builtin_type)))
-    (enum_variant
-      name: (identifier))))
+==================
+Function with parameters
+==================
 
-============================================================
+fn add(a: Int, b: Int) -> Int {
+  a + b
+}
 
-pub enum Color {
+---
+
+(source_file [0, 0] - [3, 0]
+  (function_declaration [0, 0] - [2, 1]
+    (identifier [0, 3] - [0, 6])
+    (param_list [0, 6] - [0, 24]
+      (param [0, 7] - [0, 13]
+        (identifier [0, 7] - [0, 8])
+        (builtin_type [0, 10] - [0, 13]))
+      (param [0, 15] - [0, 21]
+        (identifier [0, 15] - [0, 16])
+        (builtin_type [0, 18] - [0, 21])))
+    (block_expr [0, 28] - [2, 1]
+      (binary_expr [1, 2] - [1, 7]
+        (identifier [1, 2] - [1, 3])
+        (identifier [1, 6] - [1, 7])))))
+
+==================
+Struct declaration
+==================
+
+struct Point {
+  x: Int
+  y: Int
+}
+
+---
+
+(source_file [0, 0] - [4, 0]
+  (struct_declaration [0, 0] - [3, 1]
+    (type_identifier [0, 7] - [0, 12])
+    (field_def [1, 2] - [1, 8]
+      (identifier [1, 2] - [1, 3])
+      (builtin_type [1, 5] - [1, 8]))
+    (field_def [2, 2] - [2, 8]
+      (identifier [2, 2] - [2, 3])
+      (builtin_type [2, 5] - [2, 8]))))
+
+==================
+Top-level let binding
+==================
+
+let x = 1
+
+---
+
+(source_file [0, 0] - [1, 0]
+  (value_declaration [0, 0] - [0, 9]
+    (identifier [0, 4] - [0, 5])
+    (number_literal [0, 8] - [0, 9])))
+
+==================
+Enum declaration
+==================
+
+enum Color {
   Red
   Green
   Blue
-  Rgb(Int, Int, Int)
 }
 
-===========================================================
+---
 
-;; ============================================================
-;; 4. Trait declaration with super traits
-;; ============================================================
+(source_file [0, 0] - [5, 0]
+  (enum_declaration [0, 0] - [4, 1]
+    (type_identifier [0, 5] - [0, 10])
+    (enum_variant [1, 2] - [1, 5]
+      (constructor [1, 2] - [1, 5]))
+    (enum_variant [2, 2] - [2, 7]
+      (constructor [2, 2] - [2, 7]))
+    (enum_variant [3, 2] - [3, 6]
+      (constructor [3, 2] - [3, 6]))))
 
-(declaration
-  (trait_declaration
-    name: (identifier)
-    super_traits: (super_traits
-      (trait_bound
-        trait: (identifier)
-        alias: (identifier)))
-    body: (trait_method
-      name: (identifier)
-      params: (param_list
-        (param
-          name: (identifier)
-          type: (type_identifier)))
-      return_type: (builtin_type)))))
+==================
+Trait declaration
+==================
 
-============================================================
-
-trait Display with Show as S {
-  fn to_string(self) -> String
+trait Show {
+  fn to_string(self) -> String;
 }
 
-===========================================================
+---
 
-;; ============================================================
-;; 5. Impl block
-;; ============================================================
+(source_file [0, 0] - [3, 0]
+  (trait_declaration [0, 0] - [2, 1]
+    (type_identifier [0, 6] - [0, 10])
+    (trait_method [1, 2] - [1, 33]
+      (identifier [1, 5] - [1, 15])
+      (param_list [1, 15] - [1, 21]
+        (self_param [1, 16] - [1, 20]))
+      (builtin_type [1, 25] - [1, 31]))))
 
-(declaration
-  (impl_block
-    self_type: (named_type)
-    body: (impl_method
-      name: (identifier)
-      params: (param_list
-        (param
-          name: (identifier)
-          type: (builtin_type)))
-      return_type: (builtin_type)
-      body: (block_expr
-        (binary_expr
-          left: (field_access
-            object: (identifier)
-            field: (identifier))
-          right: (field_access
-            object: (identifier)
-            field: (identifier)))))))
+==================
+If expression
+==================
 
-============================================================
-
-impl Int {
-  pub fn double(self) -> Int { self * 2 }
+fn max(a: Int, b: Int) -> Int {
+  if a > b {
+    a
+  } else {
+    b
+  }
 }
 
-===========================================================
+---
 
-;; ============================================================
-;; 6. Pattern matching
-;; ============================================================
+(source_file [0, 0] - [7, 0]
+  (function_declaration [0, 0] - [6, 1]
+    (identifier [0, 3] - [0, 6])
+    (param_list [0, 6] - [0, 24]
+      (param [0, 7] - [0, 13]
+        (identifier [0, 7] - [0, 8])
+        (builtin_type [0, 10] - [0, 13]))
+      (param [0, 15] - [0, 21]
+        (identifier [0, 15] - [0, 16])
+        (builtin_type [0, 18] - [0, 21])))
+    (block_expr [0, 28] - [6, 1]
+      (if_expr [1, 2] - [5, 3]
+        (binary_expr [1, 5] - [1, 10]
+          (identifier [1, 5] - [1, 6])
+          (identifier [1, 9] - [1, 10]))
+        (block_expr [1, 11] - [2, 3]
+          (identifier [2, 4] - [2, 5]))
+        (block_expr [3, 7] - [5, 3]
+          (identifier [4, 4] - [4, 5]))))))
 
-(expression
-  (match_expr
-    scrutinee: (identifier)
-    body: (match_arm
-      pattern: (constructor_pattern
-        variant: (identifier)
-        payload: (tuple_pattern
-          (ident_pattern (identifier))))
-      body: (identifier))
-    (match_arm
-      pattern: (constructor_pattern
-        variant: (identifier))
-      body: (integer_literal)))))
+==================
+Match expression
+==================
 
-============================================================
-
-match result {
-  Ok(value) => value
-  Err(msg) => { println(msg); -1 }
+fn classify(n: Int) -> String {
+  match n {
+    0 => "zero"
+    _ => "other"
+  }
 }
 
-===========================================================
-
-;; ============================================================
-;; 7. Guard expression
-;; ============================================================
-
-(expression
-  (guard_expr
-    value: (identifier)
-    pattern: (constructor_pattern
-      variant: (identifier)
-      payload: (ident_pattern (identifier)))
-    fallback: (block_expr
-      (raise_expr
-        (string_literal))))))
-
-============================================================
-
-guard response is Some(data) else {
-  raise("no data")
-}
-
-===========================================================
-
-;; ============================================================
-;; 8. Error handling (try/catch/raise)
-;; ============================================================
-
-(expression
-  (try_expr
-    body: (block_expr
-      (call_expr
-        func: (identifier)
-        args: (arg (value: (identifier)))))
-    catch_arm: (catch_arm
-      pattern: (constructor_pattern
-        variant: (identifier)
-        payload: (ident_pattern (identifier)))
-      handler: (call_expr
-        func: (identifier)
-        args: (arg (value: (identifier)))))))
-
-============================================================
-
-try parse_json(input) catch {
-  JsonError(msg) => println(msg)
-  _ => raise("parse failed")
-}
-
-===========================================================
-
-;; ============================================================
-;; 9. Async function
-;; ============================================================
-
-(declaration
-  (function_declaration
-    visibility: (visibility)
-    async: (keyword)
-    name: (identifier)
-    params: (param_list
-      (param
-        name: (identifier)
-        type: (builtin_type)))
-    return_type: (builtin_type)
-    body: (block_expr
-      (let_declaration
-        pattern: (tuple_pattern
-          (ident_pattern (identifier))
-          (ident_pattern (identifier)))
-        value: (method_call
-          object: (identifier)
-          method: (identifier)
-          args: (arg (value: (identifier))))))))
-
-============================================================
-
-async fn fetch_data(url : String) -> String {
-  let (resp, body) = @http.get(url)
-  body.text()
-}
-
-===========================================================
-
-;; ============================================================
-;; 10. String interpolation
-;; ============================================================
-
-(expression
-  (interpolated_string_literal))
-
-============================================================
-
-let msg = $"The answer is \{x + y}"
-
-===========================================================
-
-;; ============================================================
-;; 11. For loop with range
-;; ============================================================
-
-(expression
-  (for_expr
-    pattern: (ident_pattern (name: (identifier)))
-    iterable: (range_pattern
-      start: (integer_literal)
-      end: (integer_literal))
-    body: (block_expr
-      (call_expr
-        func: (identifier)
-        args: (arg (value: (identifier)))))))
-
-============================================================
-
-for i in 0..<10 {
-  println(i)
-}
-
-===========================================================
-
-;; ============================================================
-;; 12. Closure expression
-;; ============================================================
-
-(expression
-  (closure_expr
-    params: (param_list
-      (param
-        name: (identifier)
-        type: (builtin_type)))
-    return_type: (builtin_type)
-    body: (binary_expr
-      left: (unary_expr
-        operand: (identifier))
-      right: (identifier)))))
-
-============================================================
-
-let double = fn(x : Int) -> Int { x * 2 }
-
-===========================================================
-
-;; ============================================================
-;; 13. Generic type and constraints
-;; ============================================================
-
-(declaration
-  (function_declaration
-    name: (identifier)
-    type_params: (type_params
-      (type_param
-        name: (identifier)
-        bound: (identifier)))
-    params: (param_list
-      (param
-        name: (identifier)
-        type: (generic_type
-          name: (type_identifier))))
-    return_type: (option_type
-      type: (type_identifier)))))
-
-============================================================
-
-fn find[T : Compare](arr : Array[T], target : T) -> Option[T] {
-  // implementation
-}
-
-===========================================================
-
-;; ============================================================
-;; 14. Attributes
-;; ============================================================
-
-(declaration
-  (function_declaration
-    attributes: (attribute
-      name: (identifier))
-    attributes: (attribute
-      name: (identifier)
-      args: (attr_arg
-        key: (identifier)
-        val: (string_literal)))
-    name: (identifier)
-    params: (param_list
-      (param
-        name: (identifier)
-        type: (builtin_type)))
-    return_type: (builtin_type)))
-
-============================================================
-
-#[inline]
-#[deprecated(since="0.2", message="use new_api instead")]
-pub fn old_api(x : Int) -> Int { x }
-
-===========================================================
-
-;; ============================================================
-;; 15. Struct creation and update
-;; ============================================================
-
-(expression
-  (struct_expr
-    type: (type_identifier)
-    fields: (field_def
-      name: (identifier)
-      value: (integer_literal))
-    (field_def
-      name: (identifier)
-      value: (integer_literal)))))
-
-============================================================
-
-let p = Point::new { x: 10, y: 20 }
-
-===========================================================
-
-(expression
-  (struct_expr
-    base: (identifier)
-    updates: (field_def
-      name: (identifier)
-      value: (integer_literal)))))
-
-============================================================
-
-let p2 = { ..p, y: 30 }
-
-===========================================================
-
-;; ============================================================
-;; 16. Enum creation
-;; ============================================================
-
-(expression
-  (enum_expr
-    enum_type: (type_identifier)
-    variant: (identifier)
-    args: (integer_literal) (integer_literal) (integer_literal)))
-
-============================================================
-
-let color = Color::Rgb(255, 128, 0)
-
-===========================================================
-
-;; ============================================================
-;; 17. Pipeline operator
-;; ============================================================
-
-(expression
-  (pipeline_expr
-    value: (identifier)
-    func: (identifier)))
-
-============================================================
-
-result |> process |> display
-
-===========================================================
-
-;; ============================================================
-;; 18. Type alias
-;; ============================================================
-
-(declaration
-  (type_alias_declaration
-    visibility: (visibility)
-    name: (identifier)
-    type_params: (type_params (type_param (identifier)))
-    alias: (fn_type
-      ret: (builtin_type))))
-
-============================================================
-
-pub type Callback[T] = (T) -> Unit
-
-===========================================================
-
-;; ============================================================
-;; 19. Suberror
-;; ============================================================
-
-(declaration
-  (suberror_declaration
-    visibility: (visibility)
-    name: (identifier)
-    body: (enum_variant
-      name: (identifier)
-      payload: (variant_field
-        type: (builtin_type)))
-    (enum_variant
-      name: (identifier)
-      payload: (variant_field
-        type: (builtin_type)))))
-
-============================================================
-
-pub suberror JsonError {
-  InvalidSyntax(String)
-  UnexpectedToken(Char)
-}
-
-===========================================================
-
-;; ============================================================
-;; 20. Defer expression
-;; ============================================================
-
-(expression
-  (defer_expr
-    (call_expr
-      func: (identifier)
-      args: (arg (value: (string_literal))))))
-
-============================================================
-
-defer cleanup()
-
-===========================================================
-
-;; ============================================================
-;; 21. Loop with break
-;; ============================================================
-
-(expression
-  (loop_expr
-    body: (block_expr
-      (if_expr
-        condition: (binary_expr
-          left: (identifier)
-          right: (integer_literal))
-        consequence: (block_expr
-          (break_expr (integer_literal)))))))
-
-============================================================
-
-loop {
-  if count > 100 { break count }
-  count += 1
-}
-
-===========================================================
-
-;; ============================================================
-;; 22. Comments
-;; ============================================================
-
-(source_file
-  (line_comment)
-  (function_declaration
-    name: (identifier)
-    body: (block_expr
-      (block_comment))))
-
-============================================================
-
-// This is a line comment
-fn commented() -> Int {
-  /* This is a
-     block comment */
-  42
-}
-
-===========================================================
-
-;; ============================================================
-;; 23. Package clause and imports
-;; ============================================================
-
-(source_file
-  (package_clause (package_name))
-  (import_declaration
-    path: (package_name))
-  (import_from_declaration
-    path: (package_name)
-    alias: (identifier)
-    members: (import_member
-      name: (identifier)
-      alias: (identifier)))))
-
-============================================================
-
-package myapp/core
-
-import moonbit/core/vec
-import moonbit/core/io as IO
-import moonbit/core/str as Str { to_int }
-
-===========================================================
-
-;; ============================================================
-;; 24. Raw string literal
-;; ============================================================
-
-(expression
-  (raw_string_literal))
-
-============================================================
-
-let html = #|
-<div class="container">
-  <p>Hello, MoonBit!</p>
-</div>
-|#
-
-===========================================================
-
-;; ============================================================
-;; 25. Byte literals
-;; ============================================================
-
-(expression
-  (byte_literal))
-
-(expression
-  (bytes_literal))
-
-============================================================
-
-let newline = b'\n'
-let data = b"hello\x00world"
-
-===========================================================
+---
+
+(source_file [0, 0] - [7, 0]
+  (function_declaration [0, 0] - [6, 1]
+    (identifier [0, 3] - [0, 11])
+    (param_list [0, 11] - [0, 19]
+      (param [0, 12] - [0, 18]
+        (identifier [0, 12] - [0, 13])
+        (builtin_type [0, 15] - [0, 18])))
+    (block_expr [0, 23] - [6, 1]
+      (match_expr [1, 2] - [5, 3]
+        (identifier [1, 8] - [1, 9])
+        (match_arm [2, 4] - [2, 14]
+          (literal_pattern [2, 4] - [2, 5]
+            (number_literal [2, 4] - [2, 5]))
+          (string_literal [2, 9] - [2, 14]))
+        (match_arm [3, 4] - [3, 15]
+          (wildcard_pattern [3, 4] - [3, 5])
+          (string_literal [3, 9] - [3, 15]))))))
