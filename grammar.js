@@ -121,6 +121,7 @@ module.exports = grammar({
       $.function_declaration,
       $.struct_declaration,
       $.enum_declaration,
+      $.suberror_declaration,
       $.trait_declaration,
       $.impl_block,
       $.type_alias,
@@ -143,10 +144,11 @@ module.exports = grammar({
       )),
     ),
 
-    qualified_name: $ => sep1('.', $.identifier),
+    qualified_name: $ => sep1(choice('.', '/'), $.identifier),
 
     // ==================== 函数声明 ====================
     function_declaration: $ => seq(
+      repeat($.attribute),
       optional($.visibility),
       optional('async'),
       'fn',
@@ -158,6 +160,22 @@ module.exports = grammar({
     ),
 
     visibility: $ => choice('pub', 'priv'),
+
+    attribute: $ => seq(
+      '#[',
+      $.identifier,
+      optional(seq(
+        '(',
+        commaSep($.attr_arg),
+        ')',
+      )),
+      ']',
+    ),
+
+    attr_arg: $ => choice(
+      $.identifier,
+      seq($.identifier, '=', choice($.string_literal, $.number_literal, $.identifier)),
+    ),
 
     type_parameters: $ => seq(
       '<',
@@ -193,6 +211,7 @@ module.exports = grammar({
 
     // ==================== 结构体 ====================
     struct_declaration: $ => seq(
+      repeat($.attribute),
       optional($.visibility),
       'struct',
       $.type_identifier,
@@ -220,6 +239,16 @@ module.exports = grammar({
       'enum',
       $.type_identifier,
       optional($.type_parameters),
+      '{',
+      repeat($.enum_variant),
+      '}',
+    ),
+
+    suberror_declaration: $ => seq(
+      repeat($.attribute),
+      optional($.visibility),
+      'suberror',
+      $.type_identifier,
       '{',
       repeat($.enum_variant),
       '}',
@@ -339,6 +368,7 @@ module.exports = grammar({
       $.raise_expr,
       $.try_expr,
       $.guard_expr,
+      $.defer_expr,
       $.block_expr,
       seq('(', $._expression, ')'),
     ),
@@ -566,6 +596,11 @@ module.exports = grammar({
       'guard',
       $.guard_pattern,
       'else',
+      $._expression,
+    ),
+
+    defer_expr: $ => seq(
+      'defer',
       $._expression,
     ),
 
