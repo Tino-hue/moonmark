@@ -97,6 +97,8 @@ module.exports = grammar({
     [$.index_access, $.try_expr],
     [$.method_call, $.field_access, $.guard_expr],
     [$.index_access, $.guard_expr],
+    [$.method_call, $.field_access, $.defer_expr],
+    [$.index_access, $.defer_expr],
     [$.try_expr],
     [$.method_call, $.field_access],
     [$.constructor, $.struct_expr],
