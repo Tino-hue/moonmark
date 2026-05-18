@@ -113,7 +113,7 @@ module.exports = grammar({
 
   rules: {
     // ==================== 顶层规则 ====================
-    source_file: $ => repeat($.declaration),
+    source_file: $ => repeat(choice($.declaration, $.value_declaration)),
 
     declaration: $ => choice(
       $.package_clause,
@@ -125,7 +125,6 @@ module.exports = grammar({
       $.impl_block,
       $.type_alias,
       $.test_declaration,
-      $.value_declaration,
     ),
 
     // ==================== 包和导入 ====================
@@ -580,7 +579,7 @@ module.exports = grammar({
 
     block_statement: $ => choice(
       seq(choice($.declaration, $._expression), ';'),
-      $.value_declaration,
+      seq($.value_declaration, optional(';')),
     ),
 
     value_declaration: $ => prec.right(1, seq(
@@ -590,7 +589,7 @@ module.exports = grammar({
       optional(seq(':', $._type)),
       '=',
       $._expression,
-      ';',
+      optional(';'),
     )),
 
     // ==================== 模式 ====================
