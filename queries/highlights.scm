@@ -102,16 +102,13 @@
 "!" @operator
 "&" @operator
 "|" @operator
-"^" @operator
 "<<" @operator
 ">>" @operator
 "=>" @operator
 "->" @operator
-"::" @operator
 "|>" @operator
 ".." @operator
 "is" @operator
-"as" @operator
 
 ;; ---- PUNCTUATION ----
 "(" @punctuation.bracket
