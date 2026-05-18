@@ -180,9 +180,9 @@ module.exports = grammar({
     ),
 
     type_parameters: $ => seq(
-      '<',
+      '[',
       commaSep1($.type_parameter),
-      '>',
+      ']',
     ),
 
     type_parameter: $ => seq(
@@ -302,9 +302,9 @@ module.exports = grammar({
     ),
 
     type_arguments: $ => seq(
-      '<',
+      '[',
       commaSep1($._type),
-      '>',
+      ']',
     ),
 
     impl_method: $ => seq(
