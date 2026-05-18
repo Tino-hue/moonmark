@@ -14,6 +14,5 @@
 
 ;; Match arm bindings
 (match_arm (identifier_pattern (identifier) @definition.var))
-(catch_clause (identifier_pattern (identifier) @definition.var))
 
 ;; Guard bindings

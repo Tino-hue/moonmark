@@ -129,7 +129,6 @@
 
 ;; ---- ERROR HANDLING HIGHLIGHTS ----
 (try_expr) @exception
-(catch_clause) @exception
 (raise_expr) @exception
 
 ;; ---- PACKAGE & IMPORT ----
