@@ -22,7 +22,6 @@
 "raise" @keyword.exception
 "try" @keyword.exception
 "catch" @keyword.exception
-"noraise" @keyword
 "if" @keyword.conditional
 "else" @keyword.conditional
 "match" @keyword.conditional
