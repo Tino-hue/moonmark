@@ -60,5 +60,4 @@ jobs:
         run: npx tree-sitter test
 
       - name: Parse demo file
-        run: |
-          npx tree-sitter parse examples/demo.mbt || echo "Parse completed with warnings (non-blocking)"
+        run: npx tree-sitter parse examples/demo.mbt || true
