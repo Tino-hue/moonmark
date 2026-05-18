@@ -30,7 +30,7 @@ pub struct Point[T] {
     (struct_declaration
       (visibility)
       (type_identifier)
-      (type_parameters (type_identifier))
+      (type_parameters (type_parameter (identifier)))
       (field_def (identifier) (type_identifier))
       (field_def (identifier) (type_identifier)))))
 
