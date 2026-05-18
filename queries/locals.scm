@@ -7,14 +7,14 @@
 (param (identifier) @definition.var)
 
 ;; Let/const bindings
-(value_declaration (ident_pattern (identifier) @definition.var))
+(value_declaration (identifier) @definition.var)
 
 ;; For loop variables
-(for_expr (pattern (ident_pattern (identifier) @definition.var)))
+(for_expr (identifier) @definition.var)
 
 ;; Match arm bindings
-(match_arm (pattern (ident_pattern (identifier) @definition.var)))
-(catch_arm (pattern (ident_pattern (identifier) @definition.var)))
+(match_arm (identifier_pattern (identifier) @definition.var))
+(catch_clause (identifier_pattern (identifier) @definition.var))
 
 ;; Guard bindings
-(guard_expr (pattern (ident_pattern (identifier) @definition.var)))
+(guard_expr (identifier_pattern (identifier) @definition.var))
