@@ -54,10 +54,6 @@
 (type_identifier) @type
 (tuple_type) @type
 (function_type) @type.function
-(array_type) @type.builtin
-(option_type) @type
-(result_type) @type.builtin
-(ref_type) @type
 
 ;; ---- FUNCTIONS & METHODS ----
 (function_declaration (identifier) @function)
