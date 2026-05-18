@@ -3,5 +3,4 @@
 ;; Enable Tree-sitter to parse embedded languages
 ;; ============================================================
 
-;; External function body strings (JS/Wasm/C code in extern "...")
-(extern_fn_declaration (string_literal) @javascript)
+;; MoonBit does not have embedded language syntax requiring injections
