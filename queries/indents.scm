@@ -24,4 +24,3 @@
 ")" @dedent
 "]" @dedent
 "else" @dedent
-(catch_clause) @dedent
