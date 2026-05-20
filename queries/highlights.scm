@@ -57,6 +57,8 @@
 (type_identifier) @type
 (tuple_type) @type
 (function_type) @type.function
+(type_parameter (type_identifier) @type.parameter)
+(type_parameter (identifier) @type.parameter)
 
 ;; ---- FUNCTIONS & METHODS ----
 (function_declaration (identifier) @function)
@@ -71,6 +73,10 @@
 (method_call (identifier) @method.call)
 (field_access (identifier) @property)
 (package_access (qualified_name (identifier) @module))
+
+;; Constructor patterns (e.g. Some(x), None)
+(constructor_pattern (constructor) @constructor)
+(self_param) @variable.builtin
 
 ;; ---- VARIABLES & PARAMETERS ----
 (value_declaration (identifier) @variable)
@@ -129,6 +135,10 @@
 
 ;; ---- COMMENTS ----
 (comment) @comment
+
+;; ---- ATTRIBUTES ----
+(attribute (identifier) @attribute)
+(attr_arg (identifier) @attribute)
 
 ;; ---- SPECIAL PATTERNS ----
 (wildcard_pattern) @variable.parameter

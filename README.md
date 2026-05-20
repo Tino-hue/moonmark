@@ -21,8 +21,8 @@
 | 🎯 模式匹配 | 通配 / 字面 / 构造器 / 范围 / or 模式 | ✅ 100% |
 | 🏷️ 类型系统 | 内置类型 / 泛型 / 元组 / 函数类型 / Result / Option | ✅ 100% |
 | 🏷️ 属性 | `#[deprecated]` / `#[cfg]` / `#[inline]` 等 | ✅ 100% |
-| ⚠️ 错误处理 | raise / try–catch / suberror / noraise | ✅ 100% |
-| ⚡ 异步 | async fn / await / defer / task 组 | ✅ 100% |
+| ⚠️ 错误处理 | raise / try–catch / suberror | ✅ 支持 |
+| ⚡ 异步 | async fn / defer | ✅ 支持 |
 | 📝 字符串 | 普通 / 原始 `#\|...\|\#` / 插值 `$"..."` / 字节 | ✅ 100% |
 
 ---
@@ -132,7 +132,7 @@ source = { git = "https://github.com/Tino-hue/moonmark.git", subpath = "src", re
 
 ### Dark 主题（Dracula 风格）
 
-![Dark Theme](https://via.placeholder.com/600x300/282A36/F8F8F2?text=MoonBit+Dark+Theme)
+> TODO: 替换为 VSCode 真实截图（`editors/vscode/themes/moonbit-dark.json`）
 
 | 元素 | 颜色 | 效果 |
 |------|------|------|
@@ -147,7 +147,7 @@ source = { git = "https://github.com/Tino-hue/moonmark.git", subpath = "src", re
 
 ### Light 主题（GitHub 风格）
 
-![Light Theme](https://via.placeholder.com/600x300/FFFFFF/24292E?text=MoonBit+Light+Theme)
+> TODO: 替换为 VSCode 真实截图（`editors/vscode/themes/moonbit-light.json`）
 
 | 元素 | 颜色 | 效果 |
 |------|------|------|
@@ -166,24 +166,23 @@ source = { git = "https://github.com/Tino-hue/moonmark.git", subpath = "src", re
 # 生成 C 解析器
 tree-sitter generate
 
-# 运行全部语料测试（25 个覆盖全部语法）
+# 运行全部语料测试（14 个覆盖核心语法）
 tree-sitter test
 
 # 解析单个文件（可视化 AST）
 tree-sitter parse examples/demo.mbt
 
-# 渲染 AST 为 PNG 图片
-tree-sitter render examples/demo.mbt -o ast.png
+# 可视化 AST（文本格式）
+tree-sitter parse examples/demo.mbt
 
-# 构建 WASM 模块（用于 Web Playground）
-tree-sitter build-wasm
+# 构建 WASM 模块（用于 Web Playground，需 WASI SDK）
+tree-sitter build --wasm
 
 # 启动 Web Playground
-npx tree-sitter playground examples/demo.mbt
+tree-sitter playground
 
-# Node.js 原生绑定构建
+# Node.js 依赖安装
 npm install
-npm run install:node   # 编译 bindings/node/moonhighlight.node
 ```
 
 ---
@@ -202,12 +201,13 @@ moonmark/
 │   ├── injections.scm      # 语言注入（字符串插值）
 │   ├── indents.scm         # 缩进规则
 │   └── locals.scm          # 变量作用域规则
-├── corpus/
-│   └── test_moonbit.txt    # 25 个测试用例（~15KB）
+├── test/
+│   └── corpus/
+│       └── basic.txt       # 14 个测试用例（~8KB）
 ├── editors/
 │   ├── vscode/             # VSCode 扩展配置 + 主题
-│   ├── neovim.lua          # Neovim nvim-treesitter 配置
-│   └── helix.toml          # Helix 编辑器配置
+│   ├── neovim/             # Neovim nvim-treesitter 配置
+│   └── helix/              # Helix 编辑器配置
 ├── examples/
 │   └── demo.mbt            # 完整语法展示示例
 ├── bindings/
@@ -226,50 +226,34 @@ moonmark/
 运行 `tree-sitter test` 将验证以下全部语法特性：
 
 ```
-✓ 1. Basic declarations (fn/let/return types)
-✓ 2. Struct with derive clause
-✓ 3. Enum variant payloads
-✓ 4. Trait with super traits
-✓ 5. Impl block methods
-✓ 6. Pattern matching (constructor patterns)
-✓ 7. Guard expressions
-✓ 8. Error handling (try/catch/raise)
-✓ 9. Async function syntax
-✓ 10. String interpolation
-✓ 11. For loop with range patterns
-✓ 12. Closure expressions
-✓ 13. Generic type parameters
-✓ 14. Attributes (#[deprecated], #[inline])
-✓ 15. Struct creation and update
-✓ 16. Enum creation (Color::Rgb(...))
-✓ 17. Pipeline operator (|> )
-✓ 18. Type alias
-✓ 19. Suberror declarations
-✓ 20. Defer expressions
-✓ 21. Loop with break
-✓ 22. Comments (line + block)
-✓ 23. Package clause and imports
-✓ 24. Raw multi-line strings
-✓ 25. Byte literals and byte strings
+✓ 1.  Function declaration
+✓ 2.  Struct declaration
+✓ 3.  Enum declaration
+✓ 4.  Type alias
+✓ 5.  Value declaration
+✓ 6.  Suberror declaration
+✓ 7.  Trait declaration
+✓ 8.  Extern function
+✓ 9.  Closure expression
+✓ 10. Impl block
+✓ 11. Associated call
+✓ 12. Package access call
+✓ 13. Tuple destructure
+✓ 14. Guard expression
 ```
 
 ---
 
 ## 技术实现细节
 
-### 为什么需要 `scanner.c`？
+### 关于 `scanner.c`
 
-Tree-sitter 的 `grammar.js` 无法处理以下复杂词法结构，需要外部 C 扫描器：
+当前 `scanner.c` 是一个**占位实现**（空扫描器）。所有词法结构（包括字符串插值、原始字符串、字节字面量、转义序列等）均已通过 `grammar.js` 中的内联规则直接处理，无需外部扫描器介入。
 
-1. **字符串插值** `$"Hello, \{name}!"` — 需要递归追踪 `{...}` 嵌套深度
-2. **原始字符串** `#|...|#` — 需要扫描到终结符 `|#`
-3. **字节字面量** `b'...'` 和 `b"..."` — 需要与常规字符串区分
-4. **转义序列** — `"Hello\nWorld"` 中的 `\n` 需要正确识别
-
-`scanner.c` 实现了完整的 Tree-sitter 外部扫描器 API：
-- `tree_sitter_moonbit_external_scanner_create()` — 初始化状态
-- `tree_sitter_moonbit_external_scanner_scan()` — 主扫描逻辑
-- `serialize()` / `deserialize()` — 支持增量解析的状态序列化
+保留空 `scanner.c` 的原因：
+- Tree-sitter CLI 在 `generate` 时默认会查找并编译 `src/scanner.c`
+- 为未来可能需要外部扫描器的复杂词法（如多行字符串嵌套深度追踪）预留接口
+- 保持与 `package.json` 中 `files` 字段和编辑器安装脚本的一致性
 
 ### 高亮查询设计
 

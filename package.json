@@ -20,10 +20,13 @@
   "types": "bindings/node/types.d.ts",
   "files": [
     "grammar.js",
-    "src/**/*",
+    "src/parser.c",
+    "src/scanner.c",
+    "src/tree_sitter/**/*",
     "queries/**/*",
-    "corpus/**/*",
-    "bindings/**/*",
+    "test/corpus/**/*",
+    "bindings/node/**/*",
+    "examples/**/*",
     "package.json",
     "README.md",
     "LICENSE"
@@ -32,8 +35,7 @@
     "generate": "tree-sitter generate --no-bindings",
     "test": "tree-sitter test",
     "parse": "tree-sitter parse",
-    "install:node": "node-gyp rebuild",
-    "build:wasm": "tree-sitter build-wasm",
+    "build:wasm": "tree-sitter build --wasm",
     "highlight": "tree-sitter highlight"
   },
   "dependencies": {
