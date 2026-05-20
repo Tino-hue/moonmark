@@ -30,7 +30,7 @@ pub struct Point[T] {
     (struct_declaration
       (visibility)
       (type_identifier)
-      (type_parameters (type_parameter (identifier)))
+      (type_parameters (type_parameter (type_identifier)))
       (field_def (identifier) (type_identifier))
       (field_def (identifier) (type_identifier)))))
 
@@ -99,3 +99,219 @@ pub suberror JsonError {
       (visibility)
       (type_identifier)
       (enum_variant (constructor (type_identifier)) (builtin_type)))))
+
+==================
+Trait declaration
+==================
+
+pub trait Show {
+  fn to_string(self) -> String
+}
+
+---
+
+(source_file
+  (declaration
+    (trait_declaration
+      (visibility)
+      (type_identifier)
+      (trait_method
+        (identifier)
+        (param_list
+          (param
+            (self_param)))
+        (builtin_type)))))
+
+==================
+Extern function
+==================
+
+extern "c" fn print(s : String) = "print"
+
+---
+
+(source_file
+  (declaration
+    (extern_fn_declaration
+      (string_literal)
+      (identifier)
+      (param_list
+        (param
+          (identifier)
+          (builtin_type)))
+      (string_literal))))
+
+==================
+Closure expression
+==================
+
+fn main {
+  let double = fn(x) { x + x }
+  double(42)
+}
+
+---
+
+(source_file
+  (declaration
+    (function_declaration
+      (identifier)
+      (block_expr
+        (block_statement
+          (value_declaration
+            (identifier)
+            (closure_expr
+              (param_list
+                (param
+                  (identifier)))
+              (block_expr
+                (block_statement
+                  (binary_expr
+                    (identifier)
+                    (identifier)))))))
+        (block_statement
+          (function_call
+            (identifier)
+            (arg_list
+              (number_literal))))))))
+
+==================
+Impl block
+==================
+
+impl Point[Int] {
+  pub fn distance(self) -> Double {
+    0.0
+  }
+}
+
+---
+
+(source_file
+  (declaration
+    (impl_block
+      (type_identifier)
+      (type_arguments
+        (builtin_type))
+      (impl_method
+        (visibility)
+        (identifier)
+        (param_list
+          (param
+            (self_param)))
+        (builtin_type)
+        (block_expr
+          (block_statement
+            (number_literal)))))))
+
+==================
+Associated call
+==================
+
+fn main {
+  Point::new { x: 1, y: 2 }
+}
+
+---
+
+(source_file
+  (declaration
+    (function_declaration
+      (identifier)
+      (block_expr
+        (block_statement
+          (associated_call
+            (type_identifier)
+            (identifier)
+            (field_init
+              (identifier)
+              (number_literal))
+            (field_init
+              (identifier)
+              (number_literal))))))))
+
+==================
+Package access call
+==================
+
+fn main {
+  @http.get("url")
+}
+
+---
+
+(source_file
+  (declaration
+    (function_declaration
+      (identifier)
+      (block_expr
+        (block_statement
+          (method_call
+            (package_access
+              (qualified_name
+                (identifier)))
+            (identifier)
+            (arg_list
+              (string_literal))))))))
+
+==================
+Tuple destructure
+==================
+
+fn main {
+  let (a, b) = (1, 2)
+}
+
+---
+
+(source_file
+  (declaration
+    (function_declaration
+      (identifier)
+      (block_expr
+        (block_statement
+          (value_declaration
+            (tuple_pattern
+              (identifier_pattern
+                (identifier))
+              (identifier_pattern
+                (identifier)))
+            (tuple_expr
+              (number_literal)
+              (number_literal))))))))
+
+==================
+Guard expression
+==================
+
+fn main {
+  let resp = 200
+  guard resp is (200..<300) else {
+    return "fail"
+  }
+}
+
+---
+
+(source_file
+  (declaration
+    (function_declaration
+      (identifier)
+      (block_expr
+        (block_statement
+          (value_declaration
+            (identifier)
+            (number_literal)))
+        (block_statement
+          (guard_expr
+            (guard_pattern
+              (identifier)
+              (range_pattern
+                (number_literal)
+                (number_literal)))
+            (block_expr
+              (block_statement
+                (return_expr
+                  (string_literal))))))))))
+
+

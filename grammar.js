@@ -75,13 +75,7 @@ module.exports = grammar({
   name: 'moonbit',
   word: $ => $.identifier,
 
-  externals: $ => [
-    $.string_literal,
-    $.raw_string_literal,
-    $.interpolated_string_literal,
-    $.byte_literal,
-    $.bytes_literal,
-  ],
+  externals: $ => [],
 
   extras: $ => [
     $.comment,
@@ -93,7 +87,6 @@ module.exports = grammar({
     [$.struct_expr],
     [$.method_call, $.field_access, $.closure_expr],
     [$.index_access, $.closure_expr],
-    [$._expression, $.closure_expr],
     [$.method_call, $.field_access, $.try_expr],
     [$.index_access, $.try_expr],
     [$.method_call, $.field_access, $.guard_expr],
@@ -102,16 +95,11 @@ module.exports = grammar({
     [$.index_access, $.defer_expr],
     [$.try_expr],
     [$.method_call, $.field_access],
-    [$.constructor, $.struct_expr],
     [$.tuple_type],
-    [$._expression, $.literal_pattern],
-    [$._expression, $.identifier_pattern],
-    [$.constructor, $.struct_expr, $.record_pattern],
-    [$.struct_expr, $.record_pattern],
-    [$.param_list, $.unit_literal],
-    [$.if_expr],
-    [$.index_access, $.match_arm],
     [$._expression, $.match_arm],
+    [$.import_declaration],
+    [$.struct_declaration],
+    [$._type],
   ],
 
   rules: {
@@ -122,6 +110,7 @@ module.exports = grammar({
       $.package_clause,
       $.import_declaration,
       $.function_declaration,
+      $.extern_fn_declaration,
       $.struct_declaration,
       $.enum_declaration,
       $.suberror_declaration,
@@ -140,15 +129,17 @@ module.exports = grammar({
     import_declaration: $ => seq(
       'import',
       $.qualified_name,
-      optional(seq('as', $.identifier)),
+      optional(seq('as', choice($.identifier, $.type_identifier))),
       optional(seq(
         '{',
-        commaSep1($.identifier),
+        commaSep1(choice($.identifier, $.type_identifier)),
         '}',
       )),
     ),
 
-    qualified_name: $ => sep1(choice('.', '/'), $.identifier),
+    qualified_name: $ => prec.left(1, sep1(choice('.', '/'), $.identifier)),
+
+    package_access: $ => seq('@', $.qualified_name),
 
     // ==================== 函数声明 ====================
     function_declaration: $ => seq(
@@ -158,9 +149,21 @@ module.exports = grammar({
       'fn',
       $.identifier,
       optional($.type_parameters),
-      $.param_list,
+      optional($.param_list),
       optional(seq('->', $._type)),
       $.block_expr,
+    ),
+
+    extern_fn_declaration: $ => seq(
+      optional($.visibility),
+      'extern',
+      $.string_literal,
+      'fn',
+      $.identifier,
+      $.param_list,
+      optional(seq('->', $._type)),
+      '=',
+      choice($.string_literal, $.identifier),
     ),
 
     visibility: $ => choice('pub', 'priv'),
@@ -178,7 +181,8 @@ module.exports = grammar({
 
     attr_arg: $ => choice(
       $.identifier,
-      seq($.identifier, '=', choice($.string_literal, $.number_literal, $.identifier)),
+      $.type_identifier,
+      seq(choice($.identifier, $.type_identifier), '=', choice($.string_literal, $.number_literal, $.identifier, $.type_identifier)),
     ),
 
     type_parameters: $ => seq(
@@ -205,7 +209,7 @@ module.exports = grammar({
 
     param: $ => choice(
       $.self_param,
-      seq($.identifier, ':', $._type),
+      seq($.identifier, optional(seq(':', $._type))),
     ),
 
     self_param: $ => seq(
@@ -289,7 +293,7 @@ module.exports = grammar({
       optional($.type_parameters),
       $.param_list,
       optional(seq('->', $._type)),
-      ';',
+      optional(choice(';', $.block_expr)),
     ),
 
     // ==================== Impl ====================
@@ -341,13 +345,14 @@ module.exports = grammar({
     // ==================== 表达式 ====================
     _expression: $ => choice(
       $.identifier,
+      $.package_access,
       $.number_literal,
       $.char_literal,
       $.bool_literal,
       $.unit_literal,
       $.string_literal,
       $.raw_string_literal,
-      $.interpolated_string_literal,
+      $.interpolated_string,
       $.byte_literal,
       $.bytes_literal,
       $.tuple_expr,
@@ -358,6 +363,7 @@ module.exports = grammar({
       $.assign_expr,
       $.pipe_expr,
       $.function_call,
+      $.associated_call,
       $.method_call,
       $.field_access,
       $.index_access,
@@ -404,7 +410,7 @@ module.exports = grammar({
       optional(seq('(', commaSep($._expression), ')')),
       optional(seq(
         '{',
-        repeat($.field_init),
+        commaSep($.field_init),
         '}',
       )),
     ),
@@ -413,6 +419,23 @@ module.exports = grammar({
       $.identifier,
       ':',
       $._expression,
+    ),
+
+    interpolated_string: $ => seq(
+      '$"',
+      repeat(choice(
+        $.string_fragment,
+        $.interpolation,
+      )),
+      '"',
+    ),
+
+    string_fragment: $ => token.immediate(/([^"\\{]|\\[^{])+/),
+
+    interpolation: $ => seq(
+      '\\{',
+      $._expression,
+      '}',
     ),
 
     // 一元表达式
@@ -456,10 +479,21 @@ module.exports = grammar({
 
     // 函数调用
     function_call: $ => seq(
-      $.identifier,
+      choice($.identifier, $.package_access),
       optional($.type_arguments),
       $.arg_list,
     ),
+
+    associated_call: $ => prec(1, seq(
+      choice($.builtin_type, $.type_identifier),
+      '::',
+      choice($.identifier, $.type_identifier),
+      optional($.type_arguments),
+      choice(
+        $.arg_list,
+        seq('{', commaSep($.field_init), '}'),
+      ),
+    )),
 
     arg_list: $ => seq(
       '(',
@@ -493,9 +527,13 @@ module.exports = grammar({
 
     // 闭包
     closure_expr: $ => seq(
-      optional($.param_list),
-      '=>',
-      choice($._expression, $.block_expr),
+      'fn',
+      optional($.type_parameters),
+      $.param_list,
+      choice(
+        seq('=>', $._expression),
+        $.block_expr,
+      ),
     ),
 
     // If 表达式
@@ -618,15 +656,15 @@ module.exports = grammar({
       '}',
     ),
 
-    block_statement: $ => choice(
-      seq(choice($.declaration, $._expression), ';'),
+    block_statement: $ => prec(1, choice(
+      seq(choice($.declaration, $._expression), optional(';')),
       seq($.value_declaration, optional(';')),
-    ),
+    )),
 
     value_declaration: $ => prec.right(1, seq(
       optional($.visibility),
-      choice('let', 'const'),
-      $.identifier,
+      choice(seq('let', optional('mut')), 'const'),
+      choice($.identifier, $.tuple_pattern),
       optional(seq(':', $._type)),
       '=',
       $._expression,
@@ -642,12 +680,13 @@ module.exports = grammar({
       $.tuple_pattern,
       $.record_pattern,
       $.range_pattern,
+      seq('(', $._pattern, ')'),
     ),
 
     range_pattern: $ => seq(
-      optional($._expression),
+      optional(choice($.number_literal, $.identifier)),
       choice('..', '..=', '..<', '..>'),
-      $._expression,
+      choice($.number_literal, $.identifier),
     ),
 
     wildcard_pattern: $ => '_',
@@ -703,9 +742,6 @@ module.exports = grammar({
       'String',
       'Bytes',
       'Array',
-      'Option',
-      'Result',
-      'Ref',
     ),
 
     tuple_type: $ => seq(
@@ -722,8 +758,47 @@ module.exports = grammar({
       $._type,
     )),
 
+    // ==================== 字符串字面量 ====================
+    string_literal: $ => seq(
+      '"',
+      repeat(choice(
+        /[^"\\]/,
+        /\\./,
+      )),
+      '"',
+    ),
+
+    raw_string_literal: $ => token(seq(
+      '#|',
+      repeat(choice(
+        /[^|#]/,
+        /\|[^#]/,
+        /#[^|]/,
+        /#\|/,
+      )),
+      '|#',
+    )),
+
+    byte_literal: $ => seq(
+      'b\'',
+      choice(
+        /[^'\\]/,
+        /\\./,
+      ),
+      '\'',
+    ),
+
+    bytes_literal: $ => seq(
+      'b"',
+      repeat(choice(
+        /[^"\\]/,
+        /\\./,
+      )),
+      '"',
+    ),
+
     // ==================== 标识符 ====================
-    identifier: $ => /[a-zA-Z_][a-zA-Z0-9_]*/,
+    identifier: $ => /[a-z_][a-zA-Z0-9_]*/,
     type_identifier: $ => /[A-Z][a-zA-Z0-9_]*/,
 
     // ==================== 注释 ====================

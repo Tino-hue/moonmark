@@ -16,8 +16,11 @@
 "type" @keyword.type
 "struct" @keyword.type
 "enum" @keyword.type
-"trait" @keyword.type-
+"trait" @keyword.type
 "impl" @keyword
+"extern" @keyword
+"with" @keyword
+"as" @keyword
 "async" @keyword
 "raise" @keyword.exception
 "try" @keyword.exception
@@ -44,7 +47,7 @@
 (char_literal) @character
 (string_literal) @string
 (raw_string_literal) @string
-(interpolated_string_literal) @string
+(interpolated_string) @string
 (byte_literal) @character.special
 (bytes_literal) @string.special
 (unit_literal) @constant.builtin
@@ -57,14 +60,17 @@
 
 ;; ---- FUNCTIONS & METHODS ----
 (function_declaration (identifier) @function)
+(extern_fn_declaration (identifier) @function)
 (impl_method (identifier) @function)
 (trait_method (identifier) @function)
 (closure_expr) @function
 (function_call (identifier) @function.call)
+(associated_call (identifier) @function.call)
 
 ;; Method calls via field access + call pattern
 (method_call (identifier) @method.call)
 (field_access (identifier) @property)
+(package_access (qualified_name (identifier) @module))
 
 ;; ---- VARIABLES & PARAMETERS ----
 (value_declaration (identifier) @variable)
@@ -72,6 +78,10 @@
 
 ;; Pattern variables in match/guard
 (match_arm (identifier_pattern (identifier) @variable))
+(guard_pattern (identifier_pattern (identifier) @variable))
+(tuple_pattern (identifier_pattern (identifier) @variable))
+(constructor_pattern (identifier_pattern (identifier) @variable))
+(record_pattern (field_pattern (identifier_pattern (identifier) @variable)))
 (for_expr (identifier) @variable)
 
 ;; ---- FIELDS ----
