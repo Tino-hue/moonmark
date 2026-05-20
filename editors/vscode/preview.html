@@ -1,0 +1,328 @@
+
+<!doctype HTML>
+<head>
+  <title>Tree-sitter Highlighting</title>
+  <style>
+    body {
+      font-family: monospace
+    }
+    .line-number {
+      user-select: none;
+      text-align: right;
+      color: rgba(27,31,35,.3);
+      padding: 0 10px;
+    }
+    .line {
+      white-space: pre;
+    }
+  </style>
+  <style>
+    .attribute { font-style: italic;color: #af0000; }
+    .comment { font-style: italic;color: #8a8a8a; }
+    .constant { color: #875f00; }
+    .constant.builtin { font-weight: bold;color: #875f00; }
+    .constructor { color: #af8700; }
+    .function { color: #005fd7; }
+    .function.builtin { font-weight: bold;color: #005fd7; }
+    .keyword { color: #5f00d7; }
+    .module { color: #af8700; }
+    .number { font-weight: bold;color: #875f00; }
+    .operator { font-weight: bold;color: #4e4e4e; }
+    .property { color: #af0000; }
+    .property.builtin { font-weight: bold;color: #af0000; }
+    .punctuation { color: #4e4e4e; }
+    .punctuation.bracket { color: #4e4e4e; }
+    .punctuation.delimiter { color: #4e4e4e; }
+    .punctuation.special { color: #4e4e4e; }
+    .string { color: #008700; }
+    .string.special { color: #008787; }
+    .tag { color: #000087; }
+    .type { color: #005f5f; }
+    .type.builtin { font-weight: bold;color: #005f5f; }
+    .variable { color: #d0d0d0; }
+    .variable.builtin { font-weight: bold;color: #d0d0d0; }
+    .variable.parameter { text-decoration: underline;color: #d0d0d0; }
+  </style>
+
+</head>
+<body>
+
+<table>
+<tr><td class=line-number>1</td><td class=line><span style='font-style: italic;color: #8a8a8a'>// ============================================================</span>
+</td></tr>
+<tr><td class=line-number>2</td><td class=line><span style='font-style: italic;color: #8a8a8a'>// MoonHighlight Demo — Showcase all syntax features</span>
+</td></tr>
+<tr><td class=line-number>3</td><td class=line><span style='font-style: italic;color: #8a8a8a'>// This file demonstrates every highlightable construct</span>
+</td></tr>
+<tr><td class=line-number>4</td><td class=line><span style='font-style: italic;color: #8a8a8a'>// ============================================================</span>
+</td></tr>
+<tr><td class=line-number>5</td><td class=line>
+</td></tr>
+<tr><td class=line-number>6</td><td class=line><span style='color: #5f00d7'>package</span> <span style='color: #af8700'>moonhighlight<span style='font-weight: bold;color: #4e4e4e'>/</span>demo</span>
+</td></tr>
+<tr><td class=line-number>7</td><td class=line>
+</td></tr>
+<tr><td class=line-number>8</td><td class=line><span style='color: #5f00d7'>import</span> <span style='color: #af8700'>moonbit<span style='font-weight: bold;color: #4e4e4e'>/</span>core<span style='font-weight: bold;color: #4e4e4e'>/</span>println</span>
+</td></tr>
+<tr><td class=line-number>9</td><td class=line><span style='color: #5f00d7'>import</span> <span style='color: #af8700'>moonbit<span style='font-weight: bold;color: #4e4e4e'>/</span>core<span style='font-weight: bold;color: #4e4e4e'>/</span>int</span> <span style='color: #5f00d7'>as</span> <span style='color: #005f5f'>Int</span>
+</td></tr>
+<tr><td class=line-number>10</td><td class=line>
+</td></tr>
+<tr><td class=line-number>11</td><td class=line><span style='font-style: italic;color: #8a8a8a'>/// A 2D point with generic coordinates</span>
+</td></tr>
+<tr><td class=line-number>12</td><td class=line>#[derive<span style='color: #4e4e4e'>(</span><span style='color: #005f5f'>Debug</span><span style='color: #4e4e4e'>,</span> <span style='color: #005f5f'>Show</span><span style='color: #4e4e4e'>,</span> <span style='color: #005f5f'>Eq</span><span style='color: #4e4e4e'>)</span><span style='color: #4e4e4e'>]</span>
+</td></tr>
+<tr><td class=line-number>13</td><td class=line><span style='color: #5f00d7'>pub</span> <span style='color: #5f00d7'>struct</span> <span style='color: #005f5f'>Point</span><span style='color: #4e4e4e'>[</span><span style='color: #005f5f'>T</span><span style='color: #4e4e4e'>]</span> <span style='color: #4e4e4e'>{</span>
+</td></tr>
+<tr><td class=line-number>14</td><td class=line>  <span style='color: #af0000'>x</span> <span style='color: #4e4e4e'>:</span> <span style='color: #005f5f'>T</span>
+</td></tr>
+<tr><td class=line-number>15</td><td class=line>  <span style='color: #af0000'>y</span> <span style='color: #4e4e4e'>:</span> <span style='color: #005f5f'>T</span>
+</td></tr>
+<tr><td class=line-number>16</td><td class=line><span style='color: #4e4e4e'>}</span>
+</td></tr>
+<tr><td class=line-number>17</td><td class=line>
+</td></tr>
+<tr><td class=line-number>18</td><td class=line><span style='color: #5f00d7'>impl</span> <span style='color: #005f5f'>Point</span><span style='color: #4e4e4e'>[</span><span style='font-weight: bold;color: #005f5f'>Int</span><span style='color: #4e4e4e'>]</span> <span style='color: #4e4e4e'>{</span>
+</td></tr>
+<tr><td class=line-number>19</td><td class=line>  <span style='font-style: italic;color: #8a8a8a'>/// Calculate distance from origin</span>
+</td></tr>
+<tr><td class=line-number>20</td><td class=line>  <span style='color: #5f00d7'>pub</span> <span style='color: #005fd7'>fn</span> <span style='color: #005fd7'>distance</span><span style='color: #4e4e4e'>(</span>self<span style='color: #4e4e4e'>)</span> <span style='font-weight: bold;color: #4e4e4e'>-&gt;</span> <span style='font-weight: bold;color: #005f5f'>Double</span> <span style='color: #4e4e4e'>{</span>
+</td></tr>
+<tr><td class=line-number>21</td><td class=line>    <span style='color: #5f00d7'>let</span> <span style='color: #d0d0d0'>dx</span> <span style='font-weight: bold;color: #4e4e4e'>=</span> <span style='color: #af0000'>self</span><span style='color: #4e4e4e'>.</span><span style='color: #af0000'>x</span><span style='color: #4e4e4e'>.</span>to_double<span style='color: #4e4e4e'>(</span><span style='color: #4e4e4e'>)</span>
+</td></tr>
+<tr><td class=line-number>22</td><td class=line>    <span style='color: #5f00d7'>let</span> <span style='color: #d0d0d0'>dy</span> <span style='font-weight: bold;color: #4e4e4e'>=</span> <span style='color: #af0000'>self</span><span style='color: #4e4e4e'>.</span><span style='color: #af0000'>y</span><span style='color: #4e4e4e'>.</span>to_double<span style='color: #4e4e4e'>(</span><span style='color: #4e4e4e'>)</span>
+</td></tr>
+<tr><td class=line-number>23</td><td class=line>    <span style='color: #4e4e4e'>(</span>dx <span style='font-weight: bold;color: #4e4e4e'>*</span> dx <span style='font-weight: bold;color: #4e4e4e'>+</span> dy <span style='font-weight: bold;color: #4e4e4e'>*</span> dy<span style='color: #4e4e4e'>)</span><span style='color: #4e4e4e'>.</span>sqrt<span style='color: #4e4e4e'>(</span><span style='color: #4e4e4e'>)</span>
+</td></tr>
+<tr><td class=line-number>24</td><td class=line>  <span style='color: #4e4e4e'>}</span>
+</td></tr>
+<tr><td class=line-number>25</td><td class=line>
+</td></tr>
+<tr><td class=line-number>26</td><td class=line>  <span style='color: #5f00d7'>pub</span> <span style='color: #005fd7'>fn</span> <span style='color: #005fd7'>translate</span><span style='color: #4e4e4e'>(</span>self<span style='color: #4e4e4e'>,</span> <span style='text-decoration: underline;color: #d0d0d0'>dx</span> <span style='color: #4e4e4e'>:</span> <span style='font-weight: bold;color: #005f5f'>Int</span><span style='color: #4e4e4e'>,</span> <span style='text-decoration: underline;color: #d0d0d0'>dy</span> <span style='color: #4e4e4e'>:</span> <span style='font-weight: bold;color: #005f5f'>Int</span><span style='color: #4e4e4e'>)</span> <span style='font-weight: bold;color: #4e4e4e'>-&gt;</span> <span style='color: #005f5f'>Point</span><span style='color: #4e4e4e'>[</span><span style='font-weight: bold;color: #005f5f'>Int</span><span style='color: #4e4e4e'>]</span> <span style='color: #4e4e4e'>{</span>
+</td></tr>
+<tr><td class=line-number>27</td><td class=line>    <span style='color: #005f5f'>Point</span>::<span style='color: #005fd7'>new</span> <span style='color: #4e4e4e'>{</span> x<span style='color: #4e4e4e'>:</span> <span style='color: #af0000'>self</span><span style='color: #4e4e4e'>.</span><span style='color: #af0000'>x</span> <span style='font-weight: bold;color: #4e4e4e'>+</span> dx<span style='color: #4e4e4e'>,</span> y<span style='color: #4e4e4e'>:</span> <span style='color: #af0000'>self</span><span style='color: #4e4e4e'>.</span><span style='color: #af0000'>y</span> <span style='font-weight: bold;color: #4e4e4e'>+</span> dy <span style='color: #4e4e4e'>}</span>
+</td></tr>
+<tr><td class=line-number>28</td><td class=line>  <span style='color: #4e4e4e'>}</span>
+</td></tr>
+<tr><td class=line-number>29</td><td class=line><span style='color: #4e4e4e'>}</span>
+</td></tr>
+<tr><td class=line-number>30</td><td class=line>
+</td></tr>
+<tr><td class=line-number>31</td><td class=line><span style='font-style: italic;color: #8a8a8a'>/// Color enum with RGB variant</span>
+</td></tr>
+<tr><td class=line-number>32</td><td class=line><span style='color: #5f00d7'>pub</span> <span style='color: #5f00d7'>enum</span> <span style='color: #005f5f'>Color</span> <span style='color: #4e4e4e'>{</span>
+</td></tr>
+<tr><td class=line-number>33</td><td class=line>  <span style='color: #005f5f'><span style='color: #005f5f'>Red</span></span>
+</td></tr>
+<tr><td class=line-number>34</td><td class=line>  <span style='color: #005f5f'><span style='color: #005f5f'>Green</span></span>
+</td></tr>
+<tr><td class=line-number>35</td><td class=line>  <span style='color: #005f5f'><span style='color: #005f5f'>Blue</span></span>
+</td></tr>
+<tr><td class=line-number>36</td><td class=line>  <span style='color: #005f5f'><span style='color: #005f5f'>Rgb</span></span><span style='color: #4e4e4e'>(</span><span style='font-weight: bold;color: #005f5f'>Int</span><span style='color: #4e4e4e'>,</span> <span style='font-weight: bold;color: #005f5f'>Int</span><span style='color: #4e4e4e'>,</span> <span style='font-weight: bold;color: #005f5f'>Int</span><span style='color: #4e4e4e'>)</span>
+</td></tr>
+<tr><td class=line-number>37</td><td class=line>  <span style='color: #005f5f'><span style='color: #005f5f'>Hex</span></span><span style='color: #4e4e4e'>(</span><span style='font-weight: bold;color: #005f5f'>String</span><span style='color: #4e4e4e'>)</span>
+</td></tr>
+<tr><td class=line-number>38</td><td class=line><span style='color: #4e4e4e'>}</span>
+</td></tr>
+<tr><td class=line-number>39</td><td class=line>
+</td></tr>
+<tr><td class=line-number>40</td><td class=line><span style='color: #5f00d7'>trait</span> <span style='color: #005f5f'>Display</span> <span style='color: #5f00d7'>with</span> <span style='color: #005f5f'>Show</span> <span style='color: #5f00d7'>as</span> <span style='color: #005f5f'>S</span> <span style='color: #4e4e4e'>{</span>
+</td></tr>
+<tr><td class=line-number>41</td><td class=line>  <span style='color: #005fd7'>fn</span> <span style='color: #005fd7'>to_string</span><span style='color: #4e4e4e'>(</span>self<span style='color: #4e4e4e'>)</span> <span style='font-weight: bold;color: #4e4e4e'>-&gt;</span> <span style='font-weight: bold;color: #005f5f'>String</span>
+</td></tr>
+<tr><td class=line-number>42</td><td class=line>  <span style='color: #005fd7'>fn</span> <span style='color: #005fd7'>display</span><span style='color: #4e4e4e'>(</span>self<span style='color: #4e4e4e'>)</span> <span style='font-weight: bold;color: #4e4e4e'>-&gt;</span> <span style='font-weight: bold;color: #005f5f'>Unit</span> <span style='color: #4e4e4e'>{</span> <span style='color: #005fd7'>println</span><span style='color: #4e4e4e'>(</span>self<span style='color: #4e4e4e'>.</span>to_string<span style='color: #4e4e4e'>(</span><span style='color: #4e4e4e'>)</span><span style='color: #4e4e4e'>)</span> <span style='color: #4e4e4e'>}</span>
+</td></tr>
+<tr><td class=line-number>43</td><td class=line><span style='color: #4e4e4e'>}</span>
+</td></tr>
+<tr><td class=line-number>44</td><td class=line>
+</td></tr>
+<tr><td class=line-number>45</td><td class=line><span style='font-style: italic;color: #8a8a8a'>/// Parse a JSON string into structured data</span>
+</td></tr>
+<tr><td class=line-number>46</td><td class=line>#[inline<span style='color: #4e4e4e'>]</span>
+</td></tr>
+<tr><td class=line-number>47</td><td class=line><span style='color: #005fd7'>fn</span> <span style='color: #005fd7'>parse_json</span><span style='color: #4e4e4e'>(</span><span style='text-decoration: underline;color: #d0d0d0'>input</span> <span style='color: #4e4e4e'>:</span> <span style='font-weight: bold;color: #005f5f'>String</span><span style='color: #4e4e4e'>)</span> <span style='font-weight: bold;color: #4e4e4e'>-&gt;</span> <span style='color: #005f5f'>Result</span><span style='color: #4e4e4e'>[</span><span style='color: #005f5f'>JsonNode</span><span style='color: #4e4e4e'>,</span> <span style='color: #005f5f'>JsonError</span><span style='color: #4e4e4e'>]</span> <span style='color: #4e4e4e'>{</span>
+</td></tr>
+<tr><td class=line-number>48</td><td class=line>  <span style='color: #5f00d7'>try</span> <span style='color: #005fd7'>do_parse</span><span style='color: #4e4e4e'>(</span>input<span style='color: #4e4e4e'>)</span> <span style='color: #5f00d7'>catch</span> <span style='color: #4e4e4e'>{</span>
+</td></tr>
+<tr><td class=line-number>49</td><td class=line>    <span style='color: #005f5f'>JsonError</span><span style='color: #4e4e4e'>(</span><span style='color: #d0d0d0'>msg</span><span style='color: #4e4e4e'>)</span> <span style='font-weight: bold;color: #4e4e4e'>=&gt;</span> <span style='color: #005f5f'>Err</span><span style='color: #4e4e4e'>(</span><span style='color: #005f5f'>JsonError</span><span style='color: #4e4e4e'>(</span><span style='color: #008700'>&quot;parse failed: &quot;</span> <span style='font-weight: bold;color: #4e4e4e'>+</span> msg<span style='color: #4e4e4e'>)</span><span style='color: #4e4e4e'>)</span>
+</td></tr>
+<tr><td class=line-number>50</td><td class=line>    <span style='text-decoration: underline;color: #d0d0d0'>_</span> <span style='font-weight: bold;color: #4e4e4e'>=&gt;</span> <span style='color: #5f00d7'>raise</span><span style='color: #4e4e4e'>(</span><span style='color: #008700'>&quot;unexpected error&quot;</span><span style='color: #4e4e4e'>)</span>
+</td></tr>
+<tr><td class=line-number>51</td><td class=line>  <span style='color: #4e4e4e'>}</span>
+</td></tr>
+<tr><td class=line-number>52</td><td class=line><span style='color: #4e4e4e'>}</span>
+</td></tr>
+<tr><td class=line-number>53</td><td class=line>
+</td></tr>
+<tr><td class=line-number>54</td><td class=line><span style='font-style: italic;color: #8a8a8a'>/// Async HTTP request handler</span>
+</td></tr>
+<tr><td class=line-number>55</td><td class=line><span style='color: #5f00d7'>async</span> <span style='color: #005fd7'>fn</span> <span style='color: #005fd7'>fetch_data</span><span style='color: #4e4e4e'>(</span><span style='text-decoration: underline;color: #d0d0d0'>url</span> <span style='color: #4e4e4e'>:</span> <span style='font-weight: bold;color: #005f5f'>String</span><span style='color: #4e4e4e'>)</span> <span style='font-weight: bold;color: #4e4e4e'>-&gt;</span> <span style='color: #005f5f'>Result</span><span style='color: #4e4e4e'>[</span><span style='font-weight: bold;color: #005f5f'>String</span><span style='color: #4e4e4e'>,</span> <span style='color: #005f5f'>Error</span><span style='color: #4e4e4e'>]</span> <span style='color: #4e4e4e'>{</span>
+</td></tr>
+<tr><td class=line-number>56</td><td class=line>  <span style='color: #5f00d7'>let</span> <span style='color: #4e4e4e'>(</span><span style='color: #d0d0d0'>resp</span><span style='color: #4e4e4e'>,</span> <span style='color: #d0d0d0'>body</span><span style='color: #4e4e4e'>)</span> <span style='font-weight: bold;color: #4e4e4e'>=</span> @<span style='color: #af8700'>http</span><span style='color: #4e4e4e'>.</span>get<span style='color: #4e4e4e'>(</span>url<span style='color: #4e4e4e'>)</span>
+</td></tr>
+<tr><td class=line-number>57</td><td class=line>  <span style='color: #5f00d7'>guard</span> <span style='color: #af0000'>resp</span><span style='color: #4e4e4e'>.</span><span style='color: #af0000'>code</span> <span style='font-weight: bold;color: #4e4e4e'>is</span> <span style='color: #4e4e4e'>(</span><span style='font-weight: bold;color: #875f00'>200</span>..&lt;<span style='font-weight: bold;color: #875f00'>300</span><span style='color: #4e4e4e'>)</span> <span style='color: #5f00d7'>else</span> <span style='color: #4e4e4e'>{</span>
+</td></tr>
+<tr><td class=line-number>58</td><td class=line>    <span style='color: #5f00d7'>return</span> <span style='color: #005f5f'>Err</span><span style='color: #4e4e4e'>(</span><span style='color: #005f5f'>Error</span><span style='color: #4e4e4e'>(</span><span style='color: #008700'>&quot;HTTP &quot;</span> <span style='font-weight: bold;color: #4e4e4e'>+</span> resp<span style='color: #4e4e4e'>.</span><span style='color: #af0000'>code</span><span style='color: #4e4e4e'>.</span>to_string<span style='color: #4e4e4e'>(</span><span style='color: #4e4e4e'>)</span><span style='color: #4e4e4e'>)</span><span style='color: #4e4e4e'>)</span>
+</td></tr>
+<tr><td class=line-number>59</td><td class=line>  <span style='color: #4e4e4e'>}</span>
+</td></tr>
+<tr><td class=line-number>60</td><td class=line>
+</td></tr>
+<tr><td class=line-number>61</td><td class=line>  <span style='font-style: italic;color: #8a8a8a'>// String interpolation example</span>
+</td></tr>
+<tr><td class=line-number>62</td><td class=line>  <span style='color: #5f00d7'>let</span> <span style='color: #d0d0d0'>msg</span> <span style='font-weight: bold;color: #4e4e4e'>=</span> <span style='color: #008700'>$&quot;Fetched \{body<span style='color: #4e4e4e'>.</span>length<span style='color: #4e4e4e'>(</span><span style='color: #4e4e4e'>)</span><span style='color: #4e4e4e'>}</span> bytes from \{url<span style='color: #4e4e4e'>}</span>&quot;</span>
+</td></tr>
+<tr><td class=line-number>63</td><td class=line>
+</td></tr>
+<tr><td class=line-number>64</td><td class=line>  <span style='font-style: italic;color: #8a8a8a'>// Raw multi-line string</span>
+</td></tr>
+<tr><td class=line-number>65</td><td class=line>  <span style='color: #5f00d7'>let</span> <span style='color: #d0d0d0'>html</span> <span style='font-weight: bold;color: #4e4e4e'>=</span> <span style='color: #008700'>#|</span>
+</td></tr>
+<tr><td class=line-number>66</td><td class=line><span style='color: #008700'>&lt;div class=&quot;result&quot;&gt;</span>
+</td></tr>
+<tr><td class=line-number>67</td><td class=line><span style='color: #008700'>  &lt;p&gt;\{msg}&lt;/p&gt;</span>
+</td></tr>
+<tr><td class=line-number>68</td><td class=line><span style='color: #008700'>&lt;/div&gt;</span>
+</td></tr>
+<tr><td class=line-number>69</td><td class=line><span style='color: #008700'>|#</span>
+</td></tr>
+<tr><td class=line-number>70</td><td class=line>
+</td></tr>
+<tr><td class=line-number>71</td><td class=line>  <span style='color: #005f5f'>Ok</span><span style='color: #4e4e4e'>(</span>html<span style='color: #4e4e4e'>)</span>
+</td></tr>
+<tr><td class=line-number>72</td><td class=line><span style='color: #4e4e4e'>}</span>
+</td></tr>
+<tr><td class=line-number>73</td><td class=line>
+</td></tr>
+<tr><td class=line-number>74</td><td class=line><span style='font-style: italic;color: #8a8a8a'>// Pattern matching showcase</span>
+</td></tr>
+<tr><td class=line-number>75</td><td class=line><span style='color: #005fd7'>fn</span> <span style='color: #005fd7'>process_color</span><span style='color: #4e4e4e'>(</span><span style='text-decoration: underline;color: #d0d0d0'>c</span> <span style='color: #4e4e4e'>:</span> <span style='color: #005f5f'>Color</span><span style='color: #4e4e4e'>)</span> <span style='font-weight: bold;color: #4e4e4e'>-&gt;</span> <span style='font-weight: bold;color: #005f5f'>String</span> <span style='color: #4e4e4e'>{</span>
+</td></tr>
+<tr><td class=line-number>76</td><td class=line>  <span style='color: #5f00d7'>match</span> c <span style='color: #4e4e4e'>{</span>
+</td></tr>
+<tr><td class=line-number>77</td><td class=line>    <span style='color: #005f5f'>Red</span> <span style='font-weight: bold;color: #4e4e4e'>=&gt;</span> <span style='color: #008700'>&quot;#FF0000&quot;</span>
+</td></tr>
+<tr><td class=line-number>78</td><td class=line>    <span style='color: #005f5f'>Green</span> <span style='font-weight: bold;color: #4e4e4e'>=&gt;</span> <span style='color: #008700'>&quot;#00FF00&quot;</span>
+</td></tr>
+<tr><td class=line-number>79</td><td class=line>    <span style='color: #005f5f'>Blue</span> <span style='font-weight: bold;color: #4e4e4e'>=&gt;</span> <span style='color: #008700'>&quot;#0000FF&quot;</span>
+</td></tr>
+<tr><td class=line-number>80</td><td class=line>    <span style='color: #005f5f'>Rgb</span><span style='color: #4e4e4e'>(</span><span style='color: #d0d0d0'>r</span><span style='color: #4e4e4e'>,</span> <span style='color: #d0d0d0'>g</span><span style='color: #4e4e4e'>,</span> <span style='color: #d0d0d0'>b</span><span style='color: #4e4e4e'>)</span> <span style='font-weight: bold;color: #4e4e4e'>=&gt;</span> <span style='color: #008700'>$&quot;rgb(\{r<span style='color: #4e4e4e'>}</span>,\{g<span style='color: #4e4e4e'>}</span>,\{b<span style='color: #4e4e4e'>}</span>)&quot;</span>
+</td></tr>
+<tr><td class=line-number>81</td><td class=line>    <span style='color: #005f5f'>Hex</span><span style='color: #4e4e4e'>(</span><span style='color: #d0d0d0'>s</span><span style='color: #4e4e4e'>)</span> <span style='font-weight: bold;color: #4e4e4e'>=&gt;</span> s
+</td></tr>
+<tr><td class=line-number>82</td><td class=line>  <span style='color: #4e4e4e'>}</span>
+</td></tr>
+<tr><td class=line-number>83</td><td class=line><span style='color: #4e4e4e'>}</span>
+</td></tr>
+<tr><td class=line-number>84</td><td class=line>
+</td></tr>
+<tr><td class=line-number>85</td><td class=line><span style='font-style: italic;color: #8a8a8a'>// Guard expression</span>
+</td></tr>
+<tr><td class=line-number>86</td><td class=line><span style='color: #005fd7'>fn</span> <span style='color: #005fd7'>unwrap</span><span style='color: #4e4e4e'>[</span><span style='color: #005f5f'>T</span><span style='color: #4e4e4e'>]</span><span style='color: #4e4e4e'>(</span><span style='text-decoration: underline;color: #d0d0d0'>opt</span> <span style='color: #4e4e4e'>:</span> <span style='color: #005f5f'>Option</span><span style='color: #4e4e4e'>[</span><span style='color: #005f5f'>T</span><span style='color: #4e4e4e'>]</span><span style='color: #4e4e4e'>,</span> <span style='text-decoration: underline;color: #d0d0d0'>default</span> <span style='color: #4e4e4e'>:</span> <span style='color: #005f5f'>T</span><span style='color: #4e4e4e'>)</span> <span style='font-weight: bold;color: #4e4e4e'>-&gt;</span> <span style='color: #005f5f'>T</span> <span style='color: #4e4e4e'>{</span>
+</td></tr>
+<tr><td class=line-number>87</td><td class=line>  <span style='color: #5f00d7'>guard</span> opt <span style='font-weight: bold;color: #4e4e4e'>is</span> <span style='color: #005f5f'>Some</span><span style='color: #4e4e4e'>(</span><span style='color: #d0d0d0'>v</span><span style='color: #4e4e4e'>)</span> <span style='color: #5f00d7'>else</span> <span style='color: #4e4e4e'>{</span> default <span style='color: #4e4e4e'>}</span>
+</td></tr>
+<tr><td class=line-number>88</td><td class=line>  v
+</td></tr>
+<tr><td class=line-number>89</td><td class=line><span style='color: #4e4e4e'>}</span>
+</td></tr>
+<tr><td class=line-number>90</td><td class=line>
+</td></tr>
+<tr><td class=line-number>91</td><td class=line><span style='font-style: italic;color: #8a8a8a'>// For loop with range</span>
+</td></tr>
+<tr><td class=line-number>92</td><td class=line><span style='color: #005fd7'>fn</span> <span style='color: #005fd7'>count_down</span><span style='color: #4e4e4e'>(</span><span style='text-decoration: underline;color: #d0d0d0'>n</span> <span style='color: #4e4e4e'>:</span> <span style='font-weight: bold;color: #005f5f'>Int</span><span style='color: #4e4e4e'>)</span> <span style='font-weight: bold;color: #4e4e4e'>-&gt;</span> <span style='font-weight: bold;color: #005f5f'>Array</span><span style='color: #4e4e4e'>[</span><span style='font-weight: bold;color: #005f5f'>Int</span><span style='color: #4e4e4e'>]</span> <span style='color: #4e4e4e'>{</span>
+</td></tr>
+<tr><td class=line-number>93</td><td class=line>  <span style='color: #5f00d7'>let</span> <span style='color: #d0d0d0'>result</span> <span style='font-weight: bold;color: #4e4e4e'>=</span> <span style='font-weight: bold;color: #005f5f'>Array</span>::<span style='color: #005fd7'>new</span><span style='color: #4e4e4e'>(</span><span style='color: #4e4e4e'>)</span>
+</td></tr>
+<tr><td class=line-number>94</td><td class=line>  <span style='color: #5f00d7'>for</span> <span style='color: #d0d0d0'>i</span> <span style='color: #5f00d7'>in</span> n..&gt;<span style='font-weight: bold;color: #875f00'>0</span> <span style='color: #4e4e4e'>{</span>
+</td></tr>
+<tr><td class=line-number>95</td><td class=line>    result<span style='color: #4e4e4e'>.</span>push<span style='color: #4e4e4e'>(</span>i<span style='color: #4e4e4e'>)</span>
+</td></tr>
+<tr><td class=line-number>96</td><td class=line>  <span style='color: #4e4e4e'>}</span>
+</td></tr>
+<tr><td class=line-number>97</td><td class=line>  result
+</td></tr>
+<tr><td class=line-number>98</td><td class=line><span style='color: #4e4e4e'>}</span>
+</td></tr>
+<tr><td class=line-number>99</td><td class=line>
+</td></tr>
+<tr><td class=line-number>100</td><td class=line><span style='font-style: italic;color: #8a8a8a'>// Closure and pipeline</span>
+</td></tr>
+<tr><td class=line-number>101</td><td class=line><span style='color: #005fd7'>fn</span> <span style='color: #005fd7'>pipeline_demo</span><span style='color: #4e4e4e'>(</span><span style='text-decoration: underline;color: #d0d0d0'>arr</span> <span style='color: #4e4e4e'>:</span> <span style='font-weight: bold;color: #005f5f'>Array</span><span style='color: #4e4e4e'>[</span><span style='font-weight: bold;color: #005f5f'>Int</span><span style='color: #4e4e4e'>]</span><span style='color: #4e4e4e'>)</span> <span style='font-weight: bold;color: #4e4e4e'>-&gt;</span> <span style='font-weight: bold;color: #005f5f'>Int</span> <span style='color: #4e4e4e'>{</span>
+</td></tr>
+<tr><td class=line-number>102</td><td class=line>  arr
+</td></tr>
+<tr><td class=line-number>103</td><td class=line>    <span style='font-weight: bold;color: #4e4e4e'>|&gt;</span> <span style='color: #005fd7'>filter</span><span style='color: #4e4e4e'>(</span><span style='color: #005fd7'><span style='color: #005fd7'>fn</span><span style='color: #4e4e4e'>(</span><span style='text-decoration: underline;color: #d0d0d0'>x</span><span style='color: #4e4e4e'>)</span> <span style='color: #4e4e4e'>{</span> x <span style='font-weight: bold;color: #4e4e4e'>&gt;</span> <span style='font-weight: bold;color: #875f00'>0</span> <span style='color: #4e4e4e'>}</span></span><span style='color: #4e4e4e'>)</span>
+</td></tr>
+<tr><td class=line-number>104</td><td class=line>    <span style='font-weight: bold;color: #4e4e4e'>|&gt;</span> <span style='color: #005fd7'>map</span><span style='color: #4e4e4e'>(</span><span style='color: #005fd7'><span style='color: #005fd7'>fn</span><span style='color: #4e4e4e'>(</span><span style='text-decoration: underline;color: #d0d0d0'>x</span><span style='color: #4e4e4e'>)</span> <span style='color: #4e4e4e'>{</span> x <span style='font-weight: bold;color: #4e4e4e'>*</span> <span style='font-weight: bold;color: #875f00'>2</span> <span style='color: #4e4e4e'>}</span></span><span style='color: #4e4e4e'>)</span>
+</td></tr>
+<tr><td class=line-number>105</td><td class=line>    <span style='font-weight: bold;color: #4e4e4e'>|&gt;</span> sum
+</td></tr>
+<tr><td class=line-number>106</td><td class=line><span style='color: #4e4e4e'>}</span>
+</td></tr>
+<tr><td class=line-number>107</td><td class=line>
+</td></tr>
+<tr><td class=line-number>108</td><td class=line><span style='font-style: italic;color: #8a8a8a'>// Byte literals</span>
+</td></tr>
+<tr><td class=line-number>109</td><td class=line><span style='color: #5f00d7'>let</span> <span style='color: #d0d0d0'>newline</span> <span style='font-weight: bold;color: #4e4e4e'>=</span> b&#39;\n&#39;
+</td></tr>
+<tr><td class=line-number>110</td><td class=line><span style='color: #5f00d7'>let</span> <span style='color: #d0d0d0'>header</span> <span style='font-weight: bold;color: #4e4e4e'>=</span> <span style='color: #008787'>b&quot;Content-Type: application/json&quot;</span>
+</td></tr>
+<tr><td class=line-number>111</td><td class=line>
+</td></tr>
+<tr><td class=line-number>112</td><td class=line><span style='font-style: italic;color: #8a8a8a'>// Suberror types</span>
+</td></tr>
+<tr><td class=line-number>113</td><td class=line><span style='color: #5f00d7'>pub</span> <span style='color: #5f00d7'>suberror</span> <span style='color: #005f5f'>JsonError</span> <span style='color: #4e4e4e'>{</span>
+</td></tr>
+<tr><td class=line-number>114</td><td class=line>  <span style='color: #005f5f'><span style='color: #005f5f'>InvalidSyntax</span></span><span style='color: #4e4e4e'>(</span><span style='font-weight: bold;color: #005f5f'>String</span><span style='color: #4e4e4e'>)</span>
+</td></tr>
+<tr><td class=line-number>115</td><td class=line>  <span style='color: #005f5f'><span style='color: #005f5f'>UnexpectedToken</span></span><span style='color: #4e4e4e'>(</span><span style='font-weight: bold;color: #005f5f'>Char</span><span style='color: #4e4e4e'>)</span>
+</td></tr>
+<tr><td class=line-number>116</td><td class=line>  <span style='color: #005f5f'><span style='color: #005f5f'>IoError</span></span><span style='color: #4e4e4e'>(</span><span style='font-weight: bold;color: #005f5f'>String</span><span style='color: #4e4e4e'>)</span>
+</td></tr>
+<tr><td class=line-number>117</td><td class=line><span style='color: #4e4e4e'>}</span>
+</td></tr>
+<tr><td class=line-number>118</td><td class=line>
+</td></tr>
+<tr><td class=line-number>119</td><td class=line><span style='font-style: italic;color: #8a8a8a'>// Defer for cleanup</span>
+</td></tr>
+<tr><td class=line-number>120</td><td class=line><span style='color: #005fd7'>fn</span> <span style='color: #005fd7'>with_resource</span><span style='color: #4e4e4e'>[</span><span style='color: #005f5f'>T</span><span style='color: #4e4e4e'>]</span><span style='color: #4e4e4e'>(</span><span style='text-decoration: underline;color: #d0d0d0'>r</span> <span style='color: #4e4e4e'>:</span> <span style='color: #005f5f'>Resource</span><span style='color: #4e4e4e'>,</span> <span style='text-decoration: underline;color: #d0d0d0'>f</span> <span style='color: #4e4e4e'>:</span> <span style='color: #005fd7'><span style='color: #4e4e4e'>(</span><span style='color: #005f5f'>Resource</span><span style='color: #4e4e4e'>)</span> <span style='font-weight: bold;color: #4e4e4e'>-&gt;</span> <span style='color: #005f5f'>T</span></span><span style='color: #4e4e4e'>)</span> <span style='font-weight: bold;color: #4e4e4e'>-&gt;</span> <span style='color: #005f5f'>T</span> <span style='color: #4e4e4e'>{</span>
+</td></tr>
+<tr><td class=line-number>121</td><td class=line>  <span style='color: #5f00d7'>defer</span> r<span style='color: #4e4e4e'>.</span>close<span style='color: #4e4e4e'>(</span><span style='color: #4e4e4e'>)</span>
+</td></tr>
+<tr><td class=line-number>122</td><td class=line>  <span style='color: #005fd7'>f</span><span style='color: #4e4e4e'>(</span>r<span style='color: #4e4e4e'>)</span>
+</td></tr>
+<tr><td class=line-number>123</td><td class=line><span style='color: #4e4e4e'>}</span>
+</td></tr>
+<tr><td class=line-number>124</td><td class=line>
+</td></tr>
+<tr><td class=line-number>125</td><td class=line><span style='font-style: italic;color: #8a8a8a'>// Type alias</span>
+</td></tr>
+<tr><td class=line-number>126</td><td class=line><span style='color: #5f00d7'>pub</span> <span style='color: #5f00d7'>type</span> <span style='color: #005f5f'>Callback</span><span style='color: #4e4e4e'>[</span><span style='color: #005f5f'>T</span><span style='color: #4e4e4e'>]</span> <span style='font-weight: bold;color: #4e4e4e'>=</span> <span style='color: #005fd7'><span style='color: #4e4e4e'>(</span><span style='color: #005f5f'>T</span><span style='color: #4e4e4e'>)</span> <span style='font-weight: bold;color: #4e4e4e'>-&gt;</span> <span style='font-weight: bold;color: #005f5f'>Unit</span></span>
+</td></tr>
+<tr><td class=line-number>127</td><td class=line><span style='color: #5f00d7'>pub</span> <span style='color: #5f00d7'>type</span> <span style='color: #005f5f'>Predicate</span><span style='color: #4e4e4e'>[</span><span style='color: #005f5f'>T</span><span style='color: #4e4e4e'>]</span> <span style='font-weight: bold;color: #4e4e4e'>=</span> <span style='color: #005fd7'><span style='color: #4e4e4e'>(</span><span style='color: #005f5f'>T</span><span style='color: #4e4e4e'>)</span> <span style='font-weight: bold;color: #4e4e4e'>-&gt;</span> <span style='font-weight: bold;color: #005f5f'>Bool</span></span>
+</td></tr>
+<tr><td class=line-number>128</td><td class=line>
+</td></tr>
+<tr><td class=line-number>129</td><td class=line><span style='font-style: italic;color: #8a8a8a'>// External FFI declaration</span>
+</td></tr>
+<tr><td class=line-number>130</td><td class=line><span style='color: #5f00d7'>extern</span> <span style='color: #008700'>&quot;js&quot;</span> <span style='color: #005fd7'>fn</span> <span style='color: #005fd7'>console_log</span><span style='color: #4e4e4e'>(</span><span style='text-decoration: underline;color: #d0d0d0'>msg</span> <span style='color: #4e4e4e'>:</span> <span style='font-weight: bold;color: #005f5f'>String</span><span style='color: #4e4e4e'>)</span> <span style='font-weight: bold;color: #4e4e4e'>=</span> <span style='color: #008700'>&quot;console.log&quot;</span>
+</td></tr>
+<tr><td class=line-number>131</td><td class=line>
+</td></tr>
+<tr><td class=line-number>132</td><td class=line><span style='font-style: italic;color: #8a8a8a'>// Deprecated API</span>
+</td></tr>
+<tr><td class=line-number>133</td><td class=line>#[deprecated<span style='color: #4e4e4e'>(</span>since<span style='font-weight: bold;color: #4e4e4e'>=</span><span style='color: #008700'>&quot;0.2&quot;</span><span style='color: #4e4e4e'>,</span> message<span style='font-weight: bold;color: #4e4e4e'>=</span><span style='color: #008700'>&quot;use fetch_data instead&quot;</span><span style='color: #4e4e4e'>)</span><span style='color: #4e4e4e'>]</span>
+</td></tr>
+<tr><td class=line-number>134</td><td class=line>#[cfg<span style='color: #4e4e4e'>(</span>target<span style='font-weight: bold;color: #4e4e4e'>=</span><span style='color: #008700'>&quot;wasm&quot;</span><span style='color: #4e4e4e'>)</span><span style='color: #4e4e4e'>]</span>
+</td></tr>
+<tr><td class=line-number>135</td><td class=line><span style='color: #5f00d7'>pub</span> <span style='color: #005fd7'>fn</span> <span style='color: #005fd7'>old_fetch</span><span style='color: #4e4e4e'>(</span><span style='text-decoration: underline;color: #d0d0d0'>url</span> <span style='color: #4e4e4e'>:</span> <span style='font-weight: bold;color: #005f5f'>String</span><span style='color: #4e4e4e'>)</span> <span style='font-weight: bold;color: #4e4e4e'>-&gt;</span> <span style='font-weight: bold;color: #005f5f'>String</span> <span style='color: #4e4e4e'>{</span>
+</td></tr>
+<tr><td class=line-number>136</td><td class=line>  <span style='color: #008700'>&quot;legacy implementation&quot;</span>
+</td></tr>
+<tr><td class=line-number>137</td><td class=line><span style='color: #4e4e4e'>}</span>
+</td></tr>
+</table>
+
+</body>
+
