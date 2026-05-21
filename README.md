@@ -14,18 +14,27 @@ MoonBit Language Server（MBT-LS）是 MoonBit 生态中首个**开源、跨编�
 
 ---
 
-## 核心能力
+## 核心功能
 
-| 层级 | 功能 | 状态 |
-|------|------|------|
-| 语法前端 | Tree-sitter 增量解析（`grammar.js` + `scanner.c`） | ✅ 完整 |
-| 语义分析 | 符号表构建、作用域分析、引用追踪 | ✅ 已实现 |
-| 实时诊断 | 语法错误、未使用变量、基础语义检查 | ✅ 已实现 |
-| 自动补全 | 局部变量、函数名、类型名上下文补全 | 🚧 推进中 |
-| 定义跳转 | 符号声明位置定位 | 🚧 推进中 |
-| 悬停提示 | 函数签名、类型信息 Quick Info | 🚧 推进中 |
-| 客户端 | VSCode Extension（LSP Client） | ✅ 骨架已搭 |
-| 高亮配套 | Tree-sitter queries（`highlights.scm` 等） | ✅ 保留作为附加值 |
+**1. 增量语法解析**
+
+基于 Tree-sitter 实现 MoonBit 完整语法解析，覆盖关键字、标识符、类型、表达式、模式匹配、属性、异步、错误处理等全部语法单元。
+
+**2. 语义分析引擎**
+
+符号表构建、作用域分析、引用追踪，基于 AST 自动收集函数声明、变量绑定、类型定义，并生成实时诊断信息。
+
+**3. LSP 协议服务**
+
+`textDocument/diagnostic`（实时错误检测）、`textDocument/documentSymbol`（文档大纲）、`textDocument/completion`（自动补全）、`textDocument/definition`（跳转定义）、`textDocument/hover`（悬停提示）。
+
+**4. 跨编辑器客户端**
+
+VSCode Extension（LSP Client）支持增量文档同步与 LSP 消息收发。
+
+**5. 配套语法高亮**
+
+Tree-sitter queries（`highlights.scm`、`indents.scm`、`injections.scm`、`locals.scm`）提供 AST 级语法高亮、缩进规则与字符串插值注入。
 
 ---
 
@@ -119,12 +128,12 @@ tree-sitter test
 
 ## 编辑器支持
 
-| 编辑器 | 支持方式 | 状态 |
-|--------|---------|------|
-| **VSCode** | 本仓库 `client/vscode`（LSP Client） | ✅ 开发中 |
-| **Neovim** | 任意 LSP Client 连接 MBT-LS | 🔜 待验证 |
-| **Helix** | 内置 LSP 连接 MBT-LS | 🔜 待验证 |
-| **Zed** | 内置 LSP 连接 MBT-LS | 🔜 规划中 |
+| 编辑器 | 支持方式 |
+|--------|---------|
+| **VSCode** | 本仓库 `client/vscode`（LSP Client） |
+| **Neovim** | 任意 LSP Client 连接 MBT-LS |
+| **Helix** | 内置 LSP 连接 MBT-LS |
+| **Zed** | 内置 LSP 连接 MBT-LS |
 
 > 语法高亮（Tree-sitter queries）已在 VSCode/Neovim/Helix 中可用，属于附加价值。
 
@@ -132,16 +141,16 @@ tree-sitter test
 
 ## 开发路线
 
-1. **Phase 1 — 语法与解析**（已完成）
+1. **Phase 1 — 语法与解析**
    - 完整的 Tree-sitter Grammar 覆盖 MoonBit v0.9.2 全部语法
-   - 14+ 语料测试用例确保解析正确性
+   - 语料测试用例确保解析正确性
 
-2. **Phase 2 — 语义引擎**（当前）
+2. **Phase 2 — 语义引擎**
    - 符号表与作用域分析
    - 实时诊断（语法错误、基础语义检查）
    - 自动补全、定义跳转、悬停提示
 
-3. **Phase 3 — 生态集成**（下一步）
+3. **Phase 3 — 生态集成**
    - VSCode Extension 打包发布
    - 多编辑器配置文档与自动化脚本
    - CI/CD 与性能基准测试
