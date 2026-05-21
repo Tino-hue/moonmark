@@ -67,3 +67,7 @@ update_xmind2.js
 
 # Misc temp
 CLAUDE.md
+"__pycache__/" 
+"gen_tests*.py" 
+"moonparse_temp/" 
+"temp_*" 
