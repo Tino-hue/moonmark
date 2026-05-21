@@ -1,6 +1,8 @@
-# MoonBit Highlight for VSCode
+# MoonBit Highlight for VSCode (Companion Plugin)
 
-Tree-sitter powered syntax highlighting for MoonBit language.
+This is the standalone **Tree-sitter syntax highlighting and color theme** plugin for MoonBit.
+
+> For full IDE features — such as **auto-completion, go-to-definition, real-time diagnostics and hover hints** — please use the **MoonBit Language Support** extension (`client/vscode`) which connects to the [MoonBit Language Server](https://github.com/Tino-hue/moonmark).
 
 ## Features
 
@@ -10,24 +12,16 @@ Tree-sitter powered syntax highlighting for MoonBit language.
 
 ## Installation
 
-### Method 1: Local Development (Recommended for now)
+### Method 1: Local Development
 
 1. Clone this repository
-2. Open VSCode and press `Ctrl+Shift+P` (or `Cmd+Shift+P` on macOS)
-3. Type `Extensions: Install from VSIX...` or open the Extensions panel
-4. Click the `...` menu and select `Install from VSIX`
-5. Or simply copy this `vscode/` folder to your VSCode extensions directory:
+2. Copy this `vscode/` folder to your VSCode extensions directory:
    - Windows: `%USERPROFILE%\.vscode\extensions\moonbit-highlight-0.1.0`
    - macOS/Linux: `~/.vscode/extensions/moonbit-highlight-0.1.0`
 
-### Method 2: Build WASM Parser (Future)
+### Method 2: With LSP Client
 
-```bash
-# Build the WebAssembly parser
-tree-sitter build --wasm -o moonbit.wasm
-
-# Then install the extension with full tree-sitter support
-```
+Install the main **MoonBit Language Support** extension from `client/vscode`. It automatically provides both semantic services and syntax highlighting.
 
 ## Supported Constructs
 
@@ -45,11 +39,6 @@ tree-sitter build --wasm -o moonbit.wasm
 - **MoonBit Light (Official)**: Clean and readable light variant
 
 Activate via `Ctrl+Shift+P` → `Preferences: Color Theme`.
-
-## Known Limitations
-
-- Full tree-sitter WASM integration pending (requires `wasi-sdk` for compilation)
-- Current highlighting relies on TextMate grammar fallback
 
 ## Development
 

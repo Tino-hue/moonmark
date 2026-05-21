@@ -1,0 +1,24 @@
+{
+  "name": "moonbit-lsp-server",
+  "version": "0.1.0",
+  "description": "MoonBit Language Server — semantic analysis engine and LSP handlers",
+  "license": "MIT",
+  "author": "Tino-hue (肖若愚)",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "main": "./out/server.js",
+  "scripts": {
+    "build": "tsc -b",
+    "watch": "tsc -b -w"
+  },
+  "dependencies": {
+    "tree-sitter": "^0.22.4",
+    "vscode-languageserver": "^9.0.1",
+    "vscode-languageserver-textdocument": "^1.0.12"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "typescript": "^5.4.5"
+  }
+}

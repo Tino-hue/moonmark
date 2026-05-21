@@ -1,6 +1,6 @@
 {
-  "source_dir": "D:\\MoonHighlight",
-  "name": "moonhighlight",
+  "source_dir": "D:\\MoonBit Language Server",
+  "name": "moonbit-language-server",
   "packages": [],
   "deps": [],
   "backend": "wasm-gc",

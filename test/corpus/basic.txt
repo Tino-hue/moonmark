@@ -314,4 +314,1128 @@ fn main {
                 (return_expr
                   (string_literal))))))))))
 
+==================
+Derive clause on struct
+==================
 
+#[derive]
+pub struct Point[T] {
+  x : T
+  y : T
+} derive(Show, Eq)
+
+---
+
+(source_file
+  (declaration
+    (struct_declaration
+      (attribute
+        (identifier))
+      (visibility)
+      (type_identifier)
+      (type_parameters
+        (type_parameter
+          (type_identifier)))
+      (field_def
+        (identifier)
+        (type_identifier))
+      (field_def
+        (identifier)
+        (type_identifier))
+      (derive_clause
+        (type_identifier)
+        (type_identifier)))))
+
+
+==================
+Derive clause on enum
+==================
+
+enum Color {
+  Red
+  Green
+} derive(Show)
+
+---
+
+(source_file
+  (declaration
+    (enum_declaration
+      (type_identifier)
+      (enum_variant
+        (constructor
+          (type_identifier)))
+      (enum_variant
+        (constructor
+          (type_identifier)))
+      (derive_clause
+        (type_identifier)))))
+
+
+==================
+Derive clause on trait
+==================
+
+pub trait Show {
+  fn to_string(self) -> String
+} derive(ToJson)
+
+---
+
+(source_file
+  (declaration
+    (trait_declaration
+      (visibility)
+      (type_identifier)
+      (trait_method
+        (identifier)
+        (param_list
+          (param
+            (self_param)))
+        (builtin_type))
+      (derive_clause
+        (type_identifier)))))
+
+
+==================
+Impl for trait
+==================
+
+impl Show for Point {
+  pub fn to_string(self) -> String {
+    ""
+  }
+}
+
+---
+
+(source_file
+  (declaration
+    (impl_block
+      (type_identifier)
+      (type_identifier)
+      (impl_method
+        (visibility)
+        (identifier)
+        (param_list
+          (param
+            (self_param)))
+        (builtin_type)
+        (block_expr
+          (block_statement
+            (string_literal)))))))
+
+
+==================
+Impl with block
+==================
+
+impl Array with {
+  pub fn sum(self) -> Int {
+    0
+  }
+}
+
+---
+
+(source_file
+  (declaration
+    (impl_block
+      (builtin_type)
+      (impl_method
+        (visibility)
+        (identifier)
+        (param_list
+          (param
+            (self_param)))
+        (builtin_type)
+        (block_expr
+          (block_statement
+            (number_literal)))))))
+
+
+==================
+Labelled parameter with default
+==================
+
+fn foo(~x : Int, y = 1) { }
+
+---
+
+(source_file
+  (declaration
+    (function_declaration
+      (identifier)
+      (param_list
+        (param
+          (identifier)
+          (builtin_type))
+        (param
+          (identifier)
+          (number_literal)))
+      (block_expr))))
+
+
+==================
+Labelled parameter shorthand
+==================
+
+fn bar(~z) { }
+
+---
+
+(source_file
+  (declaration
+    (function_declaration
+      (identifier)
+      (param_list
+        (param
+          (identifier)))
+      (block_expr))))
+
+
+==================
+For loop with tuple pattern
+==================
+
+fn main {
+  for (a, b) in list { }
+}
+
+---
+
+(source_file
+  (declaration
+    (function_declaration
+      (identifier)
+      (block_expr
+        (block_statement
+          (for_expr
+            (tuple_pattern
+              (identifier_pattern
+                (identifier))
+              (identifier_pattern
+                (identifier)))
+            (identifier)
+            (block_expr)))))))
+
+
+==================
+For loop with wildcard
+==================
+
+fn main {
+  for _ in list { }
+}
+
+---
+
+(source_file
+  (declaration
+    (function_declaration
+      (identifier)
+      (block_expr
+        (block_statement
+          (for_expr
+            (wildcard_pattern)
+            (identifier)
+            (block_expr)))))))
+
+
+==================
+While with nobreak
+==================
+
+fn main {
+  while true {
+    break
+  } nobreak {
+    ()
+  }
+}
+
+---
+
+(source_file
+  (declaration
+    (function_declaration
+      (identifier)
+      (block_expr
+        (block_statement
+          (while_expr
+            (if_condition
+              (bool_literal))
+            (block_expr
+              (block_statement
+                (break_expr)))
+            (nobreak_clause
+              (block_expr
+                (block_statement
+                  (unit_literal))))))))))
+
+
+==================
+For loop with nobreak
+==================
+
+fn main {
+  for a in list {
+    break
+  } nobreak {
+    0
+  }
+}
+
+---
+
+(source_file
+  (declaration
+    (function_declaration
+      (identifier)
+      (block_expr
+        (block_statement
+          (for_expr
+            (identifier_pattern
+              (identifier))
+            (identifier)
+            (block_expr
+              (block_statement
+                (break_expr)))
+            (nobreak_clause
+              (block_expr
+                (block_statement
+                  (number_literal))))))))))
+
+
+==================
+Loop with nobreak
+==================
+
+fn main {
+  loop {
+    break
+  } nobreak {
+    0
+  }
+}
+
+---
+
+(source_file
+  (declaration
+    (function_declaration
+      (identifier)
+      (block_expr
+        (block_statement
+          (loop_expr
+            (block_expr
+              (block_statement
+                (break_expr)))
+            (nobreak_clause
+              (block_expr
+                (block_statement
+                  (number_literal))))))))))
+
+==================
+C-style for loop
+==================
+
+fn main {
+  for i = 0; i < 10; i = i + 1 { }
+}
+
+---
+
+(source_file
+  (declaration
+    (function_declaration
+      (identifier)
+      (block_expr
+        (block_statement
+          (for_expr
+            (for_init_list
+              (for_init_item
+                (identifier)
+                (number_literal)))
+            (binary_expr
+              (identifier)
+              (number_literal))
+            (for_update_list
+              (for_update_item
+                (identifier)
+                (binary_expr
+                  (identifier)
+                  (number_literal))))
+            (block_expr)))))))
+
+
+==================
+C-style for multi binding
+==================
+
+fn main {
+  for i = 0, j = 10; i < j; i = i + 1, j = j - 1 { }
+}
+
+---
+
+(source_file
+  (declaration
+    (function_declaration
+      (identifier)
+      (block_expr
+        (block_statement
+          (for_expr
+            (for_init_list
+              (for_init_item
+                (identifier)
+                (number_literal))
+              (for_init_item
+                (identifier)
+                (number_literal)))
+            (binary_expr
+              (identifier)
+              (identifier))
+            (for_update_list
+              (for_update_item
+                (identifier)
+                (binary_expr
+                  (identifier)
+                  (number_literal)))
+              (for_update_item
+                (identifier)
+                (binary_expr
+                  (identifier)
+                  (number_literal))))
+            (block_expr)))))))
+
+
+==================
+For-in two variables
+==================
+
+fn main {
+  for k, v in m { }
+}
+
+---
+
+(source_file
+  (declaration
+    (function_declaration
+      (identifier)
+      (block_expr
+        (block_statement
+          (for_expr
+            (identifier_pattern
+              (identifier))
+            (identifier_pattern
+              (identifier))
+            (identifier)
+            (block_expr)))))))
+
+
+==================
+Labeled loop
+==================
+
+fn main {
+  outer~ : for i in 0..<10 {
+    break outer~ 42
+  }
+}
+
+---
+
+(source_file
+  (declaration
+    (function_declaration
+      (identifier)
+      (block_expr
+        (block_statement
+          (for_expr
+            (label_clause
+              (identifier))
+            (identifier_pattern
+              (identifier))
+            (binary_expr
+              (number_literal)
+              (number_literal))
+            (block_expr
+              (block_statement
+                (break_expr
+                  (identifier)
+                  (number_literal))))))))))
+
+==================
+Arrow expression
+==================
+
+fn main {
+  let f = x => x + 1
+}
+
+---
+
+(source_file
+  (declaration
+    (function_declaration
+      (identifier)
+      (block_expr
+        (block_statement
+          (value_declaration
+            (identifier)
+            (arrow_expr
+              (identifier)
+              (binary_expr
+                (identifier)
+                (number_literal)))))))))
+
+
+==================
+Arrow expression with block
+==================
+
+fn main {
+  let g = x => { x * 2 }
+}
+
+---
+
+(source_file
+  (declaration
+    (function_declaration
+      (identifier)
+      (block_expr
+        (block_statement
+          (value_declaration
+            (identifier)
+            (arrow_expr
+              (identifier)
+              (block_expr
+                (block_statement
+                  (binary_expr
+                    (identifier)
+                    (number_literal)))))))))))
+
+==================
+Is expression
+==================
+
+fn main {
+  let b = x is Some(v)
+}
+
+---
+
+(source_file
+  (declaration
+    (function_declaration
+      (identifier)
+      (block_expr
+        (block_statement
+          (value_declaration
+            (identifier)
+            (is_expr
+              (identifier)
+              (constructor_pattern
+                (constructor
+                  (type_identifier))))))
+        (block_statement
+          (identifier))))))
+
+
+==================
+Is expression with guard
+==================
+
+fn main {
+  guard x is Some(v) else {
+    return 0
+  }
+}
+
+---
+
+(source_file
+  (declaration
+    (function_declaration
+      (identifier)
+      (block_expr
+        (block_statement
+          (guard_expr
+            (guard_pattern
+              (identifier)
+              (constructor_pattern
+                (constructor
+                  (type_identifier))
+                (identifier_pattern
+                  (identifier))))
+            (block_expr
+              (block_statement
+                (return_expr
+                  (number_literal))))))))))
+
+==================
+Or pattern in match
+==================
+
+fn main {
+  match x {
+    A | B => 1
+  }
+}
+
+---
+
+(source_file
+  (declaration
+    (function_declaration
+      (identifier)
+      (block_expr
+        (block_statement
+          (match_expr
+            (identifier)
+            (match_arm
+              (or_pattern
+                (constructor_pattern
+                  (constructor
+                    (type_identifier)))
+                (constructor_pattern
+                  (constructor
+                    (type_identifier))))
+              (number_literal))))))))
+
+
+==================
+Or pattern multiple
+==================
+
+fn main {
+  match x {
+    A | B | C => 1
+  }
+}
+
+---
+
+(source_file
+  (declaration
+    (function_declaration
+      (identifier)
+      (block_expr
+        (block_statement
+          (match_expr
+            (identifier)
+            (match_arm
+              (or_pattern
+                (or_pattern
+                  (constructor_pattern
+                    (constructor
+                      (type_identifier)))
+                  (constructor_pattern
+                    (constructor
+                      (type_identifier))))
+                (constructor_pattern
+                  (constructor
+                    (type_identifier))))
+              (number_literal))))))))
+
+
+==================
+Or pattern with literal
+==================
+
+fn main {
+  match x {
+    1 | 2 | 3 => 1
+  }
+}
+
+---
+
+(source_file
+  (declaration
+    (function_declaration
+      (identifier)
+      (block_expr
+        (block_statement
+          (match_expr
+            (identifier)
+            (match_arm
+              (or_pattern
+                (or_pattern
+                  (literal_pattern
+                    (number_literal))
+                  (literal_pattern
+                    (number_literal)))
+                (literal_pattern
+                  (number_literal)))
+              (number_literal))))))))
+
+==================
+Match arm guard
+==================
+
+fn main {
+  match x {
+    A if n > 0 => 1
+  }
+}
+
+---
+
+(source_file
+  (declaration
+    (function_declaration
+      (identifier)
+      (block_expr
+        (block_statement
+          (match_expr
+            (identifier)
+            (match_arm
+              (constructor_pattern
+                (constructor
+                  (type_identifier)))
+              (binary_expr
+                (identifier)
+                (number_literal))
+              (number_literal))))))))
+
+
+==================
+Match arm guard with block
+==================
+
+fn main {
+  match x {
+    A if n > 0 => {
+      1
+    }
+  }
+}
+
+---
+
+(source_file
+  (declaration
+    (function_declaration
+      (identifier)
+      (block_expr
+        (block_statement
+          (match_expr
+            (identifier)
+            (match_arm
+              (constructor_pattern
+                (constructor
+                  (type_identifier)))
+              (binary_expr
+                (identifier)
+                (number_literal))
+              (block_expr
+                (block_statement
+                  (number_literal))))))))))
+
+
+==================
+Await expression
+==================
+
+fn main {
+  let x = await foo()
+}
+
+---
+
+(source_file
+  (declaration
+    (function_declaration
+      (identifier)
+      (block_expr
+        (block_statement
+          (value_declaration
+            (identifier)
+            (await_expr
+              (function_call
+                (identifier)
+                (arg_list)))))))))
+
+
+==================
+As pattern
+==================
+
+fn main {
+  match x {
+    A as v => v
+  }
+}
+
+---
+
+(source_file
+  (declaration
+    (function_declaration
+      (identifier)
+      (block_expr
+        (block_statement
+          (match_expr
+            (identifier)
+            (match_arm
+              (as_pattern
+                (constructor_pattern
+                  (constructor
+                    (type_identifier)))
+                (identifier))
+              (identifier))))))))
+
+
+==================
+As pattern with or
+==================
+
+fn main {
+  match x {
+    A | B as v => v
+  }
+}
+
+---
+
+(source_file
+  (declaration
+    (function_declaration
+      (identifier)
+      (block_expr
+        (block_statement
+          (match_expr
+            (identifier)
+            (match_arm
+              (or_pattern
+                (constructor_pattern
+                  (constructor
+                    (type_identifier)))
+                (as_pattern
+                  (constructor_pattern
+                    (constructor
+                      (type_identifier)))
+                  (identifier)))
+              (identifier))))))))
+
+==================
+Self expression
+==================
+
+fn area(self) -> Int {
+  self.x * self.y
+}
+
+---
+
+(source_file
+  (declaration
+    (function_declaration
+      (identifier)
+      (param_list
+        (param
+          (self_param)))
+      (builtin_type)
+      (block_expr
+        (block_statement
+          (field_access
+            (binary_expr
+              (field_access
+                (identifier)))
+            (identifier)))))))
+
+
+==================
+Continue with args
+==================
+
+fn main {
+  for a in list {
+    continue a, b
+  }
+}
+
+---
+
+(source_file
+  (declaration
+    (function_declaration
+      (identifier)
+      (block_expr
+        (block_statement
+          (for_expr
+            (identifier_pattern
+              (identifier))
+            (identifier)
+            (block_expr
+              (block_statement
+                (continue_expr
+                  (continue_args
+                    (identifier)
+                    (identifier)))))))))))
+
+
+==================
+Array pattern
+==================
+
+fn main {
+  match x {
+    [a, b, c] => 1
+  }
+}
+
+---
+
+(source_file
+  (declaration
+    (function_declaration
+      (identifier)
+      (block_expr
+        (block_statement
+          (match_expr
+            (identifier)
+            (match_arm
+              (array_pattern
+                (identifier_pattern
+                  (identifier))
+                (identifier_pattern
+                  (identifier))
+                (identifier_pattern
+                  (identifier)))
+              (number_literal))))))))
+
+
+==================
+Array pattern with rest
+==================
+
+fn main {
+  match x {
+    [first, ..rest] => 1
+  }
+}
+
+---
+
+(source_file
+  (declaration
+    (function_declaration
+      (identifier)
+      (block_expr
+        (block_statement
+          (match_expr
+            (identifier)
+            (match_arm
+              (array_pattern
+                (identifier_pattern
+                  (identifier))
+                (range_pattern
+                  (identifier)))
+              (number_literal))))))))
+
+==================
+Guard without is
+==================
+
+fn main {
+  guard x > 0 else {
+    return 0
+  }
+}
+
+---
+
+(source_file
+  (declaration
+    (function_declaration
+      (identifier)
+      (block_expr
+        (block_statement
+          (guard_expr
+            (binary_expr
+              (identifier)
+              (number_literal))
+            (block_expr
+              (block_statement
+                (return_expr
+                  (number_literal))))))))))
+
+
+==================
+Record pattern with rest
+==================
+
+fn main {
+  match p {
+    Point { x, .. } => x
+  }
+}
+
+---
+
+(source_file
+  (declaration
+    (function_declaration
+      (identifier)
+      (block_expr
+        (block_statement
+          (match_expr
+            (identifier)
+            (match_arm
+              (record_pattern
+                (type_identifier)
+                (field_pattern
+                  (identifier)))
+              (identifier))))))))
+
+
+==================
+Record pattern with rest identifier
+==================
+
+fn main {
+  match p {
+    Point { x, ..rest } => x
+  }
+}
+
+---
+
+(source_file
+  (declaration
+    (function_declaration
+      (identifier)
+      (block_expr
+        (block_statement
+          (match_expr
+            (identifier)
+            (match_arm
+              (record_pattern
+                (type_identifier)
+                (field_pattern
+                  (identifier))
+                (identifier))
+              (identifier))))))))
+
+==================
+Try suffix expression
+==================
+
+fn main {
+  let x = foo()?
+}
+
+---
+
+(source_file
+  (declaration
+    (function_declaration
+      (identifier)
+      (block_expr
+        (block_statement
+          (value_declaration
+            (identifier)
+            (try_suffix_expr
+              (function_call
+                (identifier)
+                (arg_list)))))))))
+
+
+==================
+Optional parameter
+==================
+
+fn foo(x? : Int) {
+}
+
+---
+
+(source_file
+  (declaration
+    (function_declaration
+      (identifier)
+      (param_list
+        (param
+          (identifier)
+          (builtin_type)))
+      (block_expr))))
+
+==================
+Let with constructor pattern
+==================
+
+fn main {
+  let Some(v) = x
+}
+
+---
+
+(source_file
+  (declaration
+    (function_declaration
+      (identifier)
+      (block_expr
+        (block_statement
+          (value_declaration
+            (constructor_pattern
+              (constructor
+                (type_identifier)))))
+        (block_statement
+          (identifier))
+        (ERROR)
+        (block_statement
+          (identifier))))))
+__t__.mbt	Parse:    0.22 ms	   149 bytes/ms	(ERROR)
+
+
+==================
+Let with record pattern
+==================
+
+fn main {
+  let Point { x, y } = p
+}
+
+---
+
+(source_file
+  (declaration
+    (function_declaration
+      (identifier)
+      (block_expr
+        (block_statement
+          (value_declaration
+            (record_pattern
+              (type_identifier)
+              (field_pattern
+                (identifier))
+              (field_pattern
+                (identifier)))
+            (identifier)))))))
+
+
+==================
+Let without init
+==================
+
+fn main {
+  let x : Int
+}
+
+---
+
+(source_file
+  (declaration
+    (function_declaration
+      (identifier)
+      (block_expr
+        (block_statement
+          (value_declaration
+            (identifier_pattern
+              (identifier))
+            (builtin_type)))))))

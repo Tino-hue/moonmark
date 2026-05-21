@@ -62,6 +62,8 @@ const ADD = PREC.ADD;
 const MUL = PREC.MUL;
 const POW = PREC.POW;
 const UNARY = PREC.UNARY;
+const CALL = PREC.CALL;
+const FIELD = PREC.FIELD;
 const PIPE = PREC.PIPE;
 const ASSIGN = PREC.ASSIGN;
 const FN_TYPE = PREC.FN_TYPE;
@@ -89,12 +91,14 @@ module.exports = grammar({
     [$.index_access, $.closure_expr],
     [$.method_call, $.field_access, $.try_expr],
     [$.index_access, $.try_expr],
-    [$.method_call, $.field_access, $.guard_expr],
-    [$.index_access, $.guard_expr],
     [$.method_call, $.field_access, $.defer_expr],
     [$.index_access, $.defer_expr],
     [$.try_expr],
     [$.method_call, $.field_access],
+    [$.method_call, $.field_access, $.continue_args],
+    [$.index_access, $.continue_args],
+    [$.index_access, $.match_arm],
+    [$.if_expr],
     [$.tuple_type],
     [$._expression, $.match_arm],
     [$.import_declaration],
@@ -151,6 +155,7 @@ module.exports = grammar({
       optional($.type_parameters),
       optional($.param_list),
       optional(seq('->', $._type)),
+      optional($.error_type),
       $.block_expr,
     ),
 
@@ -166,7 +171,10 @@ module.exports = grammar({
       choice($.string_literal, $.identifier),
     ),
 
-    visibility: $ => choice('pub', 'priv'),
+    visibility: $ => choice(
+      seq('pub', optional(seq('(', choice('all', 'readonly', 'open'), ')'))),
+      'priv',
+    ),
 
     attribute: $ => seq(
       '#[',
@@ -209,7 +217,13 @@ module.exports = grammar({
 
     param: $ => choice(
       $.self_param,
-      seq($.identifier, optional(seq(':', $._type))),
+      seq(
+        optional('~'),
+        $.identifier,
+        optional('?'),
+        optional(seq(':', $._type)),
+        optional(seq('=', $._expression)),
+      ),
     ),
 
     self_param: $ => seq(
@@ -226,6 +240,7 @@ module.exports = grammar({
       optional($.type_parameters),
       optional(seq('(', commaSep($.struct_field), ')')),
       optional(seq('{', repeat($.field_def), '}')),
+      optional($.derive_clause),
     ),
 
     struct_field: $ => seq(
@@ -243,6 +258,7 @@ module.exports = grammar({
 
     // ==================== 枚举 ====================
     enum_declaration: $ => seq(
+      repeat($.attribute),
       optional($.visibility),
       'enum',
       $.type_identifier,
@@ -250,6 +266,7 @@ module.exports = grammar({
       '{',
       repeat($.enum_variant),
       '}',
+      optional($.derive_clause),
     ),
 
     suberror_declaration: $ => seq(
@@ -276,6 +293,7 @@ module.exports = grammar({
 
     // ==================== Trait ====================
     trait_declaration: $ => seq(
+      repeat($.attribute),
       optional($.visibility),
       'trait',
       $.type_identifier,
@@ -284,6 +302,7 @@ module.exports = grammar({
       '{',
       repeat($.trait_method),
       '}',
+      optional($.derive_clause),
     ),
 
     trait_method: $ => seq(
@@ -297,15 +316,26 @@ module.exports = grammar({
     ),
 
     // ==================== Impl ====================
-    impl_block: $ => seq(
-      optional($.visibility),
-      'impl',
-      optional(seq($.identifier, 'for')),
-      $.type_identifier,
-      optional($.type_arguments),
-      '{',
-      repeat($.impl_method),
-      '}',
+    impl_block: $ => choice(
+      seq(
+        optional($.visibility),
+        'impl',
+        choice($.identifier, $.type_identifier),
+        'for',
+        $._type,
+        '{',
+        repeat($.impl_method),
+        '}',
+      ),
+      seq(
+        optional($.visibility),
+        'impl',
+        $._type,
+        optional('with'),
+        '{',
+        repeat($.impl_method),
+        '}',
+      ),
     ),
 
     type_arguments: $ => seq(
@@ -338,9 +368,18 @@ module.exports = grammar({
     // ==================== 测试 ====================
     test_declaration: $ => seq(
       'test',
-      $.string_literal,
+      optional($.string_literal),
       $.block_expr,
     ),
+
+    derive_clause: $ => seq(
+      'derive',
+      '(',
+      commaSep1(choice($.identifier, $.type_identifier)),
+      ')',
+    ),
+
+    error_type: $ => seq('raise', optional($._type)),
 
     // ==================== 表达式 ====================
     _expression: $ => choice(
@@ -350,6 +389,7 @@ module.exports = grammar({
       $.char_literal,
       $.bool_literal,
       $.unit_literal,
+      'self',
       $.string_literal,
       $.raw_string_literal,
       $.interpolated_string,
@@ -368,6 +408,9 @@ module.exports = grammar({
       $.field_access,
       $.index_access,
       $.closure_expr,
+      $.arrow_expr,
+      $.is_expr,
+      $.await_expr,
       $.if_expr,
       $.match_expr,
       $.loop_expr,
@@ -378,6 +421,7 @@ module.exports = grammar({
       $.return_expr,
       $.raise_expr,
       $.try_expr,
+      $.try_suffix_expr,
       $.guard_expr,
       $.defer_expr,
       $.block_expr,
@@ -463,10 +507,10 @@ module.exports = grammar({
       return choice(...table.map(rule => rule[0]));
     },
 
-    // 赋值
+    // 赋值（含复合赋值）
     assign_expr: $ => prec.right(ASSIGN, seq(
       choice($.identifier, $.field_access, $.index_access),
-      '=',
+      choice('=', ':=', '+=', '-=', '*=', '/='),
       $._expression,
     )),
 
@@ -536,6 +580,13 @@ module.exports = grammar({
       ),
     ),
 
+    // 箭头函数
+    arrow_expr: $ => prec.left(-1, seq(
+      $.identifier,
+      '=>',
+      choice($._expression, $.block_expr),
+    )),
+
     // If 表达式
     if_expr: $ => seq(
       'if',
@@ -565,6 +616,7 @@ module.exports = grammar({
 
     match_arm: $ => seq(
       $._pattern,
+      optional(seq('if', $._expression)),
       '=>',
       choice($._expression, $.block_expr),
     ),
@@ -573,6 +625,7 @@ module.exports = grammar({
     loop_expr: $ => seq(
       'loop',
       $.block_expr,
+      optional($.nobreak_clause),
     ),
 
     // While 表达式
@@ -580,24 +633,76 @@ module.exports = grammar({
       'while',
       $.if_condition,
       $.block_expr,
+      optional($.nobreak_clause),
     ),
 
     // For 表达式
     for_expr: $ => seq(
+      optional($.label_clause),
       'for',
-      optional(seq($.identifier, 'in')),
+      choice(
+        seq(
+          $._pattern,
+          optional(seq(',', $._pattern)),
+          'in',
+          $._expression,
+          $.block_expr,
+          optional($.nobreak_clause),
+        ),
+        seq(
+          optional($.for_init_list),
+          ';',
+          optional($._expression),
+          ';',
+          optional($.for_update_list),
+          $.block_expr,
+          optional($.nobreak_clause),
+        ),
+      ),
+    ),
+
+    label_clause: $ => prec(1, seq(
+      $.identifier,
+      '~',
+      ':',
+    )),
+
+    for_init_list: $ => commaSep1($.for_init_item),
+
+    for_init_item: $ => seq(
+      $.identifier,
+      '=',
       $._expression,
+    ),
+
+    for_update_list: $ => commaSep1($.for_update_item),
+
+    for_update_item: $ => seq(
+      $.identifier,
+      '=',
+      $._expression,
+    ),
+
+    nobreak_clause: $ => seq(
+      'nobreak',
       $.block_expr,
     ),
 
     // Break
     break_expr: $ => prec.right(BREAK, seq(
       'break',
+      optional(seq($.identifier, '~')),
       optional($._expression),
     )),
 
     // Continue
-    continue_expr: $ => prec.right(CONTINUE, 'continue'),
+    continue_expr: $ => prec.right(CONTINUE, seq(
+      'continue',
+      optional(seq($.identifier, '~')),
+      optional($.continue_args),
+    )),
+
+    continue_args: $ => prec.left(1, commaSep1($._expression)),
 
     // Return
     return_expr: $ => prec.right(RETURN, seq(
@@ -612,35 +717,57 @@ module.exports = grammar({
     )),
 
     // Try 表达式
-    try_expr: $ => seq(
-      'try',
-      $._expression,
-      optional(seq(
-        'catch',
-        '{',
-        repeat($.match_arm),
-        '}',
-      )),
+    try_expr: $ => choice(
+      seq('try', '?', $._expression),
+      seq('try', '!', $._expression),
+      seq(
+        'try',
+        $._expression,
+        repeat1($.catch_clause),
+        optional($.noraise_clause),
+      ),
     ),
 
-    catch_clause: $ => seq(
-      'catch',
-      $._pattern,
-      $.block_expr,
+    try_suffix_expr: $ => prec(FIELD, seq($._expression, '?')),
+
+    catch_clause: $ => choice(
+      seq('catch', '{', repeat($.match_arm), '}'),
+      seq('catch', '(', $._pattern, ')', $.block_expr),
     ),
+
+    noraise_clause: $ => seq('noraise', $.block_expr),
 
     // Guard 表达式（支持 is 模式匹配）
-    guard_pattern: $ => seq(
+    guard_pattern: $ => prec(5, seq(
       $._expression,
       'is',
       $._pattern,
-    ),
+    )),
 
-    guard_expr: $ => seq(
-      'guard',
-      $.guard_pattern,
-      'else',
+    is_expr: $ => prec.left(4, seq(
       $._expression,
+      'is',
+      $._pattern,
+    )),
+
+    await_expr: $ => prec(UNARY, seq(
+      'await',
+      $._expression,
+    )),
+
+    guard_expr: $ => choice(
+      prec(13, seq(
+        'guard',
+        $.guard_pattern,
+        'else',
+        choice($._expression, $.block_expr),
+      )),
+      prec(13, seq(
+        'guard',
+        $._expression,
+        'else',
+        choice($._expression, $.block_expr),
+      )),
     ),
 
     defer_expr: $ => seq(
@@ -664,30 +791,36 @@ module.exports = grammar({
     value_declaration: $ => prec.right(1, seq(
       optional($.visibility),
       choice(seq('let', optional('mut')), 'const'),
-      choice($.identifier, $.tuple_pattern),
+      $._pattern,
       optional(seq(':', $._type)),
-      '=',
-      $._expression,
+      optional(seq('=', $._expression)),
       optional(';'),
     )),
 
     // ==================== 模式 ====================
     _pattern: $ => choice(
+      $.or_pattern,
+      $.as_pattern,
       $.wildcard_pattern,
       $.identifier_pattern,
       $.literal_pattern,
       $.constructor_pattern,
       $.tuple_pattern,
       $.record_pattern,
+      $.array_pattern,
       $.range_pattern,
       seq('(', $._pattern, ')'),
     ),
 
-    range_pattern: $ => seq(
+    or_pattern: $ => prec.left(1, seq($._pattern, '|', $._pattern)),
+
+    as_pattern: $ => prec.left(2, seq($._pattern, 'as', $.identifier)),
+
+    range_pattern: $ => prec(1, seq(
       optional(choice($.number_literal, $.identifier)),
       choice('..', '..=', '..<', '..>'),
       choice($.number_literal, $.identifier),
-    ),
+    )),
 
     wildcard_pattern: $ => '_',
 
@@ -700,10 +833,10 @@ module.exports = grammar({
       $.string_literal,
     ),
 
-    constructor_pattern: $ => seq(
+    constructor_pattern: $ => prec.left(1, seq(
       $.constructor,
       optional(seq('(', commaSep1($._pattern), ')')),
-    ),
+    )),
 
     tuple_pattern: $ => seq(
       '(',
@@ -711,12 +844,18 @@ module.exports = grammar({
       ')',
     ),
 
-    record_pattern: $ => seq(
+    array_pattern: $ => seq(
+      '[',
+      commaSep(choice($._pattern, seq('..', optional($.identifier)))),
+      ']',
+    ),
+
+    record_pattern: $ => prec(1, seq(
       $.type_identifier,
       '{',
-      repeat($.field_pattern),
+      commaSep(choice($.field_pattern, seq('..', optional($.identifier)))),
       '}',
-    ),
+    )),
 
     field_pattern: $ => seq(
       $.identifier,

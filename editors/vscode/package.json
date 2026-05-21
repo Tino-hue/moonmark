@@ -1,7 +1,7 @@
 {
   "name": "moonbit-highlight",
-  "displayName": "MoonBit Highlight",
-  "description": "Tree-sitter powered syntax highlighting for MoonBit",
+  "displayName": "MoonBit Highlight (Companion)",
+  "description": "Tree-sitter powered syntax highlighting and themes for MoonBit. For full IDE features, use the MoonBit Language Server.",
   "version": "0.1.0",
   "publisher": "moonbit",
   "license": "MIT",

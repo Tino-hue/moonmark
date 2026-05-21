@@ -1,189 +1,31 @@
-# MoonHighlight — Tree-sitter Grammar for MoonBit
+# MoonBit Language Server
 
-> 为 MoonBit 编程语言提供精准语法高亮和语义分析的 Tree-sitter 语法库
+> 基于 Tree-sitter 的 MoonBit 跨编辑器语义服务与智能 IDE 核心
 
-[![CI](https://github.com/Tino-hue/moonmark/actions/workflows/ci.yml/badge.svg)](https://github.com/Tino-hue/moonmark/actions/workflows/ci.yml)
-[![npm version](https://img.shields.io/npm/v/moonhighlight?label=moonhighlight)](https://www.npmjs.com/package/moonhighlight)
-[![Tree-sitter](https://img.shields.io/badge/tree--sitter-v0.26-blue)](https://tree-sitter.github.io/tree-sitter/)
-[![MoonBit](https://img.shields.io/badge/MoonBit-v0.9.2-orange)](https://www.moonbitlang.cn/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green)](LICENSE)
 
 ---
 
-## 支持语法特性一览
+## 项目定位
 
-| 类别 | 覆盖内容 | 状态 |
-|------|---------|------|
-| 🔤 词法 | 关键字（50+）、运算符、字面量、注释 | ✅ 100% |
-| 📦 声明 | fn / let / const / type / struct / enum / trait / impl / suberror | ✅ 100% |
-| 💬 表达式 | 字面量、调用、方法、闭包、管道符 `\|>` | ✅ 100% |
-| 🔀 控制流 | if / match / guard / while / for / loop / break | ✅ 100% |
-| 🎯 模式匹配 | 通配 / 字面 / 构造器 / 范围 / or 模式 | ✅ 100% |
-| 🏷️ 类型系统 | 内置类型 / 泛型 / 元组 / 函数类型 / Result / Option | ✅ 100% |
-| 🏷️ 属性 | `#[deprecated]` / `#[cfg]` / `#[inline]` 等 | ✅ 100% |
-| ⚠️ 错误处理 | raise / try–catch / suberror | ✅ 支持 |
-| ⚡ 异步 | async fn / defer | ✅ 支持 |
-| 📝 字符串 | 普通 / 原始 `#\|...\|\#` / 插值 `$"..."` / 字节 | ✅ 100% |
+MoonBit Language Server（MBT-LS）是 MoonBit 生态中首个**开源、跨编辑器**的 Language Server Protocol（LSP）实现。它基于 Tree-sitter 增量解析引擎，向上层编辑器提供符号表、实时诊断、自动补全、定义跳转、悬停提示等标准语义服务，让 MoonBit 在 VSCode、Neovim、Helix、Zed 等任意 LSP 兼容编辑器中都能获得 IDE 级智能体验。
+
+**与官方生态的关系**：官方 `tree-sitter-moonbit` 与本项目的 Tree-sitter Grammar 负责语法前端（词法/语法解析），MBT-LS 在其之上构建语言服务端，与官方形成**上下游互补**关系，而非替代。
 
 ---
 
-## 支持的编辑器
+## 核心能力
 
-| 编辑器 | 状态 | 安装方式 |
-|--------|------|---------|
-| **VSCode** | ✅ 完整支持 | 见下方 [VSCode 安装](#vscode-安装) |
-| **Neovim** | ✅ 配置就绪 | 见下方 [Neovim 安装](#neovim-安装) |
-| **Helix** | ✅ 配置就绪 | 见下方 [Helix 安装](#helix-安装) |
-| **Zed** | 🔜 规划中 | 等待 Tree-sitter 原生集成 |
-| **GitHub** | ✅ 开箱即用 | 自动识别 `.mbt` 文件 |
-
----
-
-## 快速安装
-
-### 前置依赖
-
-```bash
-# 安装 tree-sitter CLI (v0.23+)
-npm install -g tree-sitter-cli
-
-# 确认安装成功
-tree-sitter --version
-```
-
-### 生成解析器
-
-```bash
-git clone https://github.com/Tino-hue/moonmark.git
-cd moonmark
-tree-sitter generate   # 从 grammar.js 生成 src/parser.c
-```
-
----
-
-## 编辑器配置
-
-### VSCode 安装
-
-1. 安装官方 [Tree-sitter Extension](https://marketplace.visualstudio.com/items?itemName=pydow.tree-sitter)
-2. 将 `editors/vscode/` 目录复制到你的 VSCode 扩展目录，或修改已有扩展的 `package.json`：
-
-```json
-{
-  "contributes": {
-    "languages": [{
-      "id": "moonbit",
-      "extensions": [".mbt"],
-      "configuration": "./language-configuration.json"
-    }],
-    "grammars": [{
-      "language": "moonbit",
-      "scopeName": "source.moonbit",
-      "path": "path/to/moonmark/queries/highlights.scm"
-    }]
-  }
-}
-```
-
-3. 选择主题：**MoonBit Dark** 或 **MoonBit Light**（已随仓库提供）
-
-### Neovim 安装
-
-在 `init.lua` 中添加：
-
-```lua
-local parser_config = require("nvim-treesitter.parsers").get_parser_configs()
-parser_config.moonbit = {
-  install_info = {
-    url = "https://github.com/Tino-hue/moonmark.git",
-    files = { "src/parser.c", "src/scanner.c" },
-    branch = "main",
-  },
-  filetype = "moonbit",
-}
-
-vim.filetype.add({ extension = { mbt = "moonbit" } })
-
-require'nvim-treesitter.configs'.setup {
-  ensure_installed = { "moonbit" },
-  highlight = { enable = true },
-}
-```
-
-### Helix 安装
-
-在 `~/.config/helix/languages.toml` 中添加：
-
-```toml
-[[language]]
-name = "moonbit"
-scope = "source.moonbit"
-file-types = ["mbt"]
-roots = []
-comment-token = "//"
-
-[language.grammar]
-source = { git = "https://github.com/Tino-hue/moonmark.git", subpath = "src", rev = "main" }
-```
-
----
-
-## 配色方案预览
-
-### Dark 主题（Dracula 风格）
-
-> TODO: 替换为 VSCode 真实截图（`editors/vscode/themes/moonbit-dark.json`）
-
-| 元素 | 颜色 | 效果 |
+| 层级 | 功能 | 状态 |
 |------|------|------|
-| 关键字 | `#FF79C6` 粉红 | 正常 |
-| 类型 | `#8BE9FD` 青色 | 正常 |
-| 函数 | `#50FA7B` 绿色 | 正常 |
-| 字符串 | `#F1FA8C` 黄色 | 正常 |
-| 数字 | `#BD93F9` 紫色 | 正常 |
-| 注释 | `#6272A4` 灰色 | 斜体 |
-| 属性 | `#E9F068` 青柠 | 正常 |
-| 异常 | `#FF5555` 红色 | 斜体 |
-
-### Light 主题（GitHub 风格）
-
-> TODO: 替换为 VSCode 真实截图（`editors/vscode/themes/moonbit-light.json`）
-
-| 元素 | 颜色 | 效果 |
-|------|------|------|
-| 关键字 | `#D73A49` 红色 | 正常 |
-| 类型 | `#005CC5` 蓝色 | 正常 |
-| 函数 | `#22863A` 绿色 | 正常 |
-| 字符串 | `#032F62` 深蓝 | 正常 |
-| 数字 | `#005CC5` 蓝色 | 正常 |
-| 注释 | `#6A737D` 灰色 | 斜体 |
-
----
-
-## 开发命令
-
-```bash
-# 生成 C 解析器
-tree-sitter generate
-
-# 运行全部语料测试（14 个覆盖核心语法）
-tree-sitter test
-
-# 解析单个文件（可视化 AST）
-tree-sitter parse examples/demo.mbt
-
-# 可视化 AST（文本格式）
-tree-sitter parse examples/demo.mbt
-
-# 构建 WASM 模块（用于 Web Playground，需 WASI SDK）
-tree-sitter build --wasm
-
-# 启动 Web Playground
-tree-sitter playground
-
-# Node.js 依赖安装
-npm install
-```
+| 语法前端 | Tree-sitter 增量解析（`grammar.js` + `scanner.c`） | ✅ 完整 |
+| 语义分析 | 符号表构建、作用域分析、引用追踪 | ✅ 已实现 |
+| 实时诊断 | 语法错误、未使用变量、基础语义检查 | ✅ 已实现 |
+| 自动补全 | 局部变量、函数名、类型名上下文补全 | 🚧 推进中 |
+| 定义跳转 | 符号声明位置定位 | 🚧 推进中 |
+| 悬停提示 | 函数签名、类型信息 Quick Info | 🚧 推进中 |
+| 客户端 | VSCode Extension（LSP Client） | ✅ 骨架已搭 |
+| 高亮配套 | Tree-sitter queries（`highlights.scm` 等） | ✅ 保留作为附加值 |
 
 ---
 
@@ -191,137 +33,125 @@ npm install
 
 ```
 moonmark/
-├── grammar.js              # 核心语法定义（~24KB，~300 条规则）
+├── grammar.js                  # Tree-sitter 语法定义（解析器前端）
 ├── src/
-│   ├── scanner.c           # 外部扫描器（复杂字符串处理）
-│   ├── parser.c            # 自动生成（勿手动修改）
-│   └── tree_sitter/        # 自动生成（勿手动修改）
+│   ├── scanner.c               # 外部扫描器
+│   └── parser.c                # 自动生成（Tree-sitter CLI）
+├── server/
+│   ├── src/
+│   │   ├── server.ts           # LSP 入口（Connection / Documents / Handlers）
+│   │   ├── parser.ts           # Tree-sitter 内存解析器（Node binding）
+│   │   └── analyzer.ts         # 语义分析引擎（符号表 / 诊断 / 补全 / 跳转）
+│   ├── package.json
+│   └── tsconfig.json
+├── client/
+│   └── vscode/
+│       ├── src/
+│       │   └── extension.ts    # VSCode LSP Client 启动逻辑
+│       ├── package.json
+│       └── tsconfig.json
 ├── queries/
-│   ├── highlights.scm      # 语法高亮查询（120+ 条规则）
-│   ├── injections.scm      # 语言注入（字符串插值）
-│   ├── indents.scm         # 缩进规则
-│   └── locals.scm          # 变量作用域规则
-├── test/
-│   └── corpus/
-│       └── basic.txt       # 14 个测试用例（~8KB）
+│   ├── highlights.scm          # 语法高亮查询（附加价值）
+│   ├── injections.scm          # 语言注入
+│   ├── indents.scm             # 缩进规则
+│   └── locals.scm              # 作用域规则
 ├── editors/
-│   ├── vscode/             # VSCode 扩展配置 + 主题
-│   ├── neovim/             # Neovim nvim-treesitter 配置
-│   └── helix/              # Helix 编辑器配置
-├── examples/
-│   └── demo.mbt            # 完整语法展示示例
-├── bindings/
-│   └── node/               # Node.js 绑定
-├── package.json            # npm 包配置
-├── README.md               # 项目文档（本文件）
-├── CONTRIBUTING.md         # 贡献指南
-├── CLAUDE.md               # 项目技术文档
-└── LICENSE                 # MIT 许可证
+│   ├── vscode/                 # 配套语法高亮 + 主题插件
+│   ├── neovim/                 # Neovim 配置
+│   └── helix/                  # Helix 配置
+├── bindings/node/              # Tree-sitter Node.js binding
+├── test/corpus/                # Tree-sitter 语料测试
+└── examples/
+    └── demo.mbt                # 语法展示示例
 ```
 
 ---
 
-## 测试用例展示
+## 快速开始
 
-运行 `tree-sitter test` 将验证以下全部语法特性：
-
-```
-✓ 1.  Function declaration
-✓ 2.  Struct declaration
-✓ 3.  Enum declaration
-✓ 4.  Type alias
-✓ 5.  Value declaration
-✓ 6.  Suberror declaration
-✓ 7.  Trait declaration
-✓ 8.  Extern function
-✓ 9.  Closure expression
-✓ 10. Impl block
-✓ 11. Associated call
-✓ 12. Package access call
-✓ 13. Tuple destructure
-✓ 14. Guard expression
-```
-
----
-
-## 技术实现细节
-
-### 关于 `scanner.c`
-
-当前 `scanner.c` 是一个**占位实现**（空扫描器）。所有词法结构（包括字符串插值、原始字符串、字节字面量、转义序列等）均已通过 `grammar.js` 中的内联规则直接处理，无需外部扫描器介入。
-
-保留空 `scanner.c` 的原因：
-- Tree-sitter CLI 在 `generate` 时默认会查找并编译 `src/scanner.c`
-- 为未来可能需要外部扫描器的复杂词法（如多行字符串嵌套深度追踪）预留接口
-- 保持与 `package.json` 中 `files` 字段和编辑器安装脚本的一致性
-
-### 高亮查询设计
-
-`queries/highlights.scm` 使用 Tree-sitter 的 `@capture` 机制，将 AST 节点映射到 TextMate 作用域名称：
-
-```scheme
-(function_declaration (identifier) @function)   ; 函数名 → @function
-(type_identifier) @type                        ; 类型名 → @type
-(call_expr (identifier) @function.call)        ; 调用 → @function.call
-```
-
-支持 36 种不同作用域，包括：
-- `@keyword`, `@type`, `@function`, `@variable`
-- `@string`, `@number`, `@comment`, `@operator`
-- `@attribute`, `@exception`, `@module`
-
----
-
-## 参与贡献
-
-详见 [CONTRIBUTING.md](CONTRIBUTING.md)
-
-快速开始：
+### 前置依赖
 
 ```bash
-# Fork 本仓库后克隆
-git clone https://github.com/<your-username>/moonmark.git
-cd moonmark
+# Node.js >= 18
+node --version
 
-# 创建功能分支
-git checkout -b feat/your-feature
+# Tree-sitter CLI (用于生成/测试 parser)
+npm install -g tree-sitter-cli
+```
 
-# 修改 grammar.js 后重新生成
+### 构建解析器
+
+```bash
+# 生成 C 解析器与 Node binding
 tree-sitter generate
 
-# 运行测试确保通过
-tree-sitter test
+# 构建 Node.js native binding（供 LSP server 内存内解析）
+npm install
+# 若 binding 未生成，执行：
+# node-gyp rebuild 或 npm run install:node
+```
 
-# 提交 PR
-git push origin feat/your-feature
+### 启动 Language Server
+
+```bash
+cd server
+npm install
+npm run build       # tsc 编译到 out/
+node out/server.js  # 以 stdio 方式启动 LSP server
+```
+
+### 启动 VSCode Client（开发调试）
+
+```bash
+cd client/vscode
+npm install
+npm run build       # tsc 编译到 out/
+# 然后在 VSCode 中按 F5 运行 Extension Host
+```
+
+### 运行语料测试
+
+```bash
+tree-sitter test
 ```
 
 ---
 
-## 相关链接
+## 编辑器支持
 
-- [Tree-sitter 官方文档](https://tree-sitter.github.io/tree-sitter/)
-- [MoonBit 官方文档（中文）](https://docs.moonbitlang.cn)
-- [MoonBit 官网](https://www.moonbitlang.cn/)
-- [TextMate 作用域命名规范](https://macromates.com/manual/en/language_grammars)
-- [tree-sitter-rust](https://github.com/tree-sitter/tree-sitter-rust) — 语法参考
-- [nvim-treesitter](https://github.com/nvim-treesitter/nvim-treesitter)
+| 编辑器 | 支持方式 | 状态 |
+|--------|---------|------|
+| **VSCode** | 本仓库 `client/vscode`（LSP Client） | ✅ 开发中 |
+| **Neovim** | 任意 LSP Client 连接 MBT-LS | 🔜 待验证 |
+| **Helix** | 内置 LSP 连接 MBT-LS | 🔜 待验证 |
+| **Zed** | 内置 LSP 连接 MBT-LS | 🔜 规划中 |
+
+> 语法高亮（Tree-sitter queries）已在 VSCode/Neovim/Helix 中可用，属于附加价值。
+
+---
+
+## 开发路线
+
+1. **Phase 1 — 语法与解析**（已完成）
+   - 完整的 Tree-sitter Grammar 覆盖 MoonBit v0.9.2 全部语法
+   - 14+ 语料测试用例确保解析正确性
+
+2. **Phase 2 — 语义引擎**（当前）
+   - 符号表与作用域分析
+   - 实时诊断（语法错误、基础语义检查）
+   - 自动补全、定义跳转、悬停提示
+
+3. **Phase 3 — 生态集成**（下一步）
+   - VSCode Extension 打包发布
+   - 多编辑器配置文档与自动化脚本
+   - CI/CD 与性能基准测试
 
 ---
 
 ## 许可证
 
-[MIT License](LICENSE) — 可自由使用、修改和分发。
+[MIT License](LICENSE)
 
 ---
 
-## 作者
-
-**Tino-hue（肖若愚）**
-
-- GitHub: [@Tino-hue](https://github.com/Tino-hue)
-- 参赛项目：2026 MoonBit 国产基础软件开源大赛
-
----
-
-> 🌙 **MoonHighlight** — 让 MoonBit 代码在任意编辑器中都能拥有精准、美观的语法高亮。
+> **MoonBit Language Server** — 让 MoonBit 在任何编辑器中都能拥有 IDE 级智能体验。

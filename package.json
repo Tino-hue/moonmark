@@ -1,14 +1,16 @@
 {
-  "name": "moonhighlight",
+  "name": "moonbit-language-server",
   "version": "0.1.0",
-  "description": "Tree-sitter grammar for MoonBit — precise syntax highlighting for VSCode, Neovim, Helix, Zed and more",
+  "description": "MoonBit Language Server Protocol (LSP) implementation — cross-editor semantic services powered by Tree-sitter",
   "keywords": [
-    "tree-sitter",
     "moonbit",
-    "syntax-highlighting",
-    "parser",
+    "language-server",
+    "lsp",
+    "tree-sitter",
     "ide",
-    "grammar"
+    "semantic-analysis",
+    "autocompletion",
+    "go-to-definition"
   ],
   "license": "MIT",
   "author": "Tino-hue (肖若愚)",
