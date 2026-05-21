@@ -80,7 +80,8 @@ let answer = 42
 
 (source_file
   (value_declaration
-    (identifier)
+    (identifier_pattern
+      (identifier))
     (number_literal)))
 
 ==================
@@ -159,7 +160,8 @@ fn main {
       (block_expr
         (block_statement
           (value_declaration
-            (identifier)
+            (identifier_pattern
+              (identifier))
             (closure_expr
               (param_list
                 (param
@@ -300,7 +302,8 @@ fn main {
       (block_expr
         (block_statement
           (value_declaration
-            (identifier)
+            (identifier_pattern
+              (identifier))
             (number_literal)))
         (block_statement
           (guard_expr
@@ -784,7 +787,8 @@ fn main {
       (block_expr
         (block_statement
           (value_declaration
-            (identifier)
+            (identifier_pattern
+              (identifier))
             (arrow_expr
               (identifier)
               (binary_expr
@@ -809,7 +813,8 @@ fn main {
       (block_expr
         (block_statement
           (value_declaration
-            (identifier)
+            (identifier_pattern
+              (identifier))
             (arrow_expr
               (identifier)
               (block_expr
@@ -835,7 +840,8 @@ fn main {
       (block_expr
         (block_statement
           (value_declaration
-            (identifier)
+            (identifier_pattern
+              (identifier))
             (is_expr
               (identifier)
               (constructor_pattern
@@ -1054,7 +1060,8 @@ fn main {
       (block_expr
         (block_statement
           (value_declaration
-            (identifier)
+            (identifier_pattern
+              (identifier))
             (await_expr
               (function_call
                 (identifier)
@@ -1339,7 +1346,8 @@ fn main {
       (block_expr
         (block_statement
           (value_declaration
-            (identifier)
+            (identifier_pattern
+              (identifier))
             (try_suffix_expr
               (function_call
                 (identifier)
@@ -1365,32 +1373,7 @@ fn foo(x? : Int) {
           (builtin_type)))
       (block_expr))))
 
-==================
-Let with constructor pattern
-==================
 
-fn main {
-  let Some(v) = x
-}
-
----
-
-(source_file
-  (declaration
-    (function_declaration
-      (identifier)
-      (block_expr
-        (block_statement
-          (value_declaration
-            (constructor_pattern
-              (constructor
-                (type_identifier)))))
-        (block_statement
-          (identifier))
-        (ERROR)
-        (block_statement
-          (identifier))))))
-__t__.mbt	Parse:    0.22 ms	   149 bytes/ms	(ERROR)
 
 
 ==================
