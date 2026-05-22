@@ -71,3 +71,10 @@ __pycache__/
 gen_tests*.py
 moonparse_temp/
 temp_*
+
+# Compiled output
+out/
+*.js.map
+*.d.ts
+package-lock.json
+*.tsbuildinfo

@@ -7,6 +7,8 @@ import {
   CompletionItem,
   DiagnosticSeverity,
   DocumentSymbol,
+  StreamMessageReader,
+  StreamMessageWriter,
 } from 'vscode-languageserver/node';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { parseDocument } from './parser';
@@ -18,7 +20,13 @@ import {
   getDocumentSymbols,
 } from './analyzer';
 
-const connection = createConnection(ProposedFeatures.all);
+const connection = process.argv.includes('--stdio') || process.argv.includes('--node-ipc')
+  ? createConnection(ProposedFeatures.all)
+  : createConnection(
+      ProposedFeatures.all,
+      new StreamMessageReader(process.stdin),
+      new StreamMessageWriter(process.stdout)
+    );
 const documents: TextDocuments<TextDocument> = new TextDocuments(TextDocument);
 
 connection.onInitialize((params: InitializeParams) => {
