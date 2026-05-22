@@ -1,9 +1,0 @@
-{
-  "source_dir": "D:\\MoonBit Language Server",
-  "name": "LittleFish/depsight",
-  "packages": [],
-  "deps": [],
-  "backend": "wasm-gc",
-  "opt_level": "debug",
-  "source": "src"
-}
