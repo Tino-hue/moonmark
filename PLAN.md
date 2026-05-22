@@ -49,19 +49,22 @@
 
 ### Day 4 — Diagnostic 验证
 
-- [ ] 在 VSCode 中故意写一段语法错误的 MoonBit 代码
-- [ ] 观察编辑器是否显示红色波浪线（diagnostic）
-- [ ] 检查 `analyzer.ts` 的 `ERROR` 节点检测逻辑是否正确工作
-- [ ] 如果 diagnostic 未显示，排查 server → client 的消息链路
+- [x] 在 VSCode 中故意写一段语法错误的 MoonBit 代码
+- [x] 观察编辑器是否显示红色波浪线（diagnostic）
+- [x] 检查 `analyzer.ts` 的 `ERROR` 节点检测逻辑是否正确工作
+- [x] 修复 `parser.ts`：tree-sitter CLI 非零退出时仍提取 stdout 中的 XML
+
+> **状态**：Diagnostic 工作正常；修复了 CLI 非零退出码导致解析失败的 bug。
 
 **验收标准**：在 `.mbt` 文件中输入 `fn main { let }`，看到红色波浪线提示语法错误。
 
 ### Day 5 — Document Symbol
 
-- [ ] 验证 `textDocument/documentSymbol` 是否正常工作
-- [ ] 在 VSCode 中打开 Outline 面板（Ctrl+Shift+O 或左侧大纲）
-- [ ] 确认函数名、变量名出现在大纲中
-- [ ] 修复 `analyzer.ts` 中 `getDocumentSymbols` 返回的数据格式问题
+- [x] 验证 `textDocument/documentSymbol` 是否正常工作
+- [x] 在 VSCode 中打开 Outline 面板（Ctrl+Shift+O 或左侧大纲）
+- [x] 确认函数名、变量名出现在大纲中
+
+> **状态**：`Ctrl+Shift+O` 正确显示 `main` 函数和 `x` 变量。
 
 **验收标准**：`.mbt` 文件的 Outline 面板正确列出文件内所有函数和变量。
 
