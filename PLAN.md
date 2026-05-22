@@ -1,320 +1,378 @@
-# MoonBit Language Server — 30 天开发计划
+# MoonBit Depsight — 35 天开发计划
 
-> 周期：2026/05/22 — 2026/06/20（共 30 天）
-> 目标：LSP 可运行、可演示、有基础竞争力
+> 周期：2026/05/23 — 2026/06/26（共 35 天）  
+> 目标：完成 MoonBit Depsight 依赖健康诊断器的核心功能，发布至 mooncakes.io 并具备可演示性  
+> 项目方向：依赖审计、健康评分、风险可视化 CLI 工具
 
 ---
 
-## Week 1：基础设施跑通（Day 1 — Day 7）
+## Week 1：项目基建与依赖解析（Day 1 — Day 7）
 
-**本周目标**：Tree-sitter Node binding 编译成功，LSP Server 启动，VSCode Client 能连接并显示实时诊断。
+**本周目标**：清理旧 LSP 代码，建立新的 MoonBit 项目结构；实现 `moon.mod.json` 读取与解析；打通 mooncakes.io 元数据获取链路。
 
-### Day 1 — 编译 binding
+### Day 1 — 项目迁移与初始化
 
-- ☑️ 根目录执行 `npm install`
-- ☑️ 安装 `node-gyp` 依赖（Python、MSVC Build Tools）
-- ☑️ 执行 `node-gyp rebuild` 或 `npm run install:node` 编译 `moonhighlight.node`
-- ☑️ 验证 `bindings/node/index.js` 能正常 `require`，不抛异常
-- ☑️ 写一个本地测试脚本 `test-binding.js`，调用 `parse("fn main {}")`，确认返回 AST 对象
+- ⬜ 归档旧 LSP 代码（将 `server/`、`client/`、`editors/` 移入 `archive/` 目录或删除）
+- ⬜ 在项目根目录初始化新的 MoonBit 模块：`moon new depsight`
+- ⬜ 配置 `moon.mod.json`：模块名 `LittleFish/depsight`，版本 `0.1.0`
+- ⬜ 设计目录结构：`src/parse/`、`src/graph/`、`src/analyze/`、`src/report/`、`src/cli/`
+- ⬜ 验证 `moon build` 通过，输出 `target/js/release/build/` 产物
 
-> **状态**：原生 `.node` 编译因 WASM 下载证书失败 + node-gyp 环境未配置而受阻。按风险应对回退到 **CLI fallback 方案**：`parser.ts` 在 binding 不可用时自动调用 `tree-sitter.exe parse -x` 并通过 XML 解析生成 AST。`test-binding.js` 已验证通过，核心目标（AST 解析）达成。
+**验收标准**：`moon build --target js` 成功，生成可运行的 JS 文件。
 
-**验收标准**：`node test-binding.js` 运行成功，终端打印 AST 根节点信息。
+### Day 2 — moon.mod.json 解析器
 
-### Day 2 — Server 启动
+- ⬜ 研究 `moon.mod.json` 实际格式（字段：`name`、`version`、`deps` 等）
+- ⬜ 手写 JSON 解析逻辑（使用 `@moonbitlang/core` 的 `json` 模块）
+- ⬜ 定义核心数据结构：`Module { name, version, deps: Map[String, String] }`
+- ⬜ 处理版本约束字符串（`"~> 0.1.0"`、`">= 0.2"` 等），提取基础语义
+- ⬜ 写单元测试：读取 3 个真实的 `moon.mod.json` 样本，验证解析正确性
 
-- ☑️ `cd server && npm install`
-- ☑️ 修复 `server/src/parser.ts` 中 binding 路径问题（已添加 CLI fallback）
-- ☑️ `npm run build` 编译 `server.ts`，确保无 TypeScript 错误
-- ☑️ 启动 server：`node out/server.js`，确认进程不退出
-- ☑️ 用 `echo` 测试 stdio 通信是否正常
+**验收标准**：传入任意合法 `moon.mod.json` 字符串，正确返回 `Module` 结构，无字段丢失。
 
-> **状态**：`server.ts` 修复了 `createConnection` 在无参数时的崩溃问题（显式使用 `StreamMessageReader/Writer`）；通过 pipe 发送 LSP initialize 请求，server 正确返回 capabilities。
+### Day 3 — mooncakes.io API 调研与封装
 
-**验收标准**：`node out/server.js` 启动后保持运行，无报错。
+- ⬜ 通过浏览器抓包或阅读文档，确认 mooncakes.io 的包元数据 API 端点
+- ⬜ 确定获取包 `moon.mod.json` 的 URL 模式（如 `https://mooncakes.io/api/v1/packages/{name}/{version}`）
+- ⬜ 使用 MoonBit JS FFI 封装 `fetch` 调用：定义 `fetchPackageModJson(name, version) -> String`
+- ⬜ 处理网络错误（404、超时、JSON 解析失败）
+- ⬜ 写本地 mock 数据（3-5 个包的假 `moon.mod.json`），确保离线可测试
 
-### Day 3 — Client 连接
+**验收标准**：运行测试时，能从 mooncakes.io 拉取至少 1 个真实包的 `moon.mod.json` 并解析成功。
 
-- ☑️ `cd client/vscode && npm install`
-- ☑️ `npm run build` 编译 extension.ts
-- ☑️ 修复 `extension.ts` 中 server 模块路径（指向项目根目录 `server/out/server.js`）
-- ☑️ 创建 `.vscode/launch.json` 调试配置
-- ☑️ 在 VSCode 中按 F5 运行 Extension Host
-- ☑️ 打开一个 `.mbt` 文件，观察 Output 面板是否有 LSP 通信日志
-- ☑️ 确认 `client.start()` 成功，`server` 进程被正确拉起
+### Day 4 — 依赖图数据结构
 
-> **状态**：Client 代码与调试配置已就绪，等待用户在 VSCode 中按 F5 实际验证。
+- ⬜ 定义 `DependencyNode`：包含包名、版本、深度、父节点引用
+- ⬜ 定义 `DependencyGraph`：基于 `Map[String, DependencyNode]` + 邻接表
+- ⬜ 实现 `addNode`、`addEdge`、`getChildren`、`getParents` 基础操作
+- ⬜ 实现 `getAllNodes()` 返回拓扑排序后的节点列表
+- ⬜ 写单元测试：手动构建一个 5 节点 6 边的小型依赖图，验证遍历正确
 
-**验收标准**：VSCode Extension Host 启动后，打开 `.mbt` 文件，Output 面板出现 `[moonbit-lsp]` 相关日志。
+**验收标准**：能正确表示 "A 依赖 B，B 依赖 C 和 D" 这样的层级关系，无内存泄漏。
 
-### Day 4 — Diagnostic 验证
+### Day 5 — 传递依赖图构建器
 
-- ☑️ 在 VSCode 中故意写一段语法错误的 MoonBit 代码
-- ☑️ 观察编辑器是否显示红色波浪线（diagnostic）
-- ☑️ 检查 `analyzer.ts` 的 `ERROR` 节点检测逻辑是否正确工作
-- ☑️ 修复 `parser.ts`：tree-sitter CLI 非零退出时仍提取 stdout 中的 XML
+- ⬜ 实现递归构建逻辑：从根 `moon.mod.json` 出发，逐层拉取传递依赖
+- ⬜ 引入缓存：已拉取过的 `(name, version)` 不再重复请求
+- ⬜ 处理版本冲突：同一包的不同版本在图中作为独立节点存在
+- ⬜ 限制递归深度（默认 10 层），防止无限循环
+- ⬜ 在真实 mooncakes 包上测试（选 3-5 个热门包，如 `@moonbitlang/core`）
 
-> **状态**：Diagnostic 工作正常；修复了 CLI 非零退出码导致解析失败的 bug。
+**验收标准**：输入 `@moonbitlang/core` 的包名，能在 5 秒内构建出完整的传递依赖图（含 20+ 节点）。
 
-**验收标准**：在 `.mbt` 文件中输入 `fn main { let }`，看到红色波浪线提示语法错误。
+### Day 6 — 循环依赖检测
 
-### Day 5 — Document Symbol
+- ⬜ 在 `DependencyGraph` 中实现 DFS 环检测算法
+- ⬜ 发现环时，记录环路径并生成 `Error` 级别的诊断信息
+- ⬜ 写测试用例：构造一个包含循环依赖的 mock 数据，验证检测灵敏度
+- ⬜ 处理 mooncakes.io 上真实包：确认是否存在循环依赖案例
+- ⬜ 优化性能：对大图（>100 节点）的环检测耗时 < 100ms
 
-- ☑️ 验证 `textDocument/documentSymbol` 是否正常工作
-- ☑️ 在 VSCode 中打开 Outline 面板（Ctrl+Shift+O 或左侧大纲）
-- ☑️ 确认函数名、变量名出现在大纲中
-
-> **状态**：`Ctrl+Shift+O` 正确显示 `main` 函数和 `x` 变量。
-
-**验收标准**：`.mbt` 文件的 Outline 面板正确列出文件内所有函数和变量。
-
-### Day 6 — 增量同步测试
-
-- ⬜ 在 VSCode 中连续修改代码，观察 diagnostic 是否实时更新
-- ⬜ 测试删除大段代码、粘贴代码块等场景
-- ⬜ 排查增量同步可能导致的 AST 解析错误
-- ⬜ 优化 `parser.ts` 的 parseDocument 性能（复用 parser 实例）
-
-**验收标准**：连续编辑 `.mbt` 文件 1 分钟，diagnostic 始终准确，无卡死或延迟 >1s。
+**验收标准**：任何包含循环依赖的图都能被检测并准确报告环上所有节点。
 
 ### Day 7 — Week 1 验收 + 文档
 
-- ⬜ 录制一个 15 秒 GIF：打开文件 → 显示 diagnostic → 查看 Outline
-- ⬜ 更新 `README.md` 的"快速开始"章节，补充实际运行截图
-- ⬜ 写 `docs/week1.md` 记录本周遇到的问题和解决方案
-- ⬜ 提交代码：`git add -A && git commit -m "week1: lsp bootstrapped"`
+- ⬜ 整理 `src/parse/` 和 `src/graph/` 的公开接口，写 `README.md` 模块说明
+- ⬜ 录制一个 10 秒终端演示：`depsight tree` 输出某个包的依赖树
+- ⬜ 提交代码：`git add -A && git commit -m "week1: parser + dependency graph core"`
+- ⬜ 清理旧 LSP 产物（`moonbit.dll`、`_build/` 等），确保仓库干净
 
-**Week 1 里程碑**：VSCode 能看到 MoonBit 文件的实时语法错误和文档大纲。
+**Week 1 里程碑**：能解析本地 `moon.mod.json`，递归构建传递依赖图，检测循环依赖。
 
 ---
 
-## Week 2：核心语义功能（Day 8 — Day 14）
+## Week 2：核心诊断引擎（Day 8 — Day 14）
 
-**本周目标**：实现精准的作用域分析，让补全、跳转、悬停从"字符串匹配"升级为"语义感知"。
+**本周目标**：实现体积分析、许可证识别、废弃 API 扫描三大诊断维度。
 
-### Day 8 — 作用域链
+### Day 8 — 版本语义与新鲜度
 
-- ⬜ 重构 `analyzer.ts`，引入 `Scope` 类/接口
-- ⬜ 在 `analyze()` 中遍历 AST 时，维护一个作用域栈（函数进入 push，退出 pop）
-- ⬜ 符号按作用域分层存储（global / function / block）
-- ⬜ 写单元测试：嵌套函数内定义的变量，外层无法访问
+- ⬜ 实现 SemVer 解析器：`Version { major, minor, patch, prerelease }`
+- ⬜ 实现版本比较：`compare(v1, v2)`、`isOutdated(current, latest)`
+- ⬜ 实现版本约束匹配：`satisfies(version, constraint)`（支持 `^`、`~`、`>=` 等）
+- ⬜ 从 mooncakes.io 获取包的最新版本号，计算"新鲜度分数"
+- ⬜ 写单元测试：覆盖正常版本、预发布版本、通配符约束
 
-**验收标准**：`analyze()` 返回的 symbols 带有 `scopeId`，能区分全局变量和局部变量。
+**验收标准**：`satisfies("0.2.1", "~> 0.2.0") == true`，`isOutdated("0.1.0", "0.3.0") == true`。
 
-### Day 9 — Completion 精准化
+### Day 9 — 依赖体积静态分析
 
-- ⬜ 重写 `getCompletions`：只返回当前作用域及外层作用域可见的符号
-- ⬜ 区分 CompletionItemKind（Function / Variable / Type）
-- ⬜ 过滤掉当前光标所在作用域之外不可见的符号
-- ⬜ 在 VSCode 中测试：函数内只补全局部变量和全局函数，不补全其他函数的局部变量
+- ⬜ 设计体积估算策略：基于包内 `.mbt` 文件总字符数 + 接口文件 `.mi` 大小
+- ⬜ 实现 `calculatePackageSize(name, version)`：通过 API 或本地缓存估算
+- ⬜ 实现体积归因：每个节点标注 "自身大小" 和 "传递大小（含所有子孙）"
+- ⬜ 定位 "体积罪魁祸首"：按传递大小排序，输出 TOP 10
+- ⬜ 在 3 个真实项目上测试，验证估算值与实际构建体积的相关性
 
-**验收标准**：在函数 A 内部按 `Ctrl+Space`，补全列表不出现函数 B 的局部变量。
+**验收标准**：能输出类似 `Package A: 自身 12KB / 传递 340KB` 的归因数据。
 
-### Day 10 — Definition 精准化
+### Day 10 — 许可证识别器
 
-- ⬜ 重写 `getDefinition`：在符号表中做精确匹配，返回准确的 `Location`（含 URI）
-- ⬜ 处理同名符号的遮蔽（shadowing）问题：优先返回最近作用域的声明
-- ⬜ 在 `server.ts` 中把 `Location.create('file://placeholder', ...)` 改为真实文件 URI
-- ⬜ VSCode 中测试 `Ctrl+Click` 跳转
+- ⬜ 收集常见 SPDX 协议标识符列表（MIT、Apache-2.0、BSD-3、GPL-3.0 等）
+- ⬜ 实现 `detectLicense(text: String) -> String?`：基于关键词匹配和正则
+- ⬜ 从 mooncakes.io 获取包的 LICENSE 文件内容（或从 `moon.mod.json` 中的 license 字段）
+- ⬜ 标记高风险协议：GPL、AGPL、SSPL 等强 copyleft 协议
+- ⬜ 写测试：传入 MIT 许可证全文，返回 `"MIT"`；传入未知文本，返回 `None`
 
-**验收标准**：`Ctrl+Click` 函数名或变量名，准确跳转到其声明位置（跨文件至少同文件内准确）。
+**验收标准**：输入 10 个常见开源许可证文本，识别准确率 >= 90%。
 
-### Day 11 — Hover 签名提取
+### Day 11 — 废弃 API 扫描器设计
 
-- ⬜ 重写 `getHover`：从 AST 中提取函数参数列表和返回类型
-- ⬜ 对于函数，hover 显示 `fn name(param: Type) -> ReturnType`
-- ⬜ 对于变量，hover 显示类型信息（如果能从赋值推导）
-- ⬜ 格式化 markdown 输出
+- ⬜ 研究 MoonBit 接口文件 `.mi` 的格式（或源码中 `@deprecated` 的语法模式）
+- ⬜ 确定废弃 API 的扫描策略：基于文本正则 vs 基于 AST（先选正则，保进度）
+- ⬜ 定义 `DeprecatedApi { package, name, since, message }` 数据结构
+- ⬜ 实现 `scanDeprecatedApis(sourceCode: String) -> Array[DeprecatedApi]`
+- ⬜ 从 mooncakes.io 下载包的源码或接口文件，提取废弃 API 列表
 
-**验收标准**：鼠标悬停在函数名上，出现包含参数和返回类型的提示框。
+**验收标准**：传入包含 `@deprecated` 标记的 MoonBit 源码，正确提取所有被废弃的函数名。
 
-### Day 12 — 未使用变量检测
+### Day 12 — 跨包废弃 API 传递检测
 
-- ⬜ 在 `analyze()` 中，为每个 symbol 增加 `referenced` 标志位
-- ⬜ 遍历 AST 的 `identifier` 节点，标记哪些 symbol 被引用过
-- ⬜ 对未被引用的变量生成 `warning` 级别的 diagnostic
-- ⬜ 在 VSCode 中测试：定义了但未使用的变量显示黄色波浪线
+- ⬜ 实现 "谁调用了废弃 API" 的追踪：在依赖图中标记引用关系
+- ⬜ 设计引用扫描策略：基于 `.mi` 中的 `import` 和函数调用签名匹配
+- ⬜ 生成诊断：`Package B@0.2.0 -> Package A@0.1.0::old_function (deprecated since 0.1.5)`
+- ⬜ 处理间接传递：A 废弃 → B 调用 A → C 调用 B，C 也应被提示风险
+- ⬜ 在 mock 数据上验证三层传递检测
 
-**验收标准**：`let x = 42` 但后续未使用 `x`，显示黄色警告 "unused variable"。
+**验收标准**：构造一个三层依赖链（C→B→A），A 中有废弃 API，检测报告中 C 被标记为 "间接暴露于废弃 API"。
 
-### Day 13 — 符号重命名骨架
+### Day 13 — 健康评分模型（上）
 
-- ⬜ 实现 `textDocument/rename` handler（stub 级别）
-- ⬜ 在 `analyzer.ts` 中增加 `getReferences(symbol)`：收集所有引用该符号的 `Range`
-- ⬜ 返回 `WorkspaceEdit`，替换所有引用位置
-- ⬜ VSCode 中测试 F2 重命名（单文件内）
+- ⬜ 设计评分维度：版本新鲜度(25%)、协议合规(20%)、废弃 API 密度(25%)、体积合理性(20%)、维护活跃度(10%)
+- ⬜ 实现各维度独立打分函数（0-100）
+- ⬜ 实现加权汇总：`calculateHealthScore(node) -> Int`
+- ⬜ 为根项目计算 "整体健康分"：所有直接依赖的加权平均分
+- ⬜ 写单元测试：给定一个已知健康的包，分数 > 80；已知有问题的包，分数 < 50
 
-**验收标准**：按 F2 重命名一个局部变量，文件中所有引用同步更新。
+**验收标准**：同一组依赖，手动评估和算法评估结果方向一致。
 
 ### Day 14 — Week 2 验收 + 文档
 
-- ⬜ 录制 30 秒 GIF：补全 → 跳转 → hover → 重命名
-- ⬜ 更新 `README.md` 核心功能描述，替换为实际截图
-- ⬜ 写 `docs/week2.md` 记录本周技术决策
-- ⬜ 提交代码：`git commit -m "week2: semantic engine core"`
+- ⬜ 整合 Week 2 所有模块，写一个 `runAnalysis(graph) -> Report` 的入口函数
+- ⬜ 生成一份纯文本测试报告，在终端打印查看效果
+- ⬜ 写 `docs/week2.md`：记录诊断引擎的设计决策和遇到的格式问题
+- ⬜ 提交代码：`git commit -m "week2: analyzer engine core"`
 
-**Week 2 里程碑**：VSCode 中 MoonBit 文件支持语义补全、精准跳转、hover 提示、未使用变量警告、重命名。
+**Week 2 里程碑**：能对任意依赖图输出体积归因、许可证合规状态、废弃 API 检测、健康评分。
 
 ---
 
-## Week 3：进阶与生态（Day 15 — Day 21）
+## Week 3：报告渲染与 CLI（Day 15 — Day 21）
 
-**本周目标**：增加 Neovim/Helix 支持文档，优化性能，补充更多 LSP 功能。
+**本周目标**：让诊断结果可阅读、可交互。完成终端 TUI、HTML 报告、CLI 命令体系。
 
-### Day 15 — Neovim 配置
+### Day 15 — 终端表格报告
 
-- ⬜ 写 `editors/neovim/README.md`：如何安装和配置 MBT-LS
-- ⬜ 提供一份最小可用 `init.lua` 配置示例（含 nvim-lspconfig 自定义 server 配置）
-- ⬜ 本地安装 Neovim 测试配置是否能连接 LSP
-- ⬜ 记录 Neovim 特有的问题（如 diagnostic 显示方式不同）
+- ⬜ 设计终端输出格式：表头、颜色编码（红/黄/绿）、对齐
+- ⬜ 实现 `renderTable(nodes: Array[NodeInfo]) -> String`
+- ⬜ 实现 `renderTree(root, prefix)`：以树形缩进展示依赖层级
+- ⬜ 支持 `--depth` 参数控制树形展开层级
+- ⬜ 在 Windows Terminal / PowerShell / VSCode 终端中测试颜色显示
 
-**验收标准**：Neovim 打开 `.mbt` 文件，能看到 diagnostic 和补全。
+**验收标准**：运行 `depsight tree --depth 2`，终端输出对齐、着色正确的依赖树。
 
-### Day 16 — Helix 配置
+### Day 16 — 审计摘要报告
 
-- ⬜ 写 `editors/helix/README.md`：Helix 内置 LSP 配置方法
-- ⬜ 提供 `languages.toml` 配置示例
-- ⬜ 本地安装 Helix 测试
-- ⬜ 记录 Helix 与 VSCode 的差异
+- ⬜ 设计 `depsight audit` 的输出格式（类似 `npm audit`）
+- ⬜ 按风险等级分组：Critical / Warning / Info
+- ⬜ 每条诊断包含：包名、版本、问题描述、修复建议
+- ⬜ 底部输出汇总：`X critical, Y warnings, Z info. Health Score: 78/100`
+- ⬜ 支持 `--json` 输出（供 CI 消费）
 
-**验收标准**：Helix 打开 `.mbt` 文件，能看到 diagnostic。
+**验收标准**：`depsight audit --json` 输出合法 JSON，包含完整的诊断数组和总分。
 
-### Day 17 — 格式化骨架
+### Day 17 — HTML 报告生成器
 
-- ⬜ 实现 `textDocument/formatting` handler（stub 级别）
-- ⬜ 基于 AST 做基础格式化：统一缩进（2 空格或 4 空格）、换行处理
-- ⬜ 不追求完美，先保证"不会破坏代码结构"
-- ⬜ VSCode 中测试右键 "Format Document"
+- ⬜ 设计 HTML 报告结构：概览仪表盘 → 依赖树可视化 → 详细诊断列表
+- ⬜ 手写 HTML 模板字符串（不引入前端框架，单文件即可）
+- ⬜ 实现交互式依赖树：使用 `<details>` + `<summary>` 或内嵌 CSS/JS 做折叠展开
+- ⬜ 颜色编码：健康分 >= 80 绿色，50-79 黄色，< 50 红色
+- ⬜ 实现 `depsight report --html -o report.html`
 
-**验收标准**：右键格式化后，代码缩进正确，无语法错误引入。
+**验收标准**：生成的 `report.html` 在浏览器中打开，能交互式展开依赖树，无外部网络依赖。
 
-### Day 18 — 性能优化
+### Day 18 — CLI 参数体系
 
-- ⬜ 优化 `parser.ts`：复用 `Parser` 实例，避免每次编辑都 `new Parser()`
-- ⬜ 优化 `analyzer.ts`：缓存上次分析结果，如果 AST 无变化则跳过
-- ⬜ 测试大文件（>1000 行）的响应速度
-- ⬜ 如果慢，考虑增量解析的 Tree-sitter 原生能力（`parse(source, oldTree)`）
+- ⬜ 设计 CLI 接口：`depsight tree [package]`、`depsight audit`、`depsight report [options]`
+- ⬜ 实现参数解析：`--depth`、`-o` / `--output`、`--json`、`--fail-on-score <n>`
+- ⬜ 实现 `--cache-dir` 指定本地缓存路径
+- ⬜ 实现 `--offline` 模式：仅使用本地缓存，不请求网络
+- ⬜ 写 `--help` 文案，每个命令配示例
 
-**验收标准**：1000 行 `.mbt` 文件编辑后，diagnostic 更新延迟 < 500ms。
+**验收标准**：`depsight --help` 输出清晰、完整的命令说明；参数解析无歧义。
 
-### Day 19 — 错误恢复与鲁棒性
+### Day 19 — 缓存与离线支持
 
-- ⬜ 处理 `parser.ts` 解析失败的情况（返回 `null` 时的 fallback）
-- ⬜ 处理 server crash 自动重启（VSCode Client 的 `restart` 逻辑）
-- ⬜ 处理非法 UTF-8 字符、空文件等边界情况
-- ⬜ 增加 `try-catch` 保护，确保 server 不会因为单条消息崩溃
+- ⬜ 实现本地文件缓存：将拉取的 `moon.mod.json` 和源码存入 `~/.depsight/cache/`
+- ⬜ 实现缓存 TTL：默认 24 小时，支持 `--no-cache` 强制刷新
+- ⬜ 实现缓存序列化：使用 JSON 格式存储，便于手动查看
+- ⬜ 测试离线模式：断网后运行 `depsight audit --offline`，仍能从缓存输出报告
+- ⬜ 清理过期缓存的定期机制（或启动时自动清理 >7 天的缓存）
 
-**验收标准**：输入乱码、删除全部内容、快速连续粘贴，server 不崩溃。
+**验收标准**：第二次运行同一命令时，网络请求数减少 80% 以上；离线模式可用。
 
-### Day 20 — 代码清理与重构
+### Day 20 — CI/CD 集成支持
 
-- ⬜ 统一 `server/src/` 的代码风格（命名、注释、接口）
-- ⬜ 提取公共类型到 `types.ts`
-- ⬜ 删除调试用的 `console.log`
-- ⬜ 检查 TypeScript `strict` 模式下的所有警告
+- ⬜ 实现 `--fail-on-score <n>`：当整体健康分低于阈值时，进程退出码非 0
+- ⬜ 实现 `--fail-on-critical`：发现 Critical 级别诊断时，退出码非 0
+- ⬜ 写 GitHub Actions 示例 `.github/workflows/depsight.yml`
+- ⬜ 写 GitLink CI 示例配置
+- ⬜ 在本地模拟 CI 环境测试退出码行为
 
-**验收标准**：`npm run build` 0 错误 0 警告。
+**验收标准**：`depsight audit --fail-on-score 80` 在健康分 70 时返回 exit code 1。
 
 ### Day 21 — Week 3 验收 + 文档
 
-- ⬜ 录制多编辑器演示视频（VSCode + Neovim + Helix）
-- ⬜ 更新 `README.md` 的编辑器支持表格，补充配置链接
-- ⬜ 写 `docs/week3.md`
-- ⬜ 提交代码：`git commit -m "week3: editors + performance + robustness"`
+- ⬜ 在 5 个真实 MoonBit 项目上运行 `depsight audit`，收集报告样本
+- ⬜ 对比不同项目的健康分，验证评分合理性
+- ⬜ 写 `docs/week3.md`：CLI 设计思路、报告渲染技术选型
+- ⬜ 提交代码：`git commit -m "week3: cli + reporter + cache"`
 
-**Week 3 里程碑**：VSCode / Neovim / Helix 三端可用，性能达标，代码整洁。
-
----
-
-## Week 4：测试、演示与提交准备（Day 22 — Day 28）
-
-**本周目标**：全面测试、准备演示材料、整理文档，达到可提交状态。
-
-### Day 22 — LSP 功能全面测试
-
-- ⬜ 编写测试矩阵：每个 LSP handler（diagnostic / completion / definition / hover / rename / formatting / documentSymbol）各测 5 个场景
-- ⬜ 覆盖语法特性：函数、结构体、枚举、泛型、异步、错误处理、模式匹配
-- ⬜ 记录 bug 列表，按优先级修复
-
-**验收标准**：测试矩阵中 80% 以上场景通过。
-
-### Day 23 — Bug 修复日
-
-- ⬜ 修复 Day 22 发现的高优先级 bug
-- ⬜ 如果补全/跳转在复杂场景下不准确，回退到 Week 2 优化作用域分析
-- ⬜ 确保 CI 继续全绿
-
-**验收标准**：CI 通过，已知高优 bug 清零。
-
-### Day 24 — 演示项目准备
-
-- ⬜ 写一份完整的 MoonBit 示例项目（放在 `demo/` 目录）
-- ⬜ 示例包含：函数、结构体、枚举、模式匹配、泛型、异步函数、错误处理
-- ⬜ 确保示例代码在 MBT-LS 下能完整展示所有功能
-- ⬜ 为示例写注释，引导评委关注重点
-
-**验收标准**：打开 `demo/` 项目，能流畅演示补全、跳转、hover、diagnostic。
-
-### Day 25 — 演示视频录制
-
-- ⬜ 录制 1-2 分钟演示视频：打开 demo 项目 → 语法错误检测 → 自动补全 → 跳转定义 → hover 提示 → 重命名 → 格式化
-- ⬜ 视频要清晰、无多余操作、配字幕说明
-- ⬜ 视频上传到哪里？（B站、YouTube、GitHub Release Assets）
-
-**验收标准**：视频时长 < 2 分钟，观众能看懂核心功能。
-
-### Day 26 — 文档完善
-
-- ⬜ 重写 `README.md`：项目定位 → 功能截图 → 安装指南 → 开发文档 → 演示视频链接
-- ⬜ 写 `CONTRIBUTING.md`：如何编译、如何测试、如何提交 PR
-- ⬜ 检查所有文档链接是否有效
-- ⬜ 统一中英文术语（Language Server / 语言服务器）
-
-**验收标准**：一个从未接触过本项目的人，按照 README 能在 10 分钟内跑起来。
-
-### Day 27 — 最终代码审查
-
-- ⬜ 通读 `server/src/` 全部代码，检查是否有明显逻辑错误
-- ⬜ 检查 `package.json` 版本号、作者信息、license
-- ⬜ 确认 `.gitignore` 没有遗漏（不提交 `node_modules/`、`out/`）
-- ⬜ 最终 `git push` 到 GitHub 和 GitLink
-
-**验收标准**：仓库干净、CI 全绿、文档完整。
-
-### Day 28 — Week 4 验收 + 缓冲
-
-- ⬜ 让朋友或同学按照 README 尝试部署，收集反馈
-- ⬜ 根据反馈做最后一轮微调
-- ⬜ 准备答辩 PPT 提纲（如果有路演环节）
-- ⬜ 写 `docs/week4.md` 总结
-- ⬜ 提交代码：`git commit -m "week4: final polish"`
-
-**Week 4 里程碑**：项目可独立运行、可演示、文档完备，达到提交标准。
+**Week 3 里程碑**：`depsight` CLI 可用，支持 tree/audit/report 三种模式，有终端和 HTML 两种输出，可集成 CI。
 
 ---
 
-## Week 5：缓冲与最终提交（Day 29 — Day 30）
+## Week 4：测试、性能与集成（Day 22 — Day 28）
 
-**本周目标**：应对突发问题，做最终验收，准备提交材料。
+**本周目标**：全面测试、性能调优、在真实生态中验证工具可靠性。
 
-### Day 29 — 最终测试
+### Day 22 — 单元测试矩阵
 
-- ⬜ 在新环境中（虚拟机或另一台电脑）从零克隆仓库、编译、运行
-- ⬜ 测试 Tree-sitter binding 在新环境中的编译成功率
-- ⬜ 如果有环境依赖问题，写 `TROUBLESHOOTING.md`
-- ⬜ 检查 GitLink 仓库是否和 GitHub 同步
+- ⬜ 为 `parse/` 模块写测试：10 个 `moon.mod.json` 样本（合法 + 边界 + 畸形）
+- ⬜ 为 `graph/` 模块写测试：空图、单节点、深树、环图、DAG
+- ⬜ 为 `analyze/` 模块写测试：版本比较、许可证识别、废弃 API 提取、评分计算
+- ⬜ 为 `report/` 模块写测试：JSON 输出格式校验、HTML 生成不抛异常
+- ⬜ 配置 `moon test`，确保 `moon test --target js` 全部通过
 
-**验收标准**：在新电脑上 15 分钟内跑通 LSP。
+**验收标准**：`moon test` 运行后，通过率 >= 90%，无未捕获异常。
 
-### Day 30 — 提交日
+### Day 23 — 真实生态采样测试
 
-- ⬜ 确认大赛提交表单所有字段填写正确
-- ⬜ 确认 GitLink 仓库链接有效、README 显示正常
-- ⬜ 确认演示视频链接可访问
-- ⬜ 如果有答辩，准备 3 分钟口头介绍稿
+- ⬜ 从 mooncakes.io 随机/按热度选取 50 个包作为测试样本
+- ⬜ 批量运行 `depsight tree [package]`，记录成功率和异常日志
+- ⬜ 统计：平均依赖深度、最大节点数、最常见的许可证、废弃 API 出现频率
+- ⬜ 处理异常包：API 404、格式不兼容、网络超时等情况的容错
+- ⬜ 建立 "已知问题清单"（Known Issues）
+
+**验收标准**：50 个样本中 >= 45 个能成功构建依赖图并输出报告。
+
+### Day 24 — 性能基准测试
+
+- ⬜ 选取 3 个不同规模的测试用例：小（<10 节点）、中（50 节点）、大（200+ 节点）
+- ⬜ 测量完整分析流程耗时：解析 → 构建图 → 拉取元数据 → 诊断 → 生成报告
+- ⬜ 识别瓶颈：是网络 IO？还是图算法？
+- ⬜ 优化：并发拉取（如果 MoonBit 支持）、缓存命中提升、减少不必要的字符串拷贝
+- ⬜ 写 `benchmark.md`：记录优化前后的耗时对比
+
+**验收标准**：200 节点的大图，从解析到报告生成总耗时 < 10 秒（含网络请求）。
+
+### Day 25 — Bug 修复日
+
+- ⬜ 修复 Day 22-24 发现的所有 Critical 和 High 级别 bug
+- ⬜ 处理评分算法中的 edge case：空依赖、自依赖、版本号异常
+- ⬜ 修复终端输出在 Windows CMD 下的乱码/颜色问题
+- ⬜ 确保 `moon build` 和 `moon test` 持续全绿
+
+**验收标准**：已知高优 bug 清零，CI 通过。
+
+### Day 26 — 端到端集成测试
+
+- ⬜ 写一个完整的 E2E 测试脚本：从空目录初始化 MoonBit 项目 → 添加依赖 → 运行 Depsight
+- ⬜ 验证完整工作流：本地 `moon.mod.json` → 依赖图 → 审计报告 → HTML 输出
+- ⬜ 测试 `--offline`、`--json`、`--html` 的组合使用
+- ⬜ 测试不同 MoonBit 版本生成的 `moon.mod.json` 兼容性
+
+**验收标准**：一个新创建的 MoonBit 项目，能在 30 秒内完成从安装到出报告的全流程。
+
+### Day 27 — 跨平台测试
+
+- ⬜ 在 Windows（本机）上完整测试 CLI 所有命令
+- ⬜ 如果条件允许，在 WSL / Linux 上测试构建和运行
+- ⬜ 检查路径分隔符、换行符、文件编码等跨平台问题
+- ⬜ 确保缓存目录使用 OS 标准路径（`%LOCALAPPDATA%` / `~/.cache`）
+
+**验收标准**：Windows 和 Linux 下 `depsight audit` 输出一致，无路径相关错误。
+
+### Day 28 — Week 4 验收 + 文档
+
+- ⬜ 写 `docs/week4.md`：测试策略、性能基准、已知问题
+- ⬜ 整理测试样本数据（脱敏后）存入 `test/fixtures/`
+- ⬜ 更新 `README.md`：安装指南、使用方法、截图
+- ⬜ 提交代码：`git commit -m "week4: testing + performance + integration"`
+
+**Week 4 里程碑**：工具在真实生态中稳定运行，测试覆盖核心模块，性能达标。
+
+---
+
+## Week 5：发布、演示与最终提交（Day 29 — Day 35）
+
+**本周目标**：发布至 mooncakes.io，完善文档，准备赛事材料。
+
+### Day 29 — mooncakes.io 发布准备
+
+- ⬜ 阅读 mooncakes.io 发布文档，确认包格式和元数据要求
+- ⬜ 完善 `moon.mod.json`：补充 description、keywords、repository、license
+- ⬜ 确保 `README.md` 包含：项目介绍、安装命令、快速开始、截图、API 概览
+- ⬜ 运行 `moon publish`（或对应发布命令），解决发布过程中的报错
+- ⬜ 验证发布成功：在 mooncakes.io 搜索 `LittleFish/depsight` 能找到
+
+**验收标准**：`moon add LittleFish/depsight` 能成功安装。
+
+### Day 30 — 用户文档与示例
+
+- ⬜ 写 `docs/USAGE.md`：详细讲解 `tree`、`audit`、`report` 三个命令
+- ⬜ 写 `docs/CI_INTEGRATION.md`：GitHub Actions / GitLink CI 配置示例
+- ⬜ 在 `examples/` 目录放 2-3 个示例 MoonBit 项目，展示不同健康分的结果
+- ⬜ 写 `CHANGELOG.md`，记录 v0.1.0 的功能列表
+
+**验收标准**：一个从未用过 Depsight 的开发者，按照文档能在 5 分钟内跑通第一个审计。
+
+### Day 31 — 演示视频录制
+
+- ⬜ 准备演示脚本：介绍痛点 → 安装工具 → 运行 audit → 展示 HTML 报告 → 修复建议
+- ⬜ 录制 1-2 分钟演示视频（屏幕录制 + 配音/字幕）
+- ⬜ 剪辑：去掉等待网络请求的空闲时间，加速关键步骤
+- ⬜ 导出并上传到可访问的平台（B站、GitHub Release、网盘）
+- ⬜ 在 README 中嵌入视频链接和封面图
+
+**验收标准**：视频时长 < 2 分钟，观众能快速理解工具的价值。
+
+### Day 32 — 申报书与材料对齐
+
+- ⬜ 对照 `PROPOSAL.md`，检查实际完成的功能与承诺是否一致
+- ⬜ 如有差距，在申报书中诚实说明哪些是未来工作
+- ⬜ 补充技术博客/文章（可选）：写一篇 "如何用 MoonBit 构建依赖分析工具"
+- ⬜ 准备答辩 PPT 或口头介绍稿（如果有路演环节）
+
+**验收标准**：申报书、README、实际代码三者描述一致，无夸大。
+
+### Day 33 — 最终代码审查
+
+- ⬜ 通读 `src/` 全部代码，检查是否有明显逻辑错误或未完成的 TODO
+- ⬜ 检查 `moon.mod.json` 版本号、作者信息、license 字段
+- ⬜ 确认 `.gitignore` 正确（不提交 `target/`、缓存目录）
+- ⬜ 最终 `git push` 到 GitHub 和 GitLink，确保两边同步
+
+**验收标准**：仓库干净、构建通过、文档完整、无敏感信息泄露。
+
+### Day 34 — 社区反馈收集
+
+- ⬜ 在 MoonBit 开发者群/论坛分享项目，邀请早期试用
+- ⬜ 收集 3-5 条真实用户反馈，记录到 `docs/feedback.md`
+- ⬜ 根据反馈做最后一轮微调（如输出格式调整、新增常用包缓存）
+- ⬜ 更新 README 中的 "致谢" 或 "反馈" 板块
+
+**验收标准**：至少收到 1 条外部用户的正向反馈或建设性意见。
+
+### Day 35 — 最终提交日
+
+- ⬜ 确认赛事提交表单所有字段填写正确
+- ⬜ 确认 GitLink 仓库链接有效、README 渲染正常
+- ⬜ 确认 mooncakes.io 包页面可访问
+- ⬜ 确认演示视频链接无失效
+- ⬜ 如有答辩，最后演练 3 分钟口头介绍
 - ⬜ **提交**
 
-**最终里程碑**：大赛材料全部就绪，项目提交。
+**最终里程碑**：MoonBit Depsight v0.1.0 发布至 mooncakes.io，文档完备，可独立运行与演示。
 
 ---
 
@@ -322,11 +380,11 @@
 
 | 风险 | 影响 | 应对 |
 |------|------|------|
-| Node binding 编译失败 | **致命**，整个 LSP 无法启动 | Day 1-2 全力攻克，若失败则回退到 execFile 方案（先跑通再优化） |
-| VSCode Client 连接不上 | **高**，无法演示 | Day 3 必须解决，否则调整 Client 配置或降级 vscode-languageclient 版本 |
-| 作用域分析太复杂 | **中**，影响补全/跳转质量 | Week 2 若做不完，先做单文件内无遮蔽的简单版本，保证能演示 |
-| 大文件性能差 | **中**，影响体验 | Day 18 优化，若仍不达标则限制单文件最大行数或禁用部分功能 |
-| 多编辑器支持出 bug | **低**，Neovim/Helix 非核心 | Week 3 若时间不够，优先保 VSCode，其他编辑器只写文档不做实测 |
+| mooncakes.io API 无公开文档 | **高**，无法获取包元数据 | Day 3 全力抓包/逆向，若无法获取则转向本地 `moon.mod.json` 离线分析（分析当前项目依赖而非全生态） |
+| MoonBit JS FFI / HTTP 不稳定 | **高**，无法网络请求 | Day 3 先写 mock 数据，核心逻辑全部基于本地抽象接口；网络层作为可插拔实现 |
+| TOML/JSON 解析 edge case 多 | **中**，解析失败导致崩溃 | Day 2 用 `try-catch` 保护解析过程，遇异常时记录原始文本并跳过该包，不中断整个分析流程 |
+| 大规模依赖图性能差 | **中**，用户体验下降 | Day 24 性能优化，引入并发和缓存；若仍不达标，限制默认最大分析深度为 5 层 |
+| HTML 报告渲染复杂 | **低**，不影响核心功能 | Day 17 使用最简手写模板，不引入前端构建链；若时间不够，优先保终端输出 |
 
 ---
 

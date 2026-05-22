@@ -78,3 +78,8 @@ out/
 *.d.ts
 package-lock.json
 *.tsbuildinfo
+
+# MoonBit build artifacts
+target/
+*.wasm
+.mooncakes/

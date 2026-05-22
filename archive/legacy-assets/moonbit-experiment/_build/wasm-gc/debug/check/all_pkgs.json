@@ -1,6 +1,16 @@
 {
   "packages": [
     {
+      "root": "moonbit-lsp-engine",
+      "rel": "src/lib",
+      "artifact": "D:\\MoonBit Language Server\\moonbit-experiment\\_build\\wasm-gc\\debug\\check\\src\\lib\\lib.mi"
+    },
+    {
+      "root": "moonbit-lsp-engine",
+      "rel": "src/main",
+      "artifact": "D:\\MoonBit Language Server\\moonbit-experiment\\_build\\wasm-gc\\debug\\check\\src\\main\\main.mi"
+    },
+    {
       "root": "moonbitlang/core",
       "rel": "abort",
       "artifact": "C:\\Users\\一梦繁星\\.moon\\lib\\core\\_build\\wasm-gc\\release\\bundle\\abort\\abort.mi"
