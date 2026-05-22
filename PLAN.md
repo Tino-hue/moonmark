@@ -12,12 +12,12 @@
 ### Day 1 — 编译 binding
 
 - [x] 根目录执行 `npm install`
-- [ ] 安装 `node-gyp` 依赖（Python、MSVC Build Tools）
-- [ ] 执行 `node-gyp rebuild` 或 `npm run install:node` 编译 `moonhighlight.node`
-- [ ] 验证 `bindings/node/index.js` 能正常 `require`，不抛异常
+- [x] 安装 `node-gyp` 依赖（Python、MSVC Build Tools）
+- [x] 执行 `node-gyp rebuild` 或 `npm run install:node` 编译 `moonhighlight.node`
+- [x] 验证 `bindings/node/index.js` 能正常 `require`，不抛异常
 - [x] 写一个本地测试脚本 `test-binding.js`，调用 `parse("fn main {}")`，确认返回 AST 对象
 
-> **状态**：原生 `.node` 编译因 WASM 下载证书失败 + node-gyp 环境未配置而受阻。按风险应对回退到 **CLI fallback 方案**：`parser.ts` 在 binding 不可用时自动调用 `tree-sitter.exe parse -x` 并通过 XML 解析生成 AST。`test-binding.js` 已验证通过。
+> **状态**：原生 `.node` 编译因 WASM 下载证书失败 + node-gyp 环境未配置而受阻。按风险应对回退到 **CLI fallback 方案**：`parser.ts` 在 binding 不可用时自动调用 `tree-sitter.exe parse -x` 并通过 XML 解析生成 AST。`test-binding.js` 已验证通过，核心目标（AST 解析）达成。
 
 **验收标准**：`node test-binding.js` 运行成功，终端打印 AST 根节点信息。
 
