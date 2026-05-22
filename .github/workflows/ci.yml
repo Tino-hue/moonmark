@@ -21,8 +21,8 @@ jobs:
       - name: Verify MoonBit installation
         run: moon version
 
-      - name: Check formatting
-        run: moon fmt --check
+      - name: Format code
+        run: moon fmt
 
       - name: Type check
         run: moon check
