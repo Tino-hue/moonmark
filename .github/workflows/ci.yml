@@ -16,19 +16,26 @@ jobs:
       - name: Install MoonBit CLI
         run: |
           curl -fsSL https://cli.moonbitlang.cn/install/unix.sh | bash
+          export PATH="$HOME/.moon/bin:$PATH"
           echo "$HOME/.moon/bin" >> $GITHUB_PATH
-
-      - name: Verify MoonBit installation
-        run: moon version
+          moon version
 
       - name: Update MoonBit registry
-        run: moon update
+        run: |
+          export PATH="$HOME/.moon/bin:$PATH"
+          moon update
 
       - name: Type check
-        run: moon check
+        run: |
+          export PATH="$HOME/.moon/bin:$PATH"
+          moon check
 
       - name: Build for JS target
-        run: moon build --target js
+        run: |
+          export PATH="$HOME/.moon/bin:$PATH"
+          moon build --target js
 
       - name: Run tests
-        run: moon test --target js
+        run: |
+          export PATH="$HOME/.moon/bin:$PATH"
+          moon test --target js
