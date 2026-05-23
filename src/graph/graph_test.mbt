@@ -150,6 +150,54 @@ test "performance: topological_sort on 150 node DAG" {
   }
 }
 
+test "real package graph: moonbitlang/x has no cycle" {
+  let x = @parse.Module::new("moonbitlang/x", "0.4.44", {})
+  let chalk = @parse.Module::new("Lampese/moonbit-chalk", "0.4.0", {})
+  let parser = @parse.Module::new("peter-jerry-ye/parser-combinator", "0.9.1", {})
+
+  let registry = {
+    "moonbitlang/x@0.4.44": x,
+    "Lampese/moonbit-chalk@0.4.0": chalk,
+    "peter-jerry-ye/parser-combinator@0.9.1": parser,
+  }
+
+  let fetch = make_mock_fetch(registry)
+  let builder = @graph.GraphBuilder::new()
+  let graph = match builder.build("moonbitlang/x", "0.4.44", fetch) {
+    Ok(g) => g
+    Err(msg) => fail("Build failed: " + msg)
+  }
+
+  // 真实包目前大多没有外部 deps，所以图只有 1 个节点
+  assert_eq(graph.size(), 1)
+
+  let diags = graph.check_cycles()
+  assert_eq(diags.length(), 0)
+}
+
+test "real package graph: inject artificial cycle on real data" {
+  let x = @parse.Module::new("moonbitlang/x", "0.4.44", { "Lampese/moonbit-chalk": "0.4.0" })
+  let chalk = @parse.Module::new("Lampese/moonbit-chalk", "0.4.0", { "moonbitlang/x": "0.4.44" })
+
+  let registry = {
+    "moonbitlang/x@0.4.44": x,
+    "Lampese/moonbit-chalk@0.4.0": chalk,
+  }
+
+  let fetch = make_mock_fetch(registry)
+  let builder = @graph.GraphBuilder::new()
+  let graph = match builder.build("moonbitlang/x", "0.4.44", fetch) {
+    Ok(g) => g
+    Err(msg) => fail("Build failed: " + msg)
+  }
+
+  assert_eq(graph.size(), 2)
+
+  let diags = graph.check_cycles()
+  assert_eq(diags.length(), 1)
+  assert_eq(diags[0].code, "CYCLE-001")
+}
+
 test "find_cycle on acyclic graph" {
   let graph = @graph.DependencyGraph::new()
   graph.add_node("A", "1.0.0", 0)
