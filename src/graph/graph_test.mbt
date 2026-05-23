@@ -75,3 +75,33 @@ fn appears_before_loop(arr : Array[String], before : String, after : String, idx
   let new_found = if id == before { true } else { found }
   appears_before_loop(arr, before, after, idx + 1, new_found)
 }
+
+test "find_cycle on acyclic graph" {
+  let graph = @graph.DependencyGraph::new()
+  graph.add_node("A", "1.0.0", 0)
+  graph.add_node("B", "1.0.0", 1)
+  graph.add_node("C", "1.0.0", 2)
+
+  graph.add_edge("A", "1.0.0", "B", "1.0.0")
+  graph.add_edge("B", "1.0.0", "C", "1.0.0")
+
+  let cycle = graph.find_cycle()
+  assert_eq(cycle.length(), 0)
+}
+
+test "find_cycle detects three node cycle" {
+  let graph = @graph.DependencyGraph::new()
+  graph.add_node("A", "1.0.0", 0)
+  graph.add_node("B", "1.0.0", 1)
+  graph.add_node("C", "1.0.0", 2)
+
+  graph.add_edge("A", "1.0.0", "B", "1.0.0")
+  graph.add_edge("B", "1.0.0", "C", "1.0.0")
+  graph.add_edge("C", "1.0.0", "A", "1.0.0")
+
+  let cycle = graph.find_cycle()
+  assert_true(cycle.length() > 0)
+  assert_true(array_contains(cycle, "A@1.0.0"))
+  assert_true(array_contains(cycle, "B@1.0.0"))
+  assert_true(array_contains(cycle, "C@1.0.0"))
+}

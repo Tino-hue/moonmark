@@ -147,3 +147,82 @@ pub fn DependencyGraph::topological_sort(self : DependencyGraph) -> Result[Array
 pub fn DependencyGraph::size(self : DependencyGraph) -> Int {
   self.nodes.length()
 }
+
+/// 环检测器（内部辅助结构）
+struct CycleDetector {
+  grey : Map[String, Bool]
+  black : Map[String, Bool]
+}
+
+fn CycleDetector::new() -> CycleDetector {
+  { grey: {}, black: {} }
+}
+
+fn CycleDetector::dfs(
+  self : CycleDetector,
+  graph : DependencyGraph,
+  id : String,
+  path : Array[String]
+) -> Array[String] {
+  if self.black.get(id) is Some(_) {
+    return []
+  }
+  if self.grey.get(id) is Some(_) {
+    return extract_cycle(path, id)
+  }
+
+  self.grey[id] = true
+  path.push(id)
+
+  guard graph.nodes.get(id) is Some(node) else {
+    let _ = path.pop()
+    self.black[id] = true
+    return []
+  }
+
+  for child_id in node.children {
+    let result = self.dfs(graph, child_id, path)
+    if result.length() > 0 {
+      return result
+    }
+  }
+
+  let _ = path.pop()
+  self.black[id] = true
+  []
+}
+
+fn extract_cycle(path : Array[String], id : String) -> Array[String] {
+  extract_cycle_loop(path, id, 0, false, [])
+}
+
+fn extract_cycle_loop(path : Array[String], id : String, idx : Int, started : Bool, acc : Array[String]) -> Array[String] {
+  if idx >= path.length() {
+    acc.push(id)
+    return acc
+  }
+  let node_id = path[idx]
+  let new_started = if node_id == id { true } else { started }
+  if new_started {
+    acc.push(node_id)
+  }
+  extract_cycle_loop(path, id, idx + 1, new_started, acc)
+}
+
+/// 查找图中第一个循环依赖环。
+/// 返回环上的节点 ID 数组（按发现顺序，末尾重复起点以闭合环）。
+/// 若无环，返回空数组。
+pub fn DependencyGraph::find_cycle(self : DependencyGraph) -> Array[String] {
+  let detector = CycleDetector::new()
+  let path : Array[String] = []
+
+  for pair in self.nodes {
+    let (id, _) = pair
+    let result = detector.dfs(self, id, path)
+    if result.length() > 0 {
+      return result
+    }
+  }
+
+  []
+}
