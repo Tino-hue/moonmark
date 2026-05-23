@@ -31,7 +31,7 @@ pub fn DependencyGraph::new() -> DependencyGraph {
 }
 
 /// 添加节点（若已存在则忽略）
-pub fn add_node(self : DependencyGraph, name : String, version : String, depth : Int) -> Unit {
+pub fn DependencyGraph::add_node(self : DependencyGraph, name : String, version : String, depth : Int) -> Unit {
   let id = node_id(name, version)
   if self.nodes.get(id) is None {
     self.nodes[id] = { name, version, depth, parents: [], children: [] }
@@ -39,7 +39,7 @@ pub fn add_node(self : DependencyGraph, name : String, version : String, depth :
 }
 
 /// 添加有向边：from 依赖 to
-pub fn add_edge(self : DependencyGraph, from_name : String, from_version : String, to_name : String, to_version : String) -> Unit {
+pub fn DependencyGraph::add_edge(self : DependencyGraph, from_name : String, from_version : String, to_name : String, to_version : String) -> Unit {
   let from_id = node_id(from_name, from_version)
   let to_id = node_id(to_name, to_version)
 
@@ -55,12 +55,12 @@ pub fn add_edge(self : DependencyGraph, from_name : String, from_version : Strin
 }
 
 /// 获取节点
-pub fn get_node(self : DependencyGraph, name : String, version : String) -> DependencyNode? {
+pub fn DependencyGraph::get_node(self : DependencyGraph, name : String, version : String) -> DependencyNode? {
   self.nodes.get(node_id(name, version))
 }
 
 /// 获取子节点 ID 列表
-pub fn get_children(self : DependencyGraph, name : String, version : String) -> Array[String] {
+pub fn DependencyGraph::get_children(self : DependencyGraph, name : String, version : String) -> Array[String] {
   let id = node_id(name, version)
   match self.nodes.get(id) {
     Some(node) => node.children
@@ -69,7 +69,7 @@ pub fn get_children(self : DependencyGraph, name : String, version : String) -> 
 }
 
 /// 获取父节点 ID 列表
-pub fn get_parents(self : DependencyGraph, name : String, version : String) -> Array[String] {
+pub fn DependencyGraph::get_parents(self : DependencyGraph, name : String, version : String) -> Array[String] {
   let id = node_id(name, version)
   match self.nodes.get(id) {
     Some(node) => node.parents
@@ -78,7 +78,7 @@ pub fn get_parents(self : DependencyGraph, name : String, version : String) -> A
 }
 
 /// 获取所有节点 ID
-pub fn get_all_node_ids(self : DependencyGraph) -> Array[String] {
+pub fn DependencyGraph::get_all_node_ids(self : DependencyGraph) -> Array[String] {
   let result = []
   for pair in self.nodes {
     let (id, _) = pair
@@ -88,7 +88,7 @@ pub fn get_all_node_ids(self : DependencyGraph) -> Array[String] {
 }
 
 /// 拓扑排序（Kahn 算法）。若存在环则返回错误。
-pub fn topological_sort(self : DependencyGraph) -> Result[Array[String], String] {
+pub fn DependencyGraph::topological_sort(self : DependencyGraph) -> Result[Array[String], String] {
   let in_degree : Map[String, Int] = {}
   for pair in self.nodes {
     let (id, _) = pair
