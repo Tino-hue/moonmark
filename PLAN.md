@@ -42,13 +42,13 @@
 
 ### Day 4 — 依赖图数据结构
 
-- ⬜ 定义 `DependencyNode`：包含包名、版本、深度、父节点引用
-- ⬜ 定义 `DependencyGraph`：基于 `Map[String, DependencyNode]` + 邻接表
-- ⬜ 实现 `addNode`、`addEdge`、`getChildren`、`getParents` 基础操作
-- ⬜ 实现 `getAllNodes()` 返回拓扑排序后的节点列表
-- ⬜ 写单元测试：手动构建一个 5 节点 6 边的小型依赖图，验证遍历正确
+- ☑️ 定义 `DependencyNode`：包含包名、版本、深度、父节点引用
+- ☑️ 定义 `DependencyGraph`：基于 `Map[String, DependencyNode]` + 邻接表
+- ☑️ 实现 `addNode`、`addEdge`、`getChildren`、`getParents` 基础操作
+- ☑️ 实现 `topological_sort()` 返回拓扑排序后的节点列表（Kahn 算法）
+- ☑️ 写单元测试：手动构建一个 5 节点 6 边的小型依赖图，验证遍历正确
 
-**验收标准**：能正确表示 "A 依赖 B，B 依赖 C 和 D" 这样的层级关系，无内存泄漏。
+**验收标准**：能正确表示 "A 依赖 B，B 依赖 C 和 D" 这样的层级关系，无内存泄漏。 ✅
 
 ### Day 5 — 传递依赖图构建器
 
