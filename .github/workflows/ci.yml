@@ -25,7 +25,15 @@ jobs:
       - name: Install MoonBit CLI
         if: steps.moonbit-cache.outputs.cache-hit != 'true'
         run: |
-          curl -fsSL --retry 5 --retry-delay 10 --retry-all-errors https://cli.moonbitlang.cn/install/unix.sh | bash
+          for i in 1 2 3; do
+            echo "Attempt $i to install MoonBit..."
+            if curl -fsSL --retry 5 --retry-delay 10 --retry-all-errors https://cli.moonbitlang.cn/install/unix.sh | bash; then
+              echo "Install succeeded"
+              break
+            fi
+            echo "Install failed, waiting 30s before retry..."
+            sleep 30
+          done
 
       - name: Verify MoonBit installation
         run: |
@@ -40,7 +48,7 @@ jobs:
       - name: Type check
         run: |
           export PATH="$HOME/.moon/bin:$PATH"
-          moon check
+          moon check || (echo "=== TYPE CHECK FAILED ===" && exit 1)
 
       - name: Build for JS target
         run: |
