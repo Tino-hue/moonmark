@@ -35,11 +35,11 @@ test "build simple dependency tree" {
     Err(msg) => fail("Build failed: " + msg)
   }
 
-  assert_eq!(graph.size(), 4)
-  assert_eq!(graph.get_children("root", "1.0.0").length(), 2)
-  assert_eq!(graph.get_children("a", "1.0.0").length(), 1)
-  assert_eq!(graph.get_children("b", "1.0.0").length(), 0)
-  assert_eq!(graph.get_children("c", "1.0.0").length(), 0)
+  assert_eq(graph.size(), 4)
+  assert_eq(graph.get_children("root", "1.0.0").length(), 2)
+  assert_eq(graph.get_children("a", "1.0.0").length(), 1)
+  assert_eq(graph.get_children("b", "1.0.0").length(), 0)
+  assert_eq(graph.get_children("c", "1.0.0").length(), 0)
 }
 
 test "build with version conflict" {
@@ -67,11 +67,11 @@ test "build with version conflict" {
     Err(msg) => fail("Build failed: " + msg)
   }
 
-  assert_eq!(graph.size(), 6)
-  assert_true!(graph.get_node("a", "1.0.0") is Some(_))
-  assert_true!(graph.get_node("a", "2.0.0") is Some(_))
-  assert_true!(graph.get_node("b", "1.0.0") is Some(_))
-  assert_true!(graph.get_node("b", "2.0.0") is Some(_))
+  assert_eq(graph.size(), 6)
+  assert_true(graph.get_node("a", "1.0.0") is Some(_))
+  assert_true(graph.get_node("a", "2.0.0") is Some(_))
+  assert_true(graph.get_node("b", "1.0.0") is Some(_))
+  assert_true(graph.get_node("b", "2.0.0") is Some(_))
 }
 
 test "build respects max depth" {
@@ -98,8 +98,8 @@ test "build respects max depth" {
 
   // max_depth=2 允许 root(0) -> a(1) -> b(2)
   // b -> c(3) 超出深度，不会递归
-  assert_eq!(graph.size(), 3)
-  assert_true!(graph.get_node("c", "1.0.0") is None)
+  assert_eq(graph.size(), 3)
+  assert_true(graph.get_node("c", "1.0.0") is None)
 }
 
 test "cache prevents redundant fetches" {
@@ -123,6 +123,6 @@ test "cache prevents redundant fetches" {
   }
 
   // c 被 a 和 b 同时依赖，但图中只有一个 c 节点，且有两个父节点
-  assert_eq!(graph.size(), 4)
-  assert_eq!(graph.get_parents("c", "1.0.0").length(), 2)
+  assert_eq(graph.size(), 4)
+  assert_eq(graph.get_parents("c", "1.0.0").length(), 2)
 }
