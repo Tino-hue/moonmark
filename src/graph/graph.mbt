@@ -144,6 +144,6 @@ pub fn topological_sort(self : DependencyGraph) -> Result[Array[String], String]
 }
 
 /// 获取节点数量
-pub fn size(self : DependencyGraph) -> Int {
-  self.nodes.size()
+pub fn DependencyGraph::size(self : DependencyGraph) -> Int {
+  self.nodes.length()
 }
