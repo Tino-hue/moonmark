@@ -1,1 +1,6 @@
-{}
+{
+  "import": [
+    "moonbitlang/core/json",
+    "LittleFish/depsight/parse"
+  ]
+}
