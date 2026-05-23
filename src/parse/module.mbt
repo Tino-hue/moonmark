@@ -57,7 +57,7 @@ pub fn parse_mod_json(content : String) -> Result[Module, String] {
   // Parse keywords array
   let keywords = match obj.get("keywords") {
     Some(Array(arr)) => {
-      let mut result = []
+      let result = []
       for item in arr {
         guard item is String(s) else { continue }
         result.push(s)
@@ -70,7 +70,7 @@ pub fn parse_mod_json(content : String) -> Result[Module, String] {
   // Parse deps object
   let deps = match obj.get("deps") {
     Some(Object(dep_map)) => {
-      let mut result : Map[String, String] = Map::new()
+      let result : Map[String, String] = {}
       for pair in dep_map {
         let (key, value) = pair
         guard value is String(v) else { continue }
@@ -78,7 +78,7 @@ pub fn parse_mod_json(content : String) -> Result[Module, String] {
       }
       result
     }
-    _ => Map::new()
+    _ => {}
   }
 
   Ok({
