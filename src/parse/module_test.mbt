@@ -6,11 +6,11 @@ test "parse simple moon.mod.json" {
     #|}
   let result = @parse.parse_mod_json(content)
   match result {
-    Ok(module) => {
-      assert_eq(module.name, "test/simple")
-      assert_eq(module.version, "0.1.0")
-      assert_true(module.deps.is_empty())
-      assert_true(module.keywords.is_empty())
+    Ok(pkg) => {
+      assert_eq(pkg.name, "test/simple")
+      assert_eq(pkg.version, "0.1.0")
+      assert_true(pkg.deps.is_empty())
+      assert_true(pkg.keywords.is_empty())
     }
     Err(msg) => fail("Should parse simple mod: " + msg)
   }
@@ -33,16 +33,16 @@ test "parse full moon.mod.json" {
     #|}
   let result = @parse.parse_mod_json(content)
   match result {
-    Ok(module) => {
-      assert_eq(module.name, "LittleFish/depsight")
-      assert_eq(module.version, "0.1.0")
-      assert_eq(module.readme, Some("README.md"))
-      assert_eq(module.license, Some("Apache-2.0"))
-      assert_eq(module.description, Some("A tool"))
-      assert_eq(module.source, Some("src"))
-      assert_eq(module.keywords.length(), 2)
-      assert_eq(module.deps.size(), 2)
-      assert_eq(module.deps.get("user/helper"), Some("0.2.0"))
+    Ok(pkg) => {
+      assert_eq(pkg.name, "LittleFish/depsight")
+      assert_eq(pkg.version, "0.1.0")
+      assert_eq(pkg.readme, Some("README.md"))
+      assert_eq(pkg.license, Some("Apache-2.0"))
+      assert_eq(pkg.description, Some("A tool"))
+      assert_eq(pkg.source, Some("src"))
+      assert_eq(pkg.keywords.length(), 2)
+      assert_eq(pkg.deps.length(), 2)
+      assert_eq(pkg.deps.get("user/helper"), Some("0.2.0"))
     }
     Err(msg) => fail("Should parse full mod: " + msg)
   }

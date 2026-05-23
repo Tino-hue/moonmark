@@ -49,7 +49,7 @@ fn build_recursive(
   let id = node_id(name, version)
 
   // 从缓存或 fetch 获取模块元数据
-  let module = match self.cache.get(id) {
+  let pkg = match self.cache.get(id) {
     Some(m) => m
     None => {
       let m = fetch(name, version)?
@@ -62,7 +62,7 @@ fn build_recursive(
   graph.add_node(name, version, depth)
 
   // 递归处理依赖
-  for pair in module.deps {
+  for pair in pkg.deps {
     let (dep_name, dep_version) = pair
     graph.add_node(dep_name, dep_version, depth + 1)
     graph.add_edge(name, version, dep_name, dep_version)
