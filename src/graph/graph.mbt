@@ -148,6 +148,69 @@ pub fn DependencyGraph::size(self : DependencyGraph) -> Int {
   self.nodes.length()
 }
 
+/// 将依赖图以树形文本格式输出。
+/// `root_id` 是完整的节点标识（如 `"root@1.0.0"`）。
+/// `max_depth` 控制展开深度，0 表示只显示根节点。
+pub fn DependencyGraph::render_tree(self : DependencyGraph, root_id : String, max_depth : Int) -> String {
+  let lines = []
+  render_tree_node(self, root_id, 0, max_depth, "", true, lines)
+  join_lines(lines)
+}
+
+fn render_tree_node(
+  graph : DependencyGraph,
+  id : String,
+  depth : Int,
+  max_depth : Int,
+  prefix : String,
+  is_last : Bool,
+  lines : Array[String]
+) -> Unit {
+  if depth > max_depth {
+    return
+  }
+
+  guard graph.nodes.get(id) is Some(node) else {
+    return
+  }
+
+  let connector = if depth == 0 {
+    ""
+  } else if is_last {
+    "└── "
+  } else {
+    "├── "
+  }
+  lines.push(prefix + connector + id)
+
+  let child_count = node.children.length()
+  let child_prefix = if depth == 0 {
+    ""
+  } else if is_last {
+    "    "
+  } else {
+    "│   "
+  }
+  let new_prefix = prefix + child_prefix
+
+  let mut i = 0
+  while i < child_count {
+    let is_last_child = i == child_count - 1
+    render_tree_node(graph, node.children[i], depth + 1, max_depth, new_prefix, is_last_child, lines)
+    i = i + 1
+  }
+}
+
+fn join_lines(lines : Array[String]) -> String {
+  join_lines_loop(lines, 0, "")
+}
+
+fn join_lines_loop(lines : Array[String], idx : Int, acc : String) -> String {
+  if idx >= lines.length() { return acc }
+  let sep = if idx == 0 { "" } else { "\n" }
+  join_lines_loop(lines, idx + 1, acc + sep + lines[idx])
+}
+
 /// 环检测器（内部辅助结构）
 struct CycleDetector {
   grey : Map[String, Bool]

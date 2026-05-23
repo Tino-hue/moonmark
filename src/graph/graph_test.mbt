@@ -198,6 +198,39 @@ test "real package graph: inject artificial cycle on real data" {
   assert_eq(diags[0].code, "CYCLE-001")
 }
 
+test "render_tree basic structure" {
+  let graph = @graph.DependencyGraph::new()
+  graph.add_node("root", "1.0.0", 0)
+  graph.add_node("a", "1.0.0", 1)
+  graph.add_node("b", "1.0.0", 1)
+  graph.add_node("c", "1.0.0", 2)
+
+  graph.add_edge("root", "1.0.0", "a", "1.0.0")
+  graph.add_edge("root", "1.0.0", "b", "1.0.0")
+  graph.add_edge("a", "1.0.0", "c", "1.0.0")
+
+  let tree = graph.render_tree("root@1.0.0", 10)
+  assert_true(tree.contains("root@1.0.0"))
+  assert_true(tree.contains("a@1.0.0"))
+  assert_true(tree.contains("b@1.0.0"))
+  assert_true(tree.contains("c@1.0.0"))
+}
+
+test "render_tree respects max_depth" {
+  let graph = @graph.DependencyGraph::new()
+  graph.add_node("root", "1.0.0", 0)
+  graph.add_node("a", "1.0.0", 1)
+  graph.add_node("c", "1.0.0", 2)
+
+  graph.add_edge("root", "1.0.0", "a", "1.0.0")
+  graph.add_edge("a", "1.0.0", "c", "1.0.0")
+
+  let tree = graph.render_tree("root@1.0.0", 1)
+  assert_true(tree.contains("root@1.0.0"))
+  assert_true(tree.contains("a@1.0.0"))
+  assert_true(tree.contains("c@1.0.0") == false)
+}
+
 test "find_cycle on acyclic graph" {
   let graph = @graph.DependencyGraph::new()
   graph.add_node("A", "1.0.0", 0)
