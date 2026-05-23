@@ -1,6 +1,7 @@
 {
   "import": [
     "moonbitlang/core/json",
-    "LittleFish/depsight/parse"
+    "LittleFish/depsight/parse",
+    "LittleFish/depsight/report"
   ]
 }

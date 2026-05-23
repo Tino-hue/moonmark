@@ -226,3 +226,35 @@ pub fn DependencyGraph::find_cycle(self : DependencyGraph) -> Array[String] {
 
   []
 }
+
+/// 检查图中是否存在循环依赖，并返回结构化诊断信息数组。
+/// 若无环，返回空数组。
+pub fn DependencyGraph::check_cycles(self : DependencyGraph) -> Array[@report.Diagnostic] {
+  let cycle = self.find_cycle()
+  if cycle.length() == 0 {
+    return []
+  }
+
+  let cycle_path = cycle_to_path(cycle)
+  let diag = @report.Diagnostic::critical(
+    "CYCLE-001",
+    "Circular dependency detected",
+    cycle_path
+  ).with_suggestion("Review the dependency chain and remove one of the edges to break the cycle.")
+
+  [diag]
+}
+
+/// 将环数组（末尾重复起点）转为路径数组（不重复）
+fn cycle_to_path(cycle : Array[String]) -> Array[String] {
+  if cycle.length() == 0 {
+    return []
+  }
+  cycle_to_path_loop(cycle, 0, cycle.length() - 1, [])
+}
+
+fn cycle_to_path_loop(cycle : Array[String], idx : Int, limit : Int, acc : Array[String]) -> Array[String] {
+  if idx >= limit { return acc }
+  acc.push(cycle[idx])
+  cycle_to_path_loop(cycle, idx + 1, limit, acc)
+}

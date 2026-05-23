@@ -76,6 +76,38 @@ fn appears_before_loop(arr : Array[String], before : String, after : String, idx
   appears_before_loop(arr, before, after, idx + 1, new_found)
 }
 
+test "check_cycles returns empty for acyclic graph" {
+  let graph = @graph.DependencyGraph::new()
+  graph.add_node("A", "1.0.0", 0)
+  graph.add_node("B", "1.0.0", 1)
+  graph.add_edge("A", "1.0.0", "B", "1.0.0")
+
+  let diags = graph.check_cycles()
+  assert_eq(diags.length(), 0)
+}
+
+test "check_cycles returns critical diagnostic for cycle" {
+  let graph = @graph.DependencyGraph::new()
+  graph.add_node("A", "1.0.0", 0)
+  graph.add_node("B", "1.0.0", 1)
+  graph.add_node("C", "1.0.0", 2)
+
+  graph.add_edge("A", "1.0.0", "B", "1.0.0")
+  graph.add_edge("B", "1.0.0", "C", "1.0.0")
+  graph.add_edge("C", "1.0.0", "A", "1.0.0")
+
+  let diags = graph.check_cycles()
+  assert_eq(diags.length(), 1)
+
+  let d = diags[0]
+  assert_eq(d.level, @report.LEVEL_CRITICAL)
+  assert_eq(d.code, "CYCLE-001")
+  assert_eq(d.message, "Circular dependency detected")
+  assert_true(d.path.length() > 0)
+  assert_eq(d.suggestions.length(), 1)
+  assert_eq(d.suggestions[0], "Review the dependency chain and remove one of the edges to break the cycle.")
+}
+
 test "find_cycle on acyclic graph" {
   let graph = @graph.DependencyGraph::new()
   graph.add_node("A", "1.0.0", 0)
