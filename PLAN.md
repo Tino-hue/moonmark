@@ -32,11 +32,11 @@
 
 ### Day 3 — mooncakes.io API 调研与封装
 
-- ⬜ 通过浏览器抓包或阅读文档，确认 mooncakes.io 的包元数据 API 端点
-- ⬜ 确定获取包 `moon.mod.json` 的 URL 模式（如 `https://mooncakes.io/api/v1/packages/{name}/{version}`）
-- ⬜ 使用 MoonBit JS FFI 封装 `fetch` 调用：定义 `fetchPackageModJson(name, version) -> String`
-- ⬜ 处理网络错误（404、超时、JSON 解析失败）
-- ⬜ 写本地 mock 数据（3-5 个包的假 `moon.mod.json`），确保离线可测试
+- ☑️ 通过浏览器抓包确认 mooncakes.io 无公开 REST API（404），改用 GitHub raw 作为备选
+- ☑️ 确定 GitHub raw URL 模式：`https://raw.githubusercontent.com/{user}/{repo}/{branch}/moon.mod.json`
+- ☑️ 封装 `fetch` 调用：`fetch_package_meta(http_get, name, version, repo) -> Result[String, String]`
+- ☑️ 处理网络错误（404 自动回退 `master` 分支、未知包报错）
+- ☑️ 写本地 mock 数据与 `Registry` 抽象，确保离线可测试
 
 **验收标准**：运行测试时，能从 mooncakes.io 拉取至少 1 个真实包的 `moon.mod.json` 并解析成功。
 
