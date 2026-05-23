@@ -9,7 +9,7 @@ pub struct Module {
   description : String?
   source : String?
   deps : Map[String, String]
-} derive(Show)
+} derive(Debug)
 
 /// Parse a moon.mod.json content string into a Module struct
 pub fn parse_mod_json(content : String) -> Result[Module, String] {

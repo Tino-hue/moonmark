@@ -5,12 +5,12 @@ pub struct DependencyNode {
   depth : Int
   parents : Array[String]
   children : Array[String]
-} derive(Show)
+} derive(Debug)
 
 /// 依赖图
 pub struct DependencyGraph {
   nodes : Map[String, DependencyNode]
-} derive(Show)
+} derive(Debug)
 
 /// 构造节点唯一标识
 fn node_id(name : String, version : String) -> String {
@@ -96,7 +96,8 @@ pub fn topological_sort(self : DependencyGraph) -> Result[Array[String], String]
   }
 
   // 计算入度
-  for _, node in self.nodes {
+  for pair in self.nodes {
+    let (_, node) = pair
     for child_id in node.children {
       in_degree[child_id] = (match in_degree.get(child_id) {
         Some(d) => d
