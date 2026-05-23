@@ -13,11 +13,23 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
+      - name: Cache MoonBit CLI
+        uses: actions/cache@v4
+        id: moonbit-cache
+        with:
+          path: ~/.moon
+          key: moonbit-cli-${{ runner.os }}-${{ hashFiles('**/moon.mod.json') }}
+          restore-keys: |
+            moonbit-cli-${{ runner.os }}-
+
       - name: Install MoonBit CLI
+        if: steps.moonbit-cache.outputs.cache-hit != 'true'
         run: |
-          curl -fsSL https://cli.moonbitlang.cn/install/unix.sh | bash
+          curl -fsSL --retry 5 --retry-delay 10 --retry-all-errors https://cli.moonbitlang.cn/install/unix.sh | bash
+
+      - name: Verify MoonBit installation
+        run: |
           export PATH="$HOME/.moon/bin:$PATH"
-          echo "$HOME/.moon/bin" >> $GITHUB_PATH
           moon version
 
       - name: Update MoonBit registry
