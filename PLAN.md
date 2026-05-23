@@ -12,23 +12,23 @@
 
 ### Day 1 — 项目迁移与初始化
 
-- ⬜ 归档旧 LSP 代码（将 `server/`、`client/`、`editors/` 移入 `archive/` 目录或删除）
-- ⬜ 在项目根目录初始化新的 MoonBit 模块：`moon new depsight`
-- ⬜ 配置 `moon.mod.json`：模块名 `LittleFish/depsight`，版本 `0.1.0`
-- ⬜ 设计目录结构：`src/parse/`、`src/graph/`、`src/analyze/`、`src/report/`、`src/cli/`
-- ⬜ 验证 `moon build` 通过，输出 `target/js/release/build/` 产物
+- ☑️ 归档旧 LSP 代码（将 `server/`、`client/`、`editors/` 移入 `archive/` 目录或删除）
+- ☑️ 在项目根目录初始化新的 MoonBit 模块：`moon new depsight`
+- ☑️ 配置 `moon.mod.json`：模块名 `LittleFish/depsight`，版本 `0.1.0`
+- ☑️ 设计目录结构：`src/parse/`、`src/graph/`、`src/analyze/`、`src/report/`、`src/cli/`
+- ☑️ 验证 `moon build` 通过，输出 `target/js/release/build/` 产物
 
-**验收标准**：`moon build --target js` 成功，生成可运行的 JS 文件。
+**验收标准**：`moon build --target js` 成功，生成可运行的 JS 文件。 ✅
 
 ### Day 2 — moon.mod.json 解析器
 
-- ⬜ 研究 `moon.mod.json` 实际格式（字段：`name`、`version`、`deps` 等）
-- ⬜ 手写 JSON 解析逻辑（使用 `@moonbitlang/core` 的 `json` 模块）
-- ⬜ 定义核心数据结构：`Module { name, version, deps: Map[String, String] }`
-- ⬜ 处理版本约束字符串（`"~> 0.1.0"`、`">= 0.2"` 等），提取基础语义
-- ⬜ 写单元测试：读取 3 个真实的 `moon.mod.json` 样本，验证解析正确性
+- ☑️ 研究 `moon.mod.json` 实际格式（字段：`name`、`version`、`deps` 等）
+- ☑️ 手写 JSON 解析逻辑（使用 `@moonbitlang/core` 的 `json` 模块）
+- ☑️ 定义核心数据结构：`Module { name, version, deps: Map[String, String] }`
+- ☑️ 处理版本约束字符串（`"~> 0.1.0"`、`">= 0.2"` 等），提取基础语义
+- ☑️ 写单元测试：读取 3 个真实的 `moon.mod.json` 样本，验证解析正确性
 
-**验收标准**：传入任意合法 `moon.mod.json` 字符串，正确返回 `Module` 结构，无字段丢失。
+**验收标准**：传入任意合法 `moon.mod.json` 字符串，正确返回 `Module` 结构，无字段丢失。 ✅
 
 ### Day 3 — mooncakes.io API 调研与封装
 
