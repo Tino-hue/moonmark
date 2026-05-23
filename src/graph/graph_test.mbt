@@ -108,6 +108,48 @@ test "check_cycles returns critical diagnostic for cycle" {
   assert_eq(d.suggestions[0], "Review the dependency chain and remove one of the edges to break the cycle.")
 }
 
+test "performance: find_cycle on 150 node linear chain" {
+  let graph = @graph.DependencyGraph::new()
+  let n = 150
+
+  let mut idx = 0
+  while idx < n {
+    graph.add_node("p" + idx.to_string(), "1.0.0", idx)
+    idx = idx + 1
+  }
+
+  let mut e = 0
+  while e < n - 1 {
+    graph.add_edge("p" + e.to_string(), "1.0.0", "p" + (e + 1).to_string(), "1.0.0")
+    e = e + 1
+  }
+
+  let cycle = graph.find_cycle()
+  assert_eq(cycle.length(), 0)
+}
+
+test "performance: topological_sort on 150 node DAG" {
+  let graph = @graph.DependencyGraph::new()
+  let n = 150
+
+  let mut idx = 0
+  while idx < n {
+    graph.add_node("p" + idx.to_string(), "1.0.0", idx)
+    idx = idx + 1
+  }
+
+  let mut e = 0
+  while e < n - 1 {
+    graph.add_edge("p" + e.to_string(), "1.0.0", "p" + (e + 1).to_string(), "1.0.0")
+    e = e + 1
+  }
+
+  match graph.topological_sort() {
+    Ok(sorted) => assert_eq(sorted.length(), n)
+    Err(msg) => fail("Should sort DAG: " + msg)
+  }
+}
+
 test "find_cycle on acyclic graph" {
   let graph = @graph.DependencyGraph::new()
   graph.add_node("A", "1.0.0", 0)
