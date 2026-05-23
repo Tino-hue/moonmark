@@ -80,7 +80,8 @@ pub fn get_parents(self : DependencyGraph, name : String, version : String) -> A
 /// 获取所有节点 ID
 pub fn get_all_node_ids(self : DependencyGraph) -> Array[String] {
   let result = []
-  for id, _ in self.nodes {
+  for pair in self.nodes {
+    let (id, _) = pair
     result.push(id)
   }
   result
@@ -89,7 +90,8 @@ pub fn get_all_node_ids(self : DependencyGraph) -> Array[String] {
 /// 拓扑排序（Kahn 算法）。若存在环则返回错误。
 pub fn topological_sort(self : DependencyGraph) -> Result[Array[String], String] {
   let in_degree : Map[String, Int] = {}
-  for id, _ in self.nodes {
+  for pair in self.nodes {
+    let (id, _) = pair
     in_degree[id] = 0
   }
 
@@ -105,7 +107,8 @@ pub fn topological_sort(self : DependencyGraph) -> Result[Array[String], String]
 
   // 入度为 0 的节点入队
   let queue = []
-  for id, degree in in_degree {
+  for pair in in_degree {
+    let (id, degree) = pair
     if degree == 0 {
       queue.push(id)
     }

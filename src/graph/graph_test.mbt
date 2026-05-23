@@ -63,12 +63,15 @@ test "topological sort detects cycle" {
   }
 }
 
-/// 辅助：验证 before 在数组中出现在 after 之前
+/// 辅助：验证 before 在数组中出现在 after 之前（递归实现，无 mut）
 fn appears_before(arr : Array[String], before : String, after : String) -> Bool {
-  let mut found = false
-  for id in arr {
-    if id == before { found = true }
-    if id == after { return found }
-  }
-  false
+  appears_before_loop(arr, before, after, 0, false)
+}
+
+fn appears_before_loop(arr : Array[String], before : String, after : String, idx : Int, found : Bool) -> Bool {
+  if idx >= arr.length() { return false }
+  let id = arr[idx]
+  if id == after { return found }
+  let new_found = if id == before { true } else { found }
+  appears_before_loop(arr, before, after, idx + 1, new_found)
 }
