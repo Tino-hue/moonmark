@@ -1,6 +1,6 @@
 /// 快速构造 Module（仅填充 build 所需的字段）
 fn make_module(name : String, version : String, deps : Map[String, String]) -> @parse.Module {
-  { name, version, readme: None, repository: None, license: None, keywords: [], description: None, source: None, deps }
+  @parse.Module::new(name, version, deps)
 }
 
 /// 构造 mock fetch 闭包

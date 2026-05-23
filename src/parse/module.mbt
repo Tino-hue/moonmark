@@ -1,15 +1,24 @@
 /// Represents a parsed moon.mod.json module configuration
 pub struct Module {
-  pub name : String
-  pub version : String
-  pub readme : String?
-  pub repository : String?
-  pub license : String?
-  pub keywords : Array[String]
-  pub description : String?
-  pub source : String?
-  pub deps : Map[String, String]
+  name : String
+  version : String
+  readme : String?
+  repository : String?
+  license : String?
+  keywords : Array[String]
+  description : String?
+  source : String?
+  deps : Map[String, String]
 } derive(Debug)
+
+/// 构造函数：创建 Module 实例
+pub fn Module::new(
+  name : String,
+  version : String,
+  deps : Map[String, String]
+) -> Module {
+  { name, version, readme: None, repository: None, license: None, keywords: [], description: None, source: None, deps }
+}
 
 /// Parse a moon.mod.json content string into a Module struct
 pub fn parse_mod_json(content : String) -> Result[Module, String] {
