@@ -42,7 +42,10 @@ test "parse full moon.mod.json" {
       assert_eq(pkg.source, Some("src"))
       assert_eq(pkg.keywords.length(), 2)
       assert_eq(pkg.deps.length(), 2)
-      assert_eq(pkg.deps.get("user/helper"), Some("0.2.0"))
+      match pkg.deps.get("user/helper") {
+        Some("0.2.0") => ()
+        _ => fail("Expected Some(\"0.2.0\")")
+      }
     }
     Err(msg) => fail("Should parse full mod: " + msg)
   }

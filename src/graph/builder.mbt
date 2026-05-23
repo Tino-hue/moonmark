@@ -64,10 +64,8 @@ fn GraphBuilder::build_recursive(
   // 递归处理依赖
   for pair in pkg.deps {
     let (dep_name, dep_version) = pair
-    graph.add_node(dep_name, dep_version, depth + 1)
-    graph.add_edge(name, version, dep_name, dep_version)
     match self.build_recursive(graph, dep_name, dep_version, depth + 1, fetch) {
-      Ok(_) => ()
+      Ok(_) => graph.add_edge(name, version, dep_name, dep_version)
       Err(e) => return Err(e)
     }
   }
