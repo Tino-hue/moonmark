@@ -1,14 +1,14 @@
 /// Represents a parsed moon.mod.json module configuration
 pub struct Module {
-  name : String
-  version : String
-  readme : String?
-  repository : String?
-  license : String?
-  keywords : Array[String]
-  description : String?
-  source : String?
-  deps : Map[String, String]
+  pub name : String
+  pub version : String
+  pub readme : String?
+  pub repository : String?
+  pub license : String?
+  pub keywords : Array[String]
+  pub description : String?
+  pub source : String?
+  pub deps : Map[String, String]
 } derive(Debug)
 
 /// Parse a moon.mod.json content string into a Module struct
