@@ -39,30 +39,24 @@ fn GraphBuilder::build_recursive(
   depth : Int,
   fetch : (String, String) -> Result[@parse.Module, String]
 ) -> Result[Unit, String] {
+  // 超过最大深度时停止探索（不报错，只截断）
   if depth > self.max_depth {
-    return Err("Max depth exceeded at " + name + "@" + version)
-  }
-
-  // 若节点已在图中，说明已处理过，直接返回
-  if graph.get_node(name, version) is Some(_) {
     return Ok(())
   }
 
   let id = node_id(name, version)
 
-  // 从缓存或 fetch 获取模块元数据
-  let pkg = match self.cache.get(id) {
-    Some(m) => m
-    None => {
-      match fetch(name, version) {
-        Ok(m) => {
-          self.cache[id] = m
-          m
-        }
-        Err(e) => return Err(e)
-      }
-    }
+  // 若已在缓存中，说明已处理过，直接返回避免重复和循环
+  if self.cache.get(id) is Some(_) {
+    return Ok(())
   }
+
+  // 从 fetch 获取模块元数据
+  let pkg = match fetch(name, version) {
+    Ok(m) => m
+    Err(e) => return Err(e)
+  }
+  self.cache[id] = pkg
 
   // 将当前节点加入图
   graph.add_node(name, version, depth)
