@@ -42,7 +42,7 @@ test "topological sort on DAG" {
       assert_true!(appears_before(ids, "B@1.0.0", "C@1.0.0"))
       assert_true!(appears_before(ids, "B@1.0.0", "D@1.0.0"))
     }
-    Err(msg) => fail!("Should not have cycle: " + msg)
+    Err(msg) => fail("Should not have cycle: " + msg)
   }
 }
 
@@ -58,7 +58,7 @@ test "topological sort detects cycle" {
 
   let sorted = graph.topological_sort()
   match sorted {
-    Ok(_) => fail!("Should detect cycle")
+    Ok(_) => fail("Should detect cycle")
     Err(_) => ()
   }
 }

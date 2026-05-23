@@ -32,7 +32,7 @@ test "build simple dependency tree" {
   let builder = @graph.GraphBuilder::new()
   let graph = match builder.build("root", "1.0.0", fetch) {
     Ok(g) => g
-    Err(msg) => fail!("Build failed: " + msg)
+    Err(msg) => fail("Build failed: " + msg)
   }
 
   assert_eq!(graph.size(), 4)
@@ -64,7 +64,7 @@ test "build with version conflict" {
   let builder = @graph.GraphBuilder::new()
   let graph = match builder.build("root", "1.0.0", fetch) {
     Ok(g) => g
-    Err(msg) => fail!("Build failed: " + msg)
+    Err(msg) => fail("Build failed: " + msg)
   }
 
   assert_eq!(graph.size(), 6)
@@ -93,7 +93,7 @@ test "build respects max depth" {
   let builder = @graph.GraphBuilder::new_with_max_depth(2)
   let graph = match builder.build("root", "1.0.0", fetch) {
     Ok(g) => g
-    Err(msg) => fail!("Build failed: " + msg)
+    Err(msg) => fail("Build failed: " + msg)
   }
 
   // max_depth=2 允许 root(0) -> a(1) -> b(2)
@@ -119,7 +119,7 @@ test "cache prevents redundant fetches" {
   let builder = @graph.GraphBuilder::new()
   let graph = match builder.build("root", "1.0.0", fetch) {
     Ok(g) => g
-    Err(msg) => fail!("Build failed: " + msg)
+    Err(msg) => fail("Build failed: " + msg)
   }
 
   // c 被 a 和 b 同时依赖，但图中只有一个 c 节点，且有两个父节点
