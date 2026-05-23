@@ -1,0 +1,86 @@
+/// 包注册表：包名 -> 仓库地址
+pub struct Registry {
+  packages : Map[String, String]
+}
+
+/// 创建空注册表
+pub fn Registry::new() -> Registry {
+  { packages: {} }
+}
+
+/// 添加包映射
+pub fn Registry::add(self : Registry, name : String, repo : String) -> Unit {
+  self.packages[name] = repo
+}
+
+/// 从注册表获取包元数据（原始字符串）。
+/// 先尝试 `main` 分支，失败再回退 `master`。
+/// `http_get` 是平台相关的请求函数，如 JS FFI 或 mock。
+pub fn Registry::fetch(
+  self : Registry,
+  http_get : (String) -> Result[String, String],
+  name : String,
+  version : String
+) -> Result[String, String] {
+  match self.packages.get(name) {
+    Some(repo) => fetch_package_meta(http_get, name, version, repo)
+    None => Err("Unknown package: " + name)
+  }
+}
+
+/// 直接通过仓库地址获取包元数据。
+pub fn fetch_package_meta(
+  http_get : (String) -> Result[String, String],
+  name : String,
+  version : String,
+  repo : String
+) -> Result[String, String] {
+  let url = build_github_raw_url(repo, "main", "moon.mod.json")
+  match http_get(url) {
+    Ok(content) => Ok(content)
+    Err(e) => {
+      let url2 = build_github_raw_url(repo, "master", "moon.mod.json")
+      match http_get(url2) {
+        Ok(content) => Ok(content)
+        Err(_) => Err("Failed to fetch " + name + "@" + version + ": " + e)
+      }
+    }
+  }
+}
+
+// ---------- 内部辅助 ----------
+
+/// 将 GitHub 仓库地址转为 raw.githubusercontent.com 直链
+pub fn build_github_raw_url(repo : String, branch : String, file : String) -> String {
+  let prefix = "https://github.com/"
+  if starts_with(repo, prefix) {
+    let path = strip_prefix(repo, prefix)
+    "https://raw.githubusercontent.com/" + path + "/" + branch + "/" + file
+  } else {
+    repo + "/" + branch + "/" + file
+  }
+}
+
+fn starts_with(s : String, prefix : String) -> Bool {
+  if s.length() < prefix.length() { return false }
+  starts_with_loop(s, prefix, 0)
+}
+
+fn starts_with_loop(s : String, prefix : String, idx : Int) -> Bool {
+  if idx >= prefix.length() { return true }
+  if s[idx] != prefix[idx] { return false }
+  starts_with_loop(s, prefix, idx + 1)
+}
+
+fn strip_prefix(s : String, prefix : String) -> String {
+  if starts_with(s, prefix) == false {
+    return s
+  }
+  strip_prefix_loop(s, prefix.length(), 0, "")
+}
+
+fn strip_prefix_loop(s : String, start : Int, idx : Int, acc : String) -> String {
+  let pos = start + idx
+  if pos >= s.length() { return acc }
+  strip_prefix_loop(s, start, idx + 1, acc + s[pos].to_string())
+}
