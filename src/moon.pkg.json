@@ -1,11 +1,6 @@
 {
   "is-main": true,
   "import": [
-    "moonbitlang/core",
-    "LittleFish/depsight/cli",
-    "LittleFish/depsight/parse",
-    "LittleFish/depsight/graph",
-    "LittleFish/depsight/analyze",
-    "LittleFish/depsight/report"
+    "LittleFish/depsight/cli"
   ]
 }
