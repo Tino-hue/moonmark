@@ -6,9 +6,15 @@ A dependency health diagnostic tool for the MoonBit ecosystem.
 
 MoonBit Depsight analyzes your `moon.mod.json` and recursively inspects the entire transitive dependency tree to surface risks before they become problems.
 
-## Features (Roadmap)
+## Features
 
-- **Dependency Tree Visualization**: Recursive resolution of transitive dependencies from mooncakes.io
+- **Dependency Tree Visualization**: Recursive resolution of transitive dependencies with ASCII tree rendering
+- **Cycle Detection**: DFS-based circular dependency detection with structured diagnostics (`CYCLE-001`)
+- **Structured Diagnostics**: `Diagnostic { level, code, message, path, suggestions }` with JSON/terminal output
+- **Registry Abstraction**: GitHub raw content fallback (`main` -> `master`) for fetching `moon.mod.json`
+
+### Roadmap
+
 - **Size Attribution**: Identify which packages bloat your final build artifact
 - **Deprecated API Detection**: Cross-package tracking of `@deprecated` usage across dependency layers
 - **License Compliance**: Automatic SPDX license identification and copyleft conflict warnings

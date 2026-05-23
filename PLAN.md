@@ -72,9 +72,10 @@
 
 ### Day 7 — Week 1 验收 + 文档
 
-- ⬜ 整理 `src/parse/` 和 `src/graph/` 的公开接口，写 `README.md` 模块说明
-- ⬜ 录制一个 10 秒终端演示：`depsight tree` 输出某个包的依赖树
-- ⬜ 提交代码：`git add -A && git commit -m "week1: parser + dependency graph core"`
+- ☑️ 整理 `src/parse/` 和 `src/graph/` 的公开接口，更新 `README.md`
+- ☑️ 实现 `depsight tree` 最小演示（CLI mock 数据 + `render_tree` 输出）
+- ⬜ 录制一个 10 秒终端演示视频
+- ☑️ 提交代码
 - ⬜ 清理旧 LSP 产物（`moonbit.dll`、`_build/` 等），确保仓库干净
 
 **Week 1 里程碑**：能解析本地 `moon.mod.json`，递归构建传递依赖图，检测循环依赖。
