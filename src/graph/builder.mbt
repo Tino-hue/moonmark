@@ -25,11 +25,13 @@ pub fn GraphBuilder::build(
   fetch : (String, String) -> Result[@parse.Module, String]
 ) -> Result[DependencyGraph, String] {
   let graph = DependencyGraph::new()
-  self.build_recursive(graph, root_name, root_version, 0, fetch)?
-  Ok(graph)
+  match self.build_recursive(graph, root_name, root_version, 0, fetch) {
+    Ok(_) => Ok(graph)
+    Err(e) => Err(e)
+  }
 }
 
-fn build_recursive(
+fn GraphBuilder::build_recursive(
   self : GraphBuilder,
   graph : DependencyGraph,
   name : String,
@@ -52,9 +54,13 @@ fn build_recursive(
   let pkg = match self.cache.get(id) {
     Some(m) => m
     None => {
-      let m = fetch(name, version)?
-      self.cache[id] = m
-      m
+      match fetch(name, version) {
+        Ok(m) => {
+          self.cache[id] = m
+          m
+        }
+        Err(e) => return Err(e)
+      }
     }
   }
 
@@ -66,7 +72,10 @@ fn build_recursive(
     let (dep_name, dep_version) = pair
     graph.add_node(dep_name, dep_version, depth + 1)
     graph.add_edge(name, version, dep_name, dep_version)
-    self.build_recursive(graph, dep_name, dep_version, depth + 1, fetch)?
+    match self.build_recursive(graph, dep_name, dep_version, depth + 1, fetch) {
+      Ok(_) => ()
+      Err(e) => return Err(e)
+    }
   }
 
   Ok(())

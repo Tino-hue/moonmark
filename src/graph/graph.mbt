@@ -136,7 +136,7 @@ pub fn DependencyGraph::topological_sort(self : DependencyGraph) -> Result[Array
     }
   }
 
-  if result.length() != self.nodes.size() {
+  if result.length() != self.nodes.length() {
     return Err("Cycle detected in dependency graph")
   }
 
