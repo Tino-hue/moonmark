@@ -16,7 +16,7 @@ pub fn detect_license(text : String) -> String? {
   if contains_any(t, ["gnu lesser general public license", "lgpl v3", "lgpl-3.0"]) {
     return Some("LGPL-3.0")
   }
-  if contains_any(t, ["apache license", "version 2.0", "apache-2.0", "licensed under the apache license"]) {
+  if contains_any(t, ["apache license", "apache-2.0", "licensed under the apache license"]) {
     return Some("Apache-2.0")
   }
   if contains(t, "mit license") || contains(t, "permission is hereby granted, free of charge") {
@@ -40,8 +40,8 @@ pub fn detect_license(text : String) -> String? {
   if contains_any(t, ["cc0 1.0", "creative commons zero", "cc0-1.0"]) {
     return Some("CC0-1.0")
   }
-  // 兜底：提取 SPDX 标签
-  match extract_spdx_tag(t) {
+  // 兜底：提取 SPDX 标签（使用原始文本保持大小写）
+  match extract_spdx_tag(text) {
     Some(id) => Some(id)
     None => None
   }
