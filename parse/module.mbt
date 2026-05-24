@@ -1,17 +1,17 @@
 /// Represents a parsed moon.mod.json module configuration
 pub struct Module {
-  name : String
-  version : String
-  readme : String?
-  repository : String?
-  license : String?
-  keywords : Array[String]
-  description : String?
-  source : String?
-  deps : Map[String, String]
+  pub name : String
+  pub version : String
+  pub readme : String?
+  pub repository : String?
+  pub license : String?
+  pub keywords : Array[String]
+  pub description : String?
+  pub source : String?
+  pub deps : Map[String, String]
 } derive(Debug)
 
-/// 构造函数：创建 Module 实例
+/// 构造 Module（用于 blackbox test 直接构造）
 pub fn Module::new(
   name : String,
   version : String,

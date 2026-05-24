@@ -1,9 +1,14 @@
 /// 体积信息结构体
 pub struct SizeInfo {
-  node_id : String
-  self_size : Int
-  transitive_size : Int
+  pub node_id : String
+  pub self_size : Int
+  pub transitive_size : Int
 } derive(Debug)
+
+/// 构造 SizeInfo
+pub fn SizeInfo::new(node_id : String, self_size : Int, transitive_size : Int) -> SizeInfo {
+  { node_id, self_size, transitive_size }
+}
 
 /// 计算所有节点的传递大小（自身 + 所有子孙）
 /// `self_sizes` 是节点 ID -> 自身大小的映射

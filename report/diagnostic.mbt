@@ -11,12 +11,17 @@ pub const LEVEL_INFO : String = "Info"
 /// `path`    — 问题涉及的节点/文件路径列表
 /// `suggestions` — 修复建议
 pub struct Diagnostic {
-  level : String
-  code : String
-  message : String
-  path : Array[String]
-  suggestions : Array[String]
+  pub level : String
+  pub code : String
+  pub message : String
+  pub path : Array[String]
+  pub suggestions : Array[String]
 } derive(Debug)
+
+/// 构造 Diagnostic（用于 blackbox test 直接构造）
+pub fn Diagnostic::new(level : String, code : String, message : String, path : Array[String], suggestions : Array[String]) -> Diagnostic {
+  { level, code, message, path, suggestions }
+}
 
 /// 创建一条 Critical 级别诊断
 pub fn Diagnostic::critical(
