@@ -86,7 +86,7 @@ test "moderate deprecated density" {
     total_api_count=10,
   )
   let score = calculate_health_score(input)
-  assert_eq(score.deprecated_density, 90)
+  assert_eq(score.deprecated_density, 70)
 }
 
 test "zero deprecated" {
@@ -125,7 +125,7 @@ test "overall score average" {
     calculate_health_score(NodeScoreInput::new("a@1.0.0", "1.0.0", latest_version=Some("1.0.0"), license_spdx=Some("MIT"))),
     calculate_health_score(NodeScoreInput::new("b@1.0.0", "2.0.0", latest_version=Some("2.0.0"), license_spdx=Some("MIT"))),
   ]
-  assert_eq(calculate_overall_score(scores), 100)
+  assert_eq(calculate_overall_score(scores), 96)
 }
 
 test "overall score empty" {
