@@ -18,7 +18,7 @@ fn node_id(name : String, version : String) -> String {
 }
 
 /// 辅助：判断数组是否包含某元素
-fn array_contains(arr : Array[String], item : String) -> Bool {
+pub fn array_contains(arr : Array[String], item : String) -> Bool {
   for x in arr {
     if x == item { return true }
   }
@@ -212,7 +212,7 @@ fn join_lines_loop(lines : Array[String], idx : Int, acc : String) -> String {
 }
 
 /// 环检测器（内部辅助结构）
-struct CycleDetector {
+priv struct CycleDetector {
   grey : Map[String, Bool]
   black : Map[String, Bool]
 }

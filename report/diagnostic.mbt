@@ -137,7 +137,7 @@ fn escape_json_loop(s : String, idx : Int, acc : Array[String]) -> String {
 }
 
 fn char_to_string(ch : UInt16) -> String {
-  let c = Char::from_int(ch.to_int())
+  let c = Int::from_uint16(ch).unsafe_to_char()
   let arr : Array[String] = [c.to_string()]
   join_string_array(arr)
 }

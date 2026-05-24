@@ -114,29 +114,6 @@ fn split_node_id(node_id : String) -> (String, String) {
   (substring(node_id, 0, at_idx), substring(node_id, at_idx + 1, node_id.length() - at_idx - 1))
 }
 
-fn index_of_char(s : String, ch : Char) -> Int {
-  let mut i = 0
-  while i < s.length() {
-    if s[i] == ch { return i }
-    i = i + 1
-  }
-  -1
-}
-
-fn substring(s : String, start : Int, len : Int) -> String {
-  if start < 0 || len <= 0 || start >= s.length() {
-    return ""
-  }
-  let end = if start + len > s.length() { s.length() } else { start + len }
-  let mut result = ""
-  let mut i = start
-  while i < end {
-    result = result + s[i].to_string()
-    i = i + 1
-  }
-  result
-}
-
 fn sort_by_transitive_size_desc(arr : Array[SizeInfo]) -> Unit {
   let n = arr.length()
   let mut i = 0

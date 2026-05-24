@@ -13,8 +13,8 @@ pub fn parse_version(s : String) -> Result[Version, String] {
   }
 
   // 分离 prerelease 部分（以 '-' 为界）
-  let core_part : String
-  let pre_part : String? = None
+  let mut core_part = ""
+  let mut pre_part : String? = None
   let pre_idx = index_of_char(s, '-')
   if pre_idx >= 0 {
     core_part = substring(s, 0, pre_idx)
@@ -140,6 +140,10 @@ pub fn satisfies(version : Version, constraint : String) -> Bool {
 
 // ---------- 内部辅助 ----------
 
+fn char_at(s : String, i : Int) -> Char {
+  Int::from_uint16(s[i]).unsafe_to_char()
+}
+
 fn satisfies_caret(version : Version, base : Version) -> Bool {
   if version.major != base.major {
     return false
@@ -214,8 +218,8 @@ fn compare_string(s1 : String, s2 : String) -> Int {
   let len = if s1.length() < s2.length() { s1.length() } else { s2.length() }
   let mut i = 0
   while i < len {
-    if s1[i] != s2[i] {
-      return if s1[i] < s2[i] { -1 } else { 1 }
+    if char_at(s1, i) != char_at(s2, i) {
+      return if char_at(s1, i) < char_at(s2, i) { -1 } else { 1 }
     }
     i = i + 1
   }
@@ -227,7 +231,7 @@ fn compare_string(s1 : String, s2 : String) -> Int {
 fn index_of_char(s : String, ch : Char) -> Int {
   let mut i = 0
   while i < s.length() {
-    if s[i] == ch { return i }
+    if char_at(s, i) == ch { return i }
     i = i + 1
   }
   -1
@@ -241,7 +245,7 @@ fn substring(s : String, start : Int, len : Int) -> String {
   let mut result = ""
   let mut i = start
   while i < end {
-    result = result + s[i].to_string()
+    result = result + char_at(s, i).to_string()
     i = i + 1
   }
   result
@@ -252,11 +256,11 @@ fn split_by_dot(s : String) -> Array[String] {
   let mut current = ""
   let mut i = 0
   while i < s.length() {
-    if s[i] == '.' {
+    if char_at(s, i) == '.' {
       result.push(current)
       current = ""
     } else {
-      current = current + s[i].to_string()
+      current = current + char_at(s, i).to_string()
     }
     i = i + 1
   }
@@ -270,14 +274,14 @@ fn parse_int(s : String) -> Int? {
   }
   let mut sign = 1
   let mut start = 0
-  if s[0] == '-' {
+  if char_at(s, 0) == '-' {
     sign = -1
     start = 1
   }
   let mut result = 0
   let mut i = start
   while i < s.length() {
-    let ch = s[i]
+    let ch = char_at(s, i)
     if ch < '0' || ch > '9' {
       return None
     }
@@ -290,10 +294,10 @@ fn parse_int(s : String) -> Int? {
 fn trim(s : String) -> String {
   let mut start = 0
   let mut end = s.length()
-  while start < end && is_whitespace(s[start]) {
+  while start < end && is_whitespace(char_at(s, start)) {
     start = start + 1
   }
-  while end > start && is_whitespace(s[end - 1]) {
+  while end > start && is_whitespace(char_at(s, end - 1)) {
     end = end - 1
   }
   substring(s, start, end - start)
@@ -307,7 +311,7 @@ fn starts_with(s : String, prefix : String) -> Bool {
   if s.length() < prefix.length() { return false }
   let mut i = 0
   while i < prefix.length() {
-    if s[i] != prefix[i] { return false }
+    if char_at(s, i) != char_at(prefix, i) { return false }
     i = i + 1
   }
   true
