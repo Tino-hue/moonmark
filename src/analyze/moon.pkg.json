@@ -1,6 +1,0 @@
-{
-  "import": [
-    "LittleFish/depsight/parse",
-    "LittleFish/depsight/graph"
-  ]
-}

@@ -1,0 +1,7 @@
+import {
+  "LittleFish/depsight/cli",
+}
+
+options(
+  "is-main": true,
+)
