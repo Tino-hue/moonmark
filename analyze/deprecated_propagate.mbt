@@ -63,8 +63,4 @@ fn bfs_ancestors(
   result
 }
 
-fn split_node_id(node_id : String) -> (String, String) {
-  let at = index_of_char(node_id, '@')
-  if at < 0 { return (node_id, "") }
-  (substring(node_id, 0, at), substring(node_id, at + 1, node_id.length() - at - 1))
-}
+
