@@ -141,7 +141,7 @@ pub fn satisfies(version : Version, constraint : String) -> Bool {
 // ---------- 内部辅助 ----------
 
 fn char_at(s : String, i : Int) -> Char {
-  Int::from_uint16(s[i]).unsafe_to_char()
+  s[i].to_int().unsafe_to_char()
 }
 
 fn satisfies_caret(version : Version, base : Version) -> Bool {
