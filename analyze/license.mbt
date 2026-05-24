@@ -1,10 +1,3 @@
-/// 许可证检测结果
-pub struct LicenseInfo {
-  spdx_id : String
-  name : String
-  is_high_risk : Bool
-} derive(Debug)
-
 /// 从许可证文本中检测 SPDX 标识符（基于关键词匹配）
 pub fn detect_license(text : String) -> String? {
   let t = to_lower(text)
@@ -166,38 +159,4 @@ fn find_line_end(s : String, start : Int) -> Int {
   s.length()
 }
 
-fn substring(s : String, start : Int, len : Int) -> String {
-  if start < 0 || len <= 0 || start >= s.length() { return "" }
-  let end = if start + len > s.length() { s.length() } else { start + len }
-  let mut result = ""
-  let mut i = start
-  while i < end {
-    result = result + s[i].to_int().unsafe_to_char().to_string()
-    i = i + 1
-  }
-  result
-}
 
-fn trim(s : String) -> String {
-  if s.length() == 0 { return "" }
-  let mut start = 0
-  let mut end = s.length()
-  while start < end {
-    let ch = s[start].to_int()
-    if ch == 32 || ch == 9 || ch == 10 || ch == 13 {
-      start = start + 1
-    } else {
-      break
-    }
-  }
-  while end > start {
-    let ch = s[end - 1].to_int()
-    if ch == 32 || ch == 9 || ch == 10 || ch == 13 {
-      end = end - 1
-    } else {
-      break
-    }
-  }
-  if start >= end { return "" }
-  substring(s, start, end - start)
-}
