@@ -1,10 +1,10 @@
 /// 诊断级别常量
-pub let LEVEL_CRITICAL : String = "Critical"
-pub let LEVEL_WARNING : String = "Warning"
-pub let LEVEL_INFO : String = "Info"
+pub const LEVEL_CRITICAL : String = "Critical"
+pub const LEVEL_WARNING : String = "Warning"
+pub const LEVEL_INFO : String = "Info"
 
 /// 单条诊断信息
-/// 
+///
 /// `level`   — 严重级别，使用 `LEVEL_CRITICAL` / `LEVEL_WARNING` / `LEVEL_INFO`
 /// `code`    — 诊断码，如 `"CYCLE-001"`
 /// `message` — 人类可读的问题描述
@@ -136,7 +136,8 @@ fn escape_json_loop(s : String, idx : Int, acc : Array[String]) -> String {
   escape_json_loop(s, idx + 1, acc)
 }
 
-fn char_to_string(ch : Char) -> String {
-  let arr : Array[String] = [ch.to_string()]
+fn char_to_string(ch : UInt16) -> String {
+  let c = Char::from_int(ch.to_int())
+  let arr : Array[String] = [c.to_string()]
   join_string_array(arr)
 }
