@@ -1,7 +1,7 @@
 fn unwrap_version(r : Result[Version, String]) -> Version {
   match r {
     Ok(v) => v
-    Err(msg) => fail("parse_version failed: " + msg)
+    Err(msg) => panic("parse_version failed: " + msg)
   }
 }
 

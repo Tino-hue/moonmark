@@ -11,7 +11,7 @@ test "build_github_raw_url converts github url" {
 }
 
 test "fetch_package_meta with mock success" {
-  fn mock_get(url : String) -> Result[String, String] {
+  fn mock_get(_url : String) -> Result[String, String] {
     Ok("{\"name\":\"test\",\"version\":\"1.0.0\"}")
   }
 
@@ -44,7 +44,7 @@ test "fetch_package_meta falls back to master branch" {
 }
 
 test "fetch_package_meta returns error on both branches fail" {
-  fn mock_get(url : String) -> Result[String, String] {
+  fn mock_get(_url : String) -> Result[String, String] {
     Err("Network error")
   }
 
@@ -59,7 +59,7 @@ test "Registry fetch known package" {
   let reg = @fetch.Registry::new()
   reg.add("moonbitlang/x", "https://github.com/moonbitlang/x")
 
-  fn mock_get(url : String) -> Result[String, String] {
+  fn mock_get(_url : String) -> Result[String, String] {
     Ok("{\"name\":\"moonbitlang/x\",\"version\":\"0.4.44\"}")
   }
 
@@ -73,7 +73,7 @@ test "Registry fetch known package" {
 test "Registry fetch unknown package returns error" {
   let reg = @fetch.Registry::new()
 
-  fn mock_get(url : String) -> Result[String, String] {
+  fn mock_get(_url : String) -> Result[String, String] {
     Ok("")
   }
 

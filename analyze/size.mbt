@@ -1,8 +1,8 @@
 /// 体积信息结构体
 pub struct SizeInfo {
-  pub node_id : String
-  pub self_size : Int
-  pub transitive_size : Int
+  node_id : String
+  self_size : Int
+  transitive_size : Int
 } derive(Debug)
 
 /// 构造 SizeInfo

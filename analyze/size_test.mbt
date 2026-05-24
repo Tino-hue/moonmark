@@ -115,8 +115,8 @@ test "format size mb" {
 
 test "render size report" {
   let infos : Array[SizeInfo] = [
-    { node_id: "root@1.0.0", self_size: 50, transitive_size: 350 },
-    { node_id: "b@1.0.0", self_size: 200, transitive_size: 200 },
+    SizeInfo::new("root@1.0.0", 50, 350),
+    SizeInfo::new("b@1.0.0", 200, 200),
   ]
   let report = render_size_report(infos)
   assert_true(report.contains("root@1.0.0: self 50 B / transitive 350 B"))
