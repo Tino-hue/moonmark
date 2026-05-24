@@ -6,6 +6,16 @@ pub struct DeprecatedPropagation {
   level : String
 } derive(Debug)
 
+/// 构造 DeprecatedPropagation（用于测试）
+pub fn DeprecatedPropagation::new(
+  node_id : String,
+  source_node_id : String,
+  api_name : String,
+  level : String
+) -> DeprecatedPropagation {
+  { node_id, source_node_id, api_name, level }
+}
+
 /// 在依赖图中发现所有暴露于废弃 API 的节点
 /// `deprecated_map` 的 key 是节点 ID（name@version），value 是该节点的废弃 API 列表
 pub fn find_deprecated_propagation(

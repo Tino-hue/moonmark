@@ -5,6 +5,11 @@ pub struct DeprecatedApi {
   message : String?
 } derive(Debug)
 
+/// 构造 DeprecatedApi（用于测试）
+pub fn DeprecatedApi::new(name : String, since~ : String? = None, message~ : String? = None) -> DeprecatedApi {
+  { name, since, message }
+}
+
 /// 扫描 MoonBit 源码，提取所有标记 @deprecated 的 API
 pub fn scan_deprecated_apis(source : String) -> Array[DeprecatedApi] {
   let lines = split_lines(source)

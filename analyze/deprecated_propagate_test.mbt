@@ -17,7 +17,7 @@ test "three-level propagation" {
   graph.add_edge("C", "1.0.0", "B", "1.0.0")
 
   let deprecated_map : Map[String, Array[DeprecatedApi]] = {
-    "A@1.0.0": [{ name: "old_fn", since: Some("0.1.0"), message: None }],
+    "A@1.0.0": [DeprecatedApi::new("old_fn", since=Some("0.1.0"))],
   }
 
   let props = find_deprecated_propagation(graph, deprecated_map)
@@ -50,7 +50,7 @@ test "direct and indirect mixed" {
   graph.add_edge("D", "1.0.0", "B", "1.0.0")
 
   let deprecated_map : Map[String, Array[DeprecatedApi]] = {
-    "A@1.0.0": [{ name: "old_fn", since: None, message: None }],
+    "A@1.0.0": [DeprecatedApi::new("old_fn")],
   }
 
   let props = find_deprecated_propagation(graph, deprecated_map)
@@ -85,8 +85,8 @@ test "multiple deprecated apis" {
 
   let deprecated_map : Map[String, Array[DeprecatedApi]] = {
     "A@1.0.0": [
-      { name: "old_fn", since: None, message: None },
-      { name: "old_struct", since: None, message: None },
+      DeprecatedApi::new("old_fn"),
+      DeprecatedApi::new("old_struct"),
     ],
   }
 
@@ -99,7 +99,7 @@ test "self deprecated not included" {
   graph.add_node("A", "1.0.0", 0)
 
   let deprecated_map : Map[String, Array[DeprecatedApi]] = {
-    "A@1.0.0": [{ name: "old_fn", since: None, message: None }],
+    "A@1.0.0": [DeprecatedApi::new("old_fn")],
   }
 
   let props = find_deprecated_propagation(graph, deprecated_map)
