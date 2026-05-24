@@ -85,3 +85,4 @@ target/
 .mooncakes/
 _build/
 core/
+trace.json
