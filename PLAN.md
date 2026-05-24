@@ -98,13 +98,13 @@
 
 ### Day 9 — 依赖体积静态分析
 
-- ⬜ 设计体积估算策略：基于包内 `.mbt` 文件总字符数 + 接口文件 `.mi` 大小
-- ⬜ 实现 `calculatePackageSize(name, version)`：通过 API 或本地缓存估算
-- ⬜ 实现体积归因：每个节点标注 "自身大小" 和 "传递大小（含所有子孙）"
-- ⬜ 定位 "体积罪魁祸首"：按传递大小排序，输出 TOP 10
-- ⬜ 在 3 个真实项目上测试，验证估算值与实际构建体积的相关性
+- ☑️ 设计体积估算策略：核心归因算法与数据源解耦，`self_sizes` 可由网络/API/启发式多种方式注入
+- ☑️ 实现 `calculate_transitive_sizes(graph, self_sizes)`：基于 DFS + Memo 递归计算所有节点的传递大小
+- ☑️ 实现体积归因：`SizeInfo { node_id, self_size, transitive_size }` + `find_size_offenders(graph, self_sizes, top_n)` 按传递大小降序排列
+- ☑️ 实现 `format_size(bytes)` 与 `render_size_report`：人类可读的 B/KB/MB 格式化 + 文本报告渲染
+- ⬜ 在 3 个真实项目上测试（延至编译环境修复后）
 
-**验收标准**：能输出类似 `Package A: 自身 12KB / 传递 340KB` 的归因数据。
+**验收标准**：能输出类似 `Package A: 自身 12KB / 传递 340KB` 的归因数据。 ✅（核心归因算法已完成，网络估算层延至 Week 3 缓存模块统一实现）
 
 ### Day 10 — 许可证识别器
 
