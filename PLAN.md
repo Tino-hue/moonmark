@@ -88,13 +88,13 @@
 
 ### Day 8 — 版本语义与新鲜度
 
-- ⬜ 实现 SemVer 解析器：`Version { major, minor, patch, prerelease }`
-- ⬜ 实现版本比较：`compare(v1, v2)`、`isOutdated(current, latest)`
-- ⬜ 实现版本约束匹配：`satisfies(version, constraint)`（支持 `^`、`~`、`>=` 等）
-- ⬜ 从 mooncakes.io 获取包的最新版本号，计算"新鲜度分数"
-- ⬜ 写单元测试：覆盖正常版本、预发布版本、通配符约束
+- ☑️ 实现 SemVer 解析器：`Version { major, minor, patch, prerelease }`
+- ☑️ 实现版本比较：`compare(v1, v2)`、`isOutdated(current, latest)`
+- ☑️ 实现版本约束匹配：`satisfies(version, constraint)`（支持 `^`、`~`、`~>`、`>=`、`>`、`<=`、`<`、`=`、裸版本）
+- ⬜ 从 mooncakes.io 获取包的最新版本号，计算"新鲜度分数"（延至 Day 9 集成）
+- ☑️ 写单元测试：`semver_test.mbt` 覆盖解析、比较、预发布、全部约束类型
 
-**验收标准**：`satisfies("0.2.1", "~> 0.2.0") == true`，`isOutdated("0.1.0", "0.3.0") == true`。
+**验收标准**：`satisfies("0.2.1", "~> 0.2.0") == true`，`isOutdated("0.1.0", "0.3.0") == true`。 ✅（代码已完成，因 Windows 工具链标准库加载问题，测试待环境修复后验证）
 
 ### Day 9 — 依赖体积静态分析
 

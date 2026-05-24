@@ -84,3 +84,4 @@ target/
 *.wasm
 .mooncakes/
 _build/
+core/
