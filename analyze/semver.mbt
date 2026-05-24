@@ -85,16 +85,16 @@ pub fn satisfies(version : Version, constraint : String) -> Bool {
       Ok(base) => satisfies_caret(version, base)
       Err(_) => false
     }
-  } else if starts_with(c, "~") {
-    // ~ 近似版本
-    let v_str = trim(substring(c, 1, c.length() - 1))
+  } else if starts_with(c, "~>") {
+    // ~> 近似版本（MoonBit 风格，等价于 ~）
+    let v_str = trim(substring(c, 2, c.length() - 2))
     match parse_version(v_str) {
       Ok(base) => satisfies_tilde(version, base)
       Err(_) => false
     }
-  } else if starts_with(c, "~>") {
-    // ~> 近似版本（MoonBit 风格，等价于 ~）
-    let v_str = trim(substring(c, 2, c.length() - 2))
+  } else if starts_with(c, "~") {
+    // ~ 近似版本
+    let v_str = trim(substring(c, 1, c.length() - 1))
     match parse_version(v_str) {
       Ok(base) => satisfies_tilde(version, base)
       Err(_) => false

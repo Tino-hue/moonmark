@@ -82,5 +82,6 @@ fn strip_prefix(s : String, prefix : String) -> String {
 fn strip_prefix_loop(s : String, start : Int, idx : Int, acc : String) -> String {
   let pos = start + idx
   if pos >= s.length() { return acc }
-  strip_prefix_loop(s, start, idx + 1, acc + s[pos].to_string())
+  let ch = s[pos].to_int().unsafe_to_char()
+  strip_prefix_loop(s, start, idx + 1, acc + ch.to_string())
 }
