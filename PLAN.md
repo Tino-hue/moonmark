@@ -163,31 +163,33 @@
 
 ### Day 15 — 终端表格报告
 
-- ⬜ 设计终端输出格式：表头、颜色编码（红/黄/绿）、对齐
-- ⬜ 实现 `renderTable(nodes: Array[NodeInfo]) -> String`
-- ⬜ 实现 `renderTree(root, prefix)`：以树形缩进展示依赖层级
-- ⬜ 支持 `--depth` 参数控制树形展开层级
-- ⬜ 在 Windows Terminal / PowerShell / VSCode 终端中测试颜色显示
+- ☑️ 设计终端输出格式：表头、颜色编码（红/黄/绿）、对齐
+- ☑️ 实现 `renderTable(nodes: Array[NodeInfo]) -> String`
+- ☑️ 实现 `renderTree(root, prefix)`：以树形缩进展示依赖层级
+- ☑️ 支持 `--depth` 参数控制树形展开层级
+- ☑️ 在 Windows Terminal / PowerShell / VSCode 终端中测试颜色显示
 
 **验收标准**：运行 `depsight tree --depth 2`，终端输出对齐、着色正确的依赖树。
 
 ### Day 16 — 审计摘要报告
 
-- ⬜ 设计 `depsight audit` 的输出格式（类似 `npm audit`）
-- ⬜ 按风险等级分组：Critical / Warning / Info
-- ⬜ 每条诊断包含：包名、版本、问题描述、修复建议
-- ⬜ 底部输出汇总：`X critical, Y warnings, Z info. Health Score: 78/100`
-- ⬜ 支持 `--json` 输出（供 CI 消费）
+- ☑️ 设计 `depsight audit` 的输出格式（类似 `npm audit`）
+- ☑️ 按风险等级分组：Critical / Warning / Info
+- ☑️ 每条诊断包含：包名、版本、问题描述、修复建议
+- ☑️ 底部输出汇总：`X critical, Y warnings, Z info. Health Score: 78/100`
+- ☑️ 支持 `--json` 输出（供 CI 消费）
 
 **验收标准**：`depsight audit --json` 输出合法 JSON，包含完整的诊断数组和总分。
 
 ### Day 17 — HTML 报告生成器
 
-- ⬜ 设计 HTML 报告结构：概览仪表盘 → 依赖树可视化 → 详细诊断列表
-- ⬜ 手写 HTML 模板字符串（不引入前端框架，单文件即可）
-- ⬜ 实现交互式依赖树：使用 `<details>` + `<summary>` 或内嵌 CSS/JS 做折叠展开
-- ⬜ 颜色编码：健康分 >= 80 绿色，50-79 黄色，< 50 红色
-- ⬜ 实现 `depsight report --html -o report.html`
+- ☑️ 设计 HTML 报告结构：概览仪表盘 → 依赖树可视化 → 详细诊断列表
+- ☑️ 手写 HTML 模板字符串（不引入前端框架，单文件即可）
+- ☑️ 实现交互式依赖树：使用 `<details>` + `<summary>` 做折叠展开
+- ☑️ 颜色编码：健康分 >= 80 绿色，50-79 黄色，< 50 红色
+- ☑️ 实现 `depsight report --html -o report.html`
+- ☑️ 修复 CSS 长字符串解析错误（拆分为 Array[String] 拼接）
+- ☑️ 修复 escape_html 换行符 bug（使用 inline join）
 
 **验收标准**：生成的 `report.html` 在浏览器中打开，能交互式展开依赖树，无外部网络依赖。
 

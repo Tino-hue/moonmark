@@ -1,3 +1,3 @@
-fn main {
-  @cli.run_cli()
+fn main(args : Array[String]) -> Unit {
+  @cli.run_cli(args)
 }
