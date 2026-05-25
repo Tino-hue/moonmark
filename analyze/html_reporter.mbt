@@ -296,7 +296,7 @@ fn escape_html(s : String) -> String {
 }
 
 fn escape_html_loop(s : String, idx : Int, acc : Array[String]) -> String {
-  if idx >= s.length() { return join_html_parts(acc) }
+  if idx >= s.length() { return join_inline(acc) }
   let ch = s[idx]
   if ch == '&' { acc.push("&amp;") }
   else if ch == '<' { acc.push("&lt;") }
@@ -304,6 +304,16 @@ fn escape_html_loop(s : String, idx : Int, acc : Array[String]) -> String {
   else if ch == '"' { acc.push("&quot;") }
   else { acc.push(char_to_html_string(ch)) }
   escape_html_loop(s, idx + 1, acc)
+}
+
+fn join_inline(parts : Array[String]) -> String {
+  let mut result = ""
+  let mut i = 0
+  while i < parts.length() {
+    result = result + parts[i]
+    i = i + 1
+  }
+  result
 }
 
 fn char_to_html_string(ch : UInt16) -> String {
