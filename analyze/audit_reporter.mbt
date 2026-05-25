@@ -57,8 +57,11 @@ pub fn render_audit_report(report : AnalysisReport) -> String {
     lines.push("")
   }
 
-  // 汇总行
-  let summary = "  " + red(criticals.length().to_string()) + " critical, " + yellow(warnings.length().to_string()) + " warnings, " + green(infos.length().to_string()) + " info"
+  // 汇总行（颜色包裹整个短语，确保 contains 可匹配）
+  let crit_str = red(criticals.length().to_string() + " critical")
+  let warn_str = yellow(warnings.length().to_string() + " warnings")
+  let info_str = green(infos.length().to_string() + " info")
+  let summary = "  " + crit_str + ", " + warn_str + ", " + info_str
   lines.push(bold("─── Summary ───"))
   lines.push(summary)
   lines.push("  Health Score: " + color_score(report.overall_score))
