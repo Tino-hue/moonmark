@@ -1,4 +1,91 @@
-pub fn analyze_health_score() -> Int {
-  // TODO: Implement health scoring
-  100
+/// 节点分析所需的元数据
+pub struct NodeMeta {
+  license : String?
+  deprecated_apis : Array[DeprecatedApi]
+  latest_version : String?
+  self_size : Int
+}
+
+/// 构造 NodeMeta
+pub fn NodeMeta::new(
+  license~ : String? = None,
+  deprecated_apis~ : Array[DeprecatedApi] = [],
+  latest_version~ : String? = None,
+  self_size~ : Int = 0
+) -> NodeMeta {
+  { license, deprecated_apis, latest_version, self_size }
+}
+
+/// 完整分析报告
+pub struct AnalysisReport {
+  diagnostics : Array[@report.Diagnostic]
+  health_scores : Array[HealthScore]
+  overall_score : Int
+  node_count : Int
+} derive(Debug)
+
+/// 对依赖图运行完整分析
+///
+/// `node_metas` 的 key 为节点 ID（`name@version`），value 为该节点的附加元数据。
+pub fn run_analysis(
+  graph : @graph.DependencyGraph,
+  node_metas : Map[String, NodeMeta]
+) -> AnalysisReport {
+  let diagnostics : Array[@report.Diagnostic] = []
+
+  // 1. 循环依赖检测
+  let cycle_diags = graph.check_cycles()
+  for d in cycle_diags {
+    diagnostics.push(d)
+  }
+
+  // 2. 逐节点分析
+  let scores : Array[HealthScore] = []
+  let all_ids = graph.get_all_node_ids()
+  for id in all_ids {
+    let meta = match node_metas.get(id) {
+      Some(m) => m
+      None => NodeMeta::new()
+    }
+    let (_, version) = split_node_id(id)
+    let input = NodeScoreInput::new(
+      id,
+      version,
+      latest_version=meta.latest_version,
+      license_spdx=meta.license,
+      deprecated_count=meta.deprecated_apis.length(),
+      total_api_count=10,
+      transitive_size=Some(meta.self_size),
+    )
+    let score = calculate_health_score(input)
+    scores.push(score)
+
+    // License 诊断
+    match meta.license {
+      Some(spdx) => if is_high_risk_license(spdx) {
+        diagnostics.push(@report.Diagnostic::warning(
+          "LICENSE-001",
+          "High-risk license: " + license_name(spdx),
+          [id],
+        ))
+      }
+      None => diagnostics.push(@report.Diagnostic::info(
+        "LICENSE-002",
+        "No license info: " + id,
+        [id],
+      ))
+    }
+
+    // 废弃 API 诊断
+    if meta.deprecated_apis.length() > 0 {
+      diagnostics.push(@report.Diagnostic::warning(
+        "DEPRECATED-001",
+        id + " has " + meta.deprecated_apis.length().to_string() + " deprecated API(s)",
+        [id],
+      ))
+    }
+  }
+
+  let overall = calculate_overall_score(scores)
+  { diagnostics, health_scores: scores, overall_score: overall, node_count: all_ids.length() }
 }

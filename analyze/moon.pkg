@@ -1,3 +1,4 @@
 import {
   "LittleFish/depsight/graph",
+  "LittleFish/depsight/report",
 }

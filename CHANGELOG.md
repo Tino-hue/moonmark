@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.0] - 2026-05-26
+
+### Added (Week 2: Analyzer Engine)
+- **SemVer Parser** (`analyze/semver.mbt`): Full SemVer parsing (`major.minor.patch[-prerelease]`), comparison, and constraint matching (`^`, `~`, `~>`, `>=`, `>`, `<=`, `<`, `=`).
+- **Size Attribution** (`analyze/size.mbt`): Transitive size calculation with DFS + memo, `find_size_offenders`, and human-readable report rendering (B/KB/MB).
+- **License Detector** (`analyze/license.mbt`): Keyword-based SPDX identification for 12 common licenses (MIT, Apache-2.0, BSD-2/3, GPL-3.0, AGPL-3.0, LGPL-3.0, MPL-2.0, ISC, SSPL-1.0, Unlicense, CC0-1.0). High-risk (GPL/AGPL/SSPL) flagging.
+- **Deprecated API Scanner** (`analyze/deprecated.mbt`): Extracts `@deprecated` annotations from `///` doc comments on `fn`/`let`/`const`/`struct`/`enum`/`trait`.
+- **Cross-Package Propagation** (`analyze/deprecated_propagate.mbt`): Reverse-BFS to mark all ancestor nodes as `direct` or `indirect` exposure to deprecated APIs.
+- **Health Scoring** (`analyze/health_score.mbt`): 5-dimension scoring model (freshness 25%, compliance 20%, deprecated density 25%, size 20%, activity 10%) with per-node and overall scores.
+- **Analysis Runner** (`analyze/analyzer.mbt`): `run_analysis(graph, node_metas)` entry point integrating cycle detection, license warnings, deprecated diagnostics, and health scoring.
+- **Report Renderer** (`report/reporter.mbt`): `render_report` generates plain-text summaries with score bars and diagnostic breakdowns.
+
+### Changed
+- Project pivoted from MoonHighlight (Tree-sitter grammar) to **MoonBit Depsight** (dependency health diagnostic tool).
+
 ## [0.1.0] - 2026-05-17
 
 ### Added
