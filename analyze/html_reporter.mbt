@@ -217,7 +217,50 @@ fn html_footer() -> String {
 // ========== CSS ==========
 
 fn html_css() -> String {
-  """:root{--bg:#0d1117;--fg:#c9d1d9;--card:#161b22;--border:#30363d;--green:#238636;--yellow:#d29922;--red:#da3633;--blue:#58a6ff;}body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--fg);margin:0;padding:20px;}.container{max-width:900px;margin:0 auto;}.header{text-align:center;border-bottom:1px solid var(--border);padding-bottom:20px;margin-bottom:20px;}.header h1{margin:0;font-size:28px;}.header p{margin:6px 0 0;color:#8b949e;}.overview{margin-bottom:24px;}.stats-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;}.stat-card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:16px;text-align:center;}.stat-value{font-size:28px;font-weight:700;}.stat-label{font-size:12px;color:#8b949e;margin-top:4px;}.stat-critical .stat-value{color:var(--red);}.stat-warning .stat-value{color:var(--yellow);}.stat-info .stat-value{color:var(--green);}.score-good{color:var(--green);}.score-mid{color:var(--yellow);}.score-bad{color:var(--red);}#overall-score{color:var(--green);font-size:36px;}#overall-score.score-mid{color:var(--yellow);}#overall-score.score-bad{color:var(--red);}.score-table{width:100%;border-collapse:collapse;margin-top:12px;}.score-table th,.score-table td{padding:8px 12px;text-align:center;border:1px solid var(--border);}.score-table th{background:var(--card);font-weight:600;}.score-total{font-weight:700;font-size:16px;}.diagnostics{margin-top:24px;}.diag-card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:14px;margin-bottom:12px;border-left:4px solid var(--blue);}.diag-critical{border-left-color:var(--red);}.diag-warning{border-left-color:var(--yellow);}.diag-info{border-left-color:var(--green);}.diag-header{display:flex;gap:10px;align-items:center;margin-bottom:6px;}.diag-level{font-size:12px;font-weight:700;padding:2px 8px;border-radius:4px;background:var(--border);}.diag-critical .diag-level{background:var(--red);color:#fff;}.diag-warning .diag-level{background:var(--yellow);color:#000;}.diag-info .diag-level{background:var(--green);color:#fff;}.diag-code{font-family:monospace;color:var(--blue);font-size:13px;}.diag-msg{margin-bottom:6px;}.diag-path{font-size:13px;color:#8b949e;}.diag-suggestions{margin-top:8px;}.suggestion{font-size:13px;color:var(--blue);margin-top:2px;}.no-issues{color:var(--green);}.dep-tree{margin-top:24px;}.tree-root{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px;}.tree-branch{margin:4px 0;}.tree-branch summary{cursor:pointer;font-family:monospace;padding:4px;border-radius:4px;}.tree-branch summary:hover{background:#21262d;}.tree-leaf{font-family:monospace;padding:4px 4px 4px 20px;color:#8b949e;}.footer{text-align:center;color:#8b949e;font-size:12px;margin-top:32px;padding-top:16px;border-top:1px solid var(--border);}"""
+  let parts : Array[String] = []
+  parts.push(":root{--bg:#0d1117;--fg:#c9d1d9;--card:#161b22;--border:#30363d;")
+  parts.push("--green:#238636;--yellow:#d29922;--red:#da3633;--blue:#58a6ff;}")
+  parts.push("body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;")
+  parts.push("background:var(--bg);color:var(--fg);margin:0;padding:20px;}")
+  parts.push(".container{max-width:900px;margin:0 auto;}")
+  parts.push(".header{text-align:center;border-bottom:1px solid var(--border);padding-bottom:20px;margin-bottom:20px;}")
+  parts.push(".header h1{margin:0;font-size:28px;}.header p{margin:6px 0 0;color:#8b949e;}")
+  parts.push(".overview{margin-bottom:24px;}")
+  parts.push(".stats-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;}")
+  parts.push(".stat-card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:16px;text-align:center;}")
+  parts.push(".stat-value{font-size:28px;font-weight:700;}.stat-label{font-size:12px;color:#8b949e;margin-top:4px;}")
+  parts.push(".stat-critical .stat-value{color:var(--red);}.stat-warning .stat-value{color:var(--yellow);}.stat-info .stat-value{color:var(--green);}")
+  parts.push(".score-good{color:var(--green);}.score-mid{color:var(--yellow);}.score-bad{color:var(--red);}")
+  parts.push("#overall-score{color:var(--green);font-size:36px;}#overall-score.score-mid{color:var(--yellow);}#overall-score.score-bad{color:var(--red);}")
+  parts.push(".score-table{width:100%;border-collapse:collapse;margin-top:12px;}")
+  parts.push(".score-table th,.score-table td{padding:8px 12px;text-align:center;border:1px solid var(--border);}")
+  parts.push(".score-table th{background:var(--card);font-weight:600;}.score-total{font-weight:700;font-size:16px;}")
+  parts.push(".diagnostics{margin-top:24px;}")
+  parts.push(".diag-card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:14px;margin-bottom:12px;border-left:4px solid var(--blue);}")
+  parts.push(".diag-critical{border-left-color:var(--red);}.diag-warning{border-left-color:var(--yellow);}.diag-info{border-left-color:var(--green);}")
+  parts.push(".diag-header{display:flex;gap:10px;align-items:center;margin-bottom:6px;}")
+  parts.push(".diag-level{font-size:12px;font-weight:700;padding:2px 8px;border-radius:4px;background:var(--border);}")
+  parts.push(".diag-critical .diag-level{background:var(--red);color:#fff;}.diag-warning .diag-level{background:var(--yellow);color:#000;}.diag-info .diag-level{background:var(--green);color:#fff;}")
+  parts.push(".diag-code{font-family:monospace;color:var(--blue);font-size:13px;}.diag-msg{margin-bottom:6px;}")
+  parts.push(".diag-path{font-size:13px;color:#8b949e;}.diag-suggestions{margin-top:8px;}")
+  parts.push(".suggestion{font-size:13px;color:var(--blue);margin-top:2px;}.no-issues{color:var(--green);}")
+  parts.push(".dep-tree{margin-top:24px;}")
+  parts.push(".tree-root{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px;}")
+  parts.push(".tree-branch{margin:4px 0;}.tree-branch summary{cursor:pointer;font-family:monospace;padding:4px;border-radius:4px;}")
+  parts.push(".tree-branch summary:hover{background:#21262d;}")
+  parts.push(".tree-leaf{font-family:monospace;padding:4px 4px 4px 20px;color:#8b949e;}")
+  parts.push(".footer{text-align:center;color:#8b949e;font-size:12px;margin-top:32px;padding-top:16px;border-top:1px solid var(--border);}")
+  join_css_parts(parts)
+}
+
+fn join_css_parts(parts : Array[String]) -> String {
+  let mut result = ""
+  let mut i = 0
+  while i < parts.length() {
+    result = result + parts[i]
+    i = i + 1
+  }
+  result
 }
 
 // ========== 工具函数 ==========
