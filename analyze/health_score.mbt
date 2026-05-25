@@ -33,6 +33,19 @@ pub struct HealthScore {
   activity : Int
 } derive(Debug)
 
+/// 构造 HealthScore（用于 blackbox test 直接构造）
+pub fn HealthScore::new(
+  node_id : String,
+  total : Int,
+  freshness~ : Int = 0,
+  compliance~ : Int = 0,
+  deprecated_density~ : Int = 0,
+  size_reasonableness~ : Int = 0,
+  activity~ : Int = 0
+) -> HealthScore {
+  { node_id, total, freshness, compliance, deprecated_density, size_reasonableness, activity }
+}
+
 /// 计算单个节点的健康评分（0-100）
 /// 权重：版本新鲜度 25%、协议合规 20%、废弃密度 25%、体积合理性 20%、活跃度 10%
 pub fn calculate_health_score(input : NodeScoreInput) -> HealthScore {
