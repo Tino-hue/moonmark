@@ -5,8 +5,14 @@
 
 // ========== 公共入口 ==========
 
+/// 运行 CLI（无参数入口，供 main 调用）
+pub fn run_cli() -> Unit {
+  // MoonBit main 不支持 args，此处使用演示数据
+  run_cli_with_args(["tree", "root"])
+}
+
 /// 运行 CLI，接收命令行参数数组
-pub fn run_cli(args : Array[String]) -> Unit {
+pub fn run_cli_with_args(args : Array[String]) -> Unit {
   if args.length() == 0 {
     print_help()
     return
@@ -39,23 +45,23 @@ pub fn run_cli(args : Array[String]) -> Unit {
 
 // ========== 数据结构 ==========
 
-struct CliOptions {
-  command : String
-  target_pkg : String
-  depth : Int
-  output : String?
-  format : String
-  fail_on_score : Int?
-  fail_on_critical : Bool
-  cache_dir : String?
-  offline : Bool
-  help : Bool
-  version : Bool
+pub(struct) CliOptions {
+  pub command : String
+  pub target_pkg : String
+  pub depth : Int
+  pub output : String?
+  pub format : String
+  pub fail_on_score : Int?
+  pub fail_on_critical : Bool
+  pub cache_dir : String?
+  pub offline : Bool
+  pub help : Bool
+  pub version : Bool
 }
 
 // ========== 参数解析 ==========
 
-fn parse_args(args : Array[String]) -> Result[CliOptions, String] {
+pub fn parse_args(args : Array[String]) -> Result[CliOptions, String] {
   let mut command = ""
   let mut target_pkg = "root"
   let mut depth = 10
@@ -189,6 +195,22 @@ fn run_audit(opts : CliOptions) -> Unit {
     }
     None => println(output_text)
   }
+
+  // CI 集成：fail-on-score 和 fail-on-critical
+  if opts.fail_on_critical {
+    let has_critical = report.diagnostics.iter().any(fn(d) { d.is_critical() })
+    if has_critical {
+      println(@analyze.red("Critical issues found!"))
+    }
+  }
+  match opts.fail_on_score {
+    Some(threshold) => {
+      if report.overall_score < threshold {
+        println(@analyze.red("Health score " + report.overall_score.to_string() + " is below threshold " + threshold.to_string()))
+      }
+    }
+    None => ()
+  }
 }
 
 fn run_report(opts : CliOptions) -> Unit {
@@ -236,7 +258,7 @@ fn print_help() -> Unit {
   println(help_text())
 }
 
-fn help_text() -> String {
+pub fn help_text() -> String {
   let lines : Array[String] = []
   lines.push(@analyze.bold("MoonBit Depsight v0.1.0"))
   lines.push("Dependency health diagnostic tool for MoonBit ecosystem")
@@ -256,14 +278,14 @@ fn help_text() -> String {
   lines.push("  --cache-dir <dir> Set cache directory")
   lines.push("")
   lines.push("Use 'depsight <command> --help' for command-specific options.")
-  join_lines(lines)
+  join_cli_lines(lines)
 }
 
 fn print_tree_help() -> Unit {
   println(tree_help_text())
 }
 
-fn tree_help_text() -> String {
+pub fn tree_help_text() -> String {
   let lines : Array[String] = []
   lines.push(@analyze.bold("depsight tree — Show dependency tree"))
   lines.push("")
@@ -272,14 +294,14 @@ fn tree_help_text() -> String {
   lines.push("")
   lines.push(@analyze.bold("Options:"))
   lines.push("  --depth <n>       Max tree depth (default: 10)")
-  join_lines(lines)
+  join_cli_lines(lines)
 }
 
 fn print_audit_help() -> Unit {
   println(audit_help_text())
 }
 
-fn audit_help_text() -> String {
+pub fn audit_help_text() -> String {
   let lines : Array[String] = []
   lines.push(@analyze.bold("depsight audit — Run dependency audit"))
   lines.push("")
@@ -291,14 +313,14 @@ fn audit_help_text() -> String {
   lines.push("  --fail-on-score <n>  Exit with error if overall score < n")
   lines.push("  --fail-on-critical   Exit with error if critical issues found")
   lines.push("  -o, --output <file>  Write output to file")
-  join_lines(lines)
+  join_cli_lines(lines)
 }
 
 fn print_report_help() -> Unit {
   println(report_help_text())
 }
 
-fn report_help_text() -> String {
+pub fn report_help_text() -> String {
   let lines : Array[String] = []
   lines.push(@analyze.bold("depsight report — Generate full report"))
   lines.push("")
@@ -309,10 +331,10 @@ fn report_help_text() -> String {
   lines.push("  --html            Output HTML format")
   lines.push("  --json            Output JSON format")
   lines.push("  -o, --output <file>  Write output to file")
-  join_lines(lines)
+  join_cli_lines(lines)
 }
 
-fn join_lines(lines : Array[String]) -> String {
+fn join_cli_lines(lines : Array[String]) -> String {
   let mut result = ""
   let mut i = 0
   while i < lines.length() {
