@@ -1,7 +1,0 @@
-// import {
-//   "username/lib" @lib,
-// }
-
-options(
-  "is-main": true,
-)

@@ -1,1 +1,0 @@
-{"name": "moonbit-language-server", "description": "MoonBit Language Server Protocol implementation — cross-editor semantic services", "version": "0.1.0", "license": "MIT", "repository": "https://github.com/Tino-hue/moonmark", "keywords": ["moonbit", "lsp", "language-server", "tree-sitter", "ide"]}

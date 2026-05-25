@@ -1,16 +1,6 @@
 # Dependencies
 node_modules/
 
-# Tree-sitter generated (don't commit parser.c - it's generated from grammar.js)
-src/parser.c
-src/tree_sitter/parser.h
-
-# Build artifacts
-build/
-*.o
-*.so
-*.dylib
-
 # OS files
 .DS_Store
 Thumbs.db
@@ -21,64 +11,6 @@ Thumbs.db
 *.swp
 *.swo
 
-# Temp files
-.gitmsg
-
-# Build artifacts (Zig/MSVC)
-*.dll
-*.pdb
-*.lib
-*.obj
-
-# Generated files (regenerable)
-src/grammar.json
-src/node-types.json
-package/
-tree-sitter.exe.gz
-temp.zip
-
-# Dev scripts (build helpers, not project code)
-build_dll.bat
-extract.bat
-extract.js
-final_rebuild.js
-find_cli.js
-inspect_xmind.js
-run_test.bat
-run_ts.ps1
-run_tsparse.bat
-tasks_list.js
-unzip_manual.js
-update_xmind.js
-xmind_update.js
-xmind_update2.js
-
-# Planning docs (not source code)
-14天计划创建.md
-MoonBit-十四计划创建.xmind
-14天三步走计划.md
-MoonBit-三步走计划.xmind
-*.xmind
-
-# XMind/temp scripts
-build_xmind.js
-content.json
-update_xmind2.js
-
-# Misc temp
-CLAUDE.md
-__pycache__/
-gen_tests*.py
-moonparse_temp/
-temp_*
-
-# Compiled output
-out/
-*.js.map
-*.d.ts
-package-lock.json
-*.tsbuildinfo
-
 # MoonBit build artifacts
 target/
 *.wasm
@@ -86,3 +18,16 @@ target/
 _build/
 core/
 trace.json
+
+# Legacy / archived code (old LSP, tree-sitter, etc.)
+archive/
+lib/
+moonparse_temp/
+
+# Misc
+__pycache__/
+*.dll
+*.pdb
+*.lib
+*.obj
+*.xmind
