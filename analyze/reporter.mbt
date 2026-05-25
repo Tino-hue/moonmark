@@ -1,5 +1,5 @@
 /// 将分析报告渲染为纯文本报告
-pub fn render_report(report : @analyze.AnalysisReport) -> String {
+pub fn render_report(report : AnalysisReport) -> String {
   let lines : Array[String] = []
   lines.push("MoonBit Depsight Analysis Report")
   lines.push("================================")
@@ -28,8 +28,8 @@ pub fn render_report(report : @analyze.AnalysisReport) -> String {
     let mut info = 0
     for d in report.diagnostics {
       lines.push(d.to_string())
-      if d.level == @report.LEVEL_CRITICAL { critical = critical + 1 }
-      else if d.level == @report.LEVEL_WARNING { warning = warning + 1 }
+      if d.is_critical() { critical = critical + 1 }
+      else if d.is_warning() { warning = warning + 1 }
       else { info = info + 1 }
     }
     lines.push("")
@@ -38,7 +38,7 @@ pub fn render_report(report : @analyze.AnalysisReport) -> String {
     lines.push("No diagnostics found.")
   }
 
-  join_lines(lines)
+  join_report_lines(lines)
 }
 
 // ---------- 内部辅助 ----------
@@ -49,7 +49,7 @@ fn score_bar(score : Int) -> String {
   "[RED]"
 }
 
-fn join_lines(lines : Array[String]) -> String {
+fn join_report_lines(lines : Array[String]) -> String {
   let mut result = ""
   let mut i = 0
   while i < lines.length() {

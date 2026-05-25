@@ -77,7 +77,7 @@ test "render report contains summary" {
     "pkg@1.0.0": NodeMeta::new(license=Some("MIT")),
   }
   let report = run_analysis(graph, metas)
-  let text = @report.render_report(report)
+  let text = render_report(report)
   assert_true(text.contains("MoonBit Depsight Analysis Report"))
   assert_true(text.contains("1 nodes analyzed"))
   assert_true(text.contains("Overall Health Score"))

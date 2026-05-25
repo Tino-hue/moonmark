@@ -60,6 +60,21 @@ pub fn Diagnostic::with_suggestion(self : Diagnostic, suggestion : String) -> Di
   { level: self.level, code: self.code, message: self.message, path: self.path, suggestions: new_suggestions }
 }
 
+/// 是否为 Critical 级别
+pub fn Diagnostic::is_critical(self : Diagnostic) -> Bool {
+  self.level == LEVEL_CRITICAL
+}
+
+/// 是否为 Warning 级别
+pub fn Diagnostic::is_warning(self : Diagnostic) -> Bool {
+  self.level == LEVEL_WARNING
+}
+
+/// 是否为 Info 级别
+pub fn Diagnostic::is_info(self : Diagnostic) -> Bool {
+  self.level == LEVEL_INFO
+}
+
 /// 将诊断转为可阅读的字符串（单行格式，适合终端表格）
 pub fn Diagnostic::to_string(self : Diagnostic) -> String {
   let parts = [self.level, " [", self.code, "] ", self.message]

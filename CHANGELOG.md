@@ -12,7 +12,7 @@ All notable changes to this project will be documented in this file.
 - **Cross-Package Propagation** (`analyze/deprecated_propagate.mbt`): Reverse-BFS to mark all ancestor nodes as `direct` or `indirect` exposure to deprecated APIs.
 - **Health Scoring** (`analyze/health_score.mbt`): 5-dimension scoring model (freshness 25%, compliance 20%, deprecated density 25%, size 20%, activity 10%) with per-node and overall scores.
 - **Analysis Runner** (`analyze/analyzer.mbt`): `run_analysis(graph, node_metas)` entry point integrating cycle detection, license warnings, deprecated diagnostics, and health scoring.
-- **Report Renderer** (`report/reporter.mbt`): `render_report` generates plain-text summaries with score bars and diagnostic breakdowns.
+- **Report Renderer** (`analyze/reporter.mbt`): `render_report` generates plain-text summaries with score bars and diagnostic breakdowns.
 
 ### Changed
 - Project pivoted from MoonHighlight (Tree-sitter grammar) to **MoonBit Depsight** (dependency health diagnostic tool).
