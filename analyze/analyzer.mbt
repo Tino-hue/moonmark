@@ -24,6 +24,16 @@ pub struct AnalysisReport {
   node_count : Int
 } derive(Debug)
 
+/// 构造 AnalysisReport（用于 blackbox test 直接构造）
+pub fn AnalysisReport::new(
+  diagnostics~ : Array[@report.Diagnostic] = [],
+  health_scores~ : Array[HealthScore] = [],
+  overall_score~ : Int = 100,
+  node_count~ : Int = 0
+) -> AnalysisReport {
+  { diagnostics, health_scores, overall_score, node_count }
+}
+
 /// 对依赖图运行完整分析
 ///
 /// `node_metas` 的 key 为节点 ID（`name@version`），value 为该节点的附加元数据。
