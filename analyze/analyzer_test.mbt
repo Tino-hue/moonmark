@@ -2,9 +2,9 @@ test "run analysis on empty graph" {
   let graph = @graph.DependencyGraph::new()
   let metas : Map[String, NodeMeta] = {}
   let report = run_analysis(graph, metas)
-  assert_eq(report.node_count, 0)
-  assert_eq(report.overall_score, 100)
-  assert_eq(report.diagnostics.length(), 0)
+  inspect!(report.node_count, content="0")
+  inspect!(report.overall_score, content="100")
+  inspect!(report.diagnostics.length(), content="0")
 }
 
 test "run analysis detects cycle" {
@@ -18,7 +18,7 @@ test "run analysis detects cycle" {
 
   let metas : Map[String, NodeMeta] = {}
   let report = run_analysis(graph, metas)
-  assert_eq(report.node_count, 3)
+  inspect!(report.node_count, content="3")
   assert_true(report.diagnostics.length() > 0)
 }
 
@@ -30,7 +30,7 @@ test "run analysis with high risk license" {
     "pkg@1.0.0": NodeMeta::new(license=Some("GPL-3.0")),
   }
   let report = run_analysis(graph, metas)
-  assert_eq(report.node_count, 1)
+  inspect!(report.node_count, content="1")
 
   let mut found = false
   for d in report.diagnostics {
@@ -65,8 +65,8 @@ test "run analysis overall score" {
     "b@2.0.0": NodeMeta::new(license=Some("MIT")),
   }
   let report = run_analysis(graph, metas)
-  assert_eq(report.health_scores.length(), 2)
-  assert_eq(report.overall_score, 100)
+  inspect!(report.health_scores.length(), content="2")
+  inspect!(report.overall_score, content="100")
 }
 
 test "render report contains summary" {

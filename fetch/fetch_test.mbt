@@ -4,9 +4,9 @@ test "build_github_raw_url converts github url" {
     "main",
     "moon.mod.json"
   )
-  assert_eq(
+  inspect!(
     url,
-    "https://raw.githubusercontent.com/moonbitlang/x/main/moon.mod.json"
+    content="https://raw.githubusercontent.com/moonbitlang/x/main/moon.mod.json"
   )
 }
 
@@ -17,7 +17,7 @@ test "fetch_package_meta with mock success" {
 
   let result = @fetch.fetch_package_meta(mock_get, "test", "1.0.0", "https://github.com/user/test")
   match result {
-    Ok(content) => assert_eq(content, "{\"name\":\"test\",\"version\":\"1.0.0\"}")
+    Ok(content) => inspect!(content, content="{\"name\":\"test\",\"version\":\"1.0.0\"}")
     Err(msg) => fail("Should succeed: " + msg)
   }
 }
@@ -36,8 +36,8 @@ test "fetch_package_meta falls back to master branch" {
   let result = @fetch.fetch_package_meta(mock_get, "test", "1.0.0", "https://github.com/user/test")
   match result {
     Ok(content) => {
-      assert_eq(content, "{\"name\":\"test\",\"version\":\"1.0.0\"}")
-      assert_eq(call_count, 2)
+      inspect!(content, content="{\"name\":\"test\",\"version\":\"1.0.0\"}")
+      inspect!(call_count, content="2")
     }
     Err(msg) => fail("Should fallback: " + msg)
   }
@@ -65,7 +65,7 @@ test "Registry fetch known package" {
 
   let result = reg.fetch(mock_get, "moonbitlang/x", "0.4.44")
   match result {
-    Ok(content) => assert_eq(content, "{\"name\":\"moonbitlang/x\",\"version\":\"0.4.44\"}")
+    Ok(content) => inspect!(content, content="{\"name\":\"moonbitlang/x\",\"version\":\"0.4.44\"}")
     Err(msg) => fail("Should succeed: " + msg)
   }
 }

@@ -5,10 +5,10 @@ test "detect deprecated function" {
     #|  // ...
     #|}
   let apis = scan_deprecated_apis(source)
-  assert_eq(apis.length(), 1)
-  assert_eq(apis[0].name, "old_fn")
-  assert_eq(apis[0].since, Some("0.1.0"))
-  assert_eq(apis[0].message, Some("Use new_fn instead"))
+  inspect!(apis.length(), content="1")
+  inspect!(apis[0].name, content="old_fn")
+  inspect!(apis[0].since, content="Some(\"0.1.0\")")
+  inspect!(apis[0].message, content="Some(\"Use new_fn instead\")")
 }
 
 test "detect deprecated without since" {
@@ -18,10 +18,10 @@ test "detect deprecated without since" {
     #|  0
     #|}
   let apis = scan_deprecated_apis(source)
-  assert_eq(apis.length(), 1)
-  assert_eq(apis[0].name, "obsolete")
-  assert_eq(apis[0].since, None)
-  assert_eq(apis[0].message, Some("This function is obsolete"))
+  inspect!(apis.length(), content="1")
+  inspect!(apis[0].name, content="obsolete")
+  inspect!(apis[0].since, content="None")
+  inspect!(apis[0].message, content="Some(\"This function is obsolete\")")
 }
 
 test "no deprecated in source" {
@@ -30,7 +30,7 @@ test "no deprecated in source" {
     #|  ()
     #|}
   let apis = scan_deprecated_apis(source)
-  assert_eq(apis.length(), 0)
+  inspect!(apis.length(), content="0")
 }
 
 test "detect deprecated let binding" {
@@ -38,9 +38,9 @@ test "detect deprecated let binding" {
     #|/// @deprecated since 0.2.0
     #|pub let OLD_VALUE = 42
   let apis = scan_deprecated_apis(source)
-  assert_eq(apis.length(), 1)
-  assert_eq(apis[0].name, "OLD_VALUE")
-  assert_eq(apis[0].since, Some("0.2.0"))
+  inspect!(apis.length(), content="1")
+  inspect!(apis[0].name, content="OLD_VALUE")
+  inspect!(apis[0].since, content="Some(\"0.2.0\")")
 }
 
 test "detect deprecated struct" {
@@ -50,10 +50,10 @@ test "detect deprecated struct" {
     #|  field : Int
     #|}
   let apis = scan_deprecated_apis(source)
-  assert_eq(apis.length(), 1)
-  assert_eq(apis[0].name, "OldStruct")
-  assert_eq(apis[0].since, Some("1.0.0"))
-  assert_eq(apis[0].message, Some("Use NewStruct"))
+  inspect!(apis.length(), content="1")
+  inspect!(apis[0].name, content="OldStruct")
+  inspect!(apis[0].since, content="Some(\"1.0.0\")")
+  inspect!(apis[0].message, content="Some(\"Use NewStruct\")")
 }
 
 test "multiple deprecated apis" {
@@ -64,9 +64,9 @@ test "multiple deprecated apis" {
     #|/// @deprecated since 0.2.0
     #|pub fn second() -> Int { 0 }
   let apis = scan_deprecated_apis(source)
-  assert_eq(apis.length(), 2)
-  assert_eq(apis[0].name, "first")
-  assert_eq(apis[1].name, "second")
+  inspect!(apis.length(), content="2")
+  inspect!(apis[0].name, content="first")
+  inspect!(apis[1].name, content="second")
 }
 
 test "deprecated const" {
@@ -74,8 +74,8 @@ test "deprecated const" {
     #|/// @deprecated since 0.3.0
     #|pub const OLD_CONST = "value"
   let apis = scan_deprecated_apis(source)
-  assert_eq(apis.length(), 1)
-  assert_eq(apis[0].name, "OLD_CONST")
+  inspect!(apis.length(), content="1")
+  inspect!(apis[0].name, content="OLD_CONST")
 }
 
 test "deprecated enum" {
@@ -86,8 +86,8 @@ test "deprecated enum" {
     #|  B
     #|}
   let apis = scan_deprecated_apis(source)
-  assert_eq(apis.length(), 1)
-  assert_eq(apis[0].name, "OldEnum")
+  inspect!(apis.length(), content="1")
+  inspect!(apis[0].name, content="OldEnum")
 }
 
 test "deprecated trait" {
@@ -97,6 +97,6 @@ test "deprecated trait" {
     #|  fn method(self) -> Unit
     #|}
   let apis = scan_deprecated_apis(source)
-  assert_eq(apis.length(), 1)
-  assert_eq(apis[0].name, "OldTrait")
+  inspect!(apis.length(), content="1")
+  inspect!(apis[0].name, content="OldTrait")
 }

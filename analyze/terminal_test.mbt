@@ -1,24 +1,24 @@
 test "pad_left aligns correctly" {
-  assert_eq(pad_left("abc", 5), "abc  ")
-  assert_eq(pad_left("hello", 5), "hello")
-  assert_eq(pad_left("x", 3), "x  ")
+  inspect!(pad_left("abc", 5), content="abc  ")
+  inspect!(pad_left("hello", 5), content="hello")
+  inspect!(pad_left("x", 3), content="x  ")
 }
 
 test "pad_right aligns correctly" {
-  assert_eq(pad_right("abc", 5), "  abc")
-  assert_eq(pad_right("hello", 5), "hello")
-  assert_eq(pad_right("x", 3), "  x")
+  inspect!(pad_right("abc", 5), content="  abc")
+  inspect!(pad_right("hello", 5), content="hello")
+  inspect!(pad_right("x", 3), content="  x")
 }
 
 test "pad_center aligns correctly" {
-  assert_eq(pad_center("ab", 4), " ab ")
-  assert_eq(pad_center("a", 3), " a ")
-  assert_eq(pad_center("abc", 3), "abc")
+  inspect!(pad_center("ab", 4), content=" ab ")
+  inspect!(pad_center("a", 3), content=" a ")
+  inspect!(pad_center("abc", 3), content="abc")
 }
 
 test "repeat_char repeats n times" {
-  assert_eq(repeat_char("-", 0), "")
-  assert_eq(repeat_char("*", 3), "***")
+  inspect!(repeat_char("-", 0), content="")
+  inspect!(repeat_char("*", 3), content="***")
 }
 
 test "color functions wrap with ANSI" {

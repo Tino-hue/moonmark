@@ -7,18 +7,18 @@ fn unwrap_version(r : Result[Version, String]) -> Version {
 
 test "parse simple version" {
   let v = unwrap_version(parse_version("1.2.3"))
-  assert_eq(v.major, 1)
-  assert_eq(v.minor, 2)
-  assert_eq(v.patch, 3)
-  assert_eq(v.prerelease, None)
+  inspect!(v.major, content="1")
+  inspect!(v.minor, content="2")
+  inspect!(v.patch, content="3")
+  inspect!(v.prerelease, content="None")
 }
 
 test "parse version with prerelease" {
   let v = unwrap_version(parse_version("2.0.0-alpha"))
-  assert_eq(v.major, 2)
-  assert_eq(v.minor, 0)
-  assert_eq(v.patch, 0)
-  assert_eq(v.prerelease, Some("alpha"))
+  inspect!(v.major, content="2")
+  inspect!(v.minor, content="0")
+  inspect!(v.patch, content="0")
+  inspect!(v.prerelease, content="Some(\"alpha\")")
 }
 
 test "parse invalid version" {
@@ -34,39 +34,39 @@ test "parse empty version" {
 test "compare equal versions" {
   let v1 = unwrap_version(parse_version("1.2.3"))
   let v2 = unwrap_version(parse_version("1.2.3"))
-  assert_eq(compare(v1, v2), 0)
+  inspect!(compare(v1, v2), content="0")
 }
 
 test "compare different major" {
   let v1 = unwrap_version(parse_version("1.0.0"))
   let v2 = unwrap_version(parse_version("2.0.0"))
-  assert_eq(compare(v1, v2), -1)
-  assert_eq(compare(v2, v1), 1)
+  inspect!(compare(v1, v2), content="-1")
+  inspect!(compare(v2, v1), content="1")
 }
 
 test "compare different minor" {
   let v1 = unwrap_version(parse_version("1.2.0"))
   let v2 = unwrap_version(parse_version("1.3.0"))
-  assert_eq(compare(v1, v2), -1)
+  inspect!(compare(v1, v2), content="-1")
 }
 
 test "compare different patch" {
   let v1 = unwrap_version(parse_version("1.2.3"))
   let v2 = unwrap_version(parse_version("1.2.4"))
-  assert_eq(compare(v1, v2), -1)
+  inspect!(compare(v1, v2), content="-1")
 }
 
 test "compare prerelease vs stable" {
   let pre = unwrap_version(parse_version("1.0.0-alpha"))
   let stable = unwrap_version(parse_version("1.0.0"))
-  assert_eq(compare(pre, stable), -1)
-  assert_eq(compare(stable, pre), 1)
+  inspect!(compare(pre, stable), content="-1")
+  inspect!(compare(stable, pre), content="1")
 }
 
 test "compare prerelease strings" {
   let v1 = unwrap_version(parse_version("1.0.0-alpha"))
   let v2 = unwrap_version(parse_version("1.0.0-beta"))
-  assert_eq(compare(v1, v2), -1)
+  inspect!(compare(v1, v2), content="-1")
 }
 
 test "is outdated" {

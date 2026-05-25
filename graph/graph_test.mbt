@@ -1,7 +1,7 @@
 test "empty graph" {
   let graph = @graph.DependencyGraph::new()
-  assert_eq(graph.size(), 0)
-  assert_eq(graph.get_all_node_ids().length(), 0)
+  inspect!(graph.size(), content="0")
+  inspect!(graph.get_all_node_ids().length(), content="0")
 }
 
 test "add nodes and edges" {
@@ -10,17 +10,17 @@ test "add nodes and edges" {
   graph.add_node("B", "1.0.0", 1)
   graph.add_node("C", "1.0.0", 1)
 
-  assert_eq(graph.size(), 3)
+  inspect!(graph.size(), content="3")
 
   graph.add_edge("A", "1.0.0", "B", "1.0.0")
   graph.add_edge("A", "1.0.0", "C", "1.0.0")
 
   let a_children = graph.get_children("A", "1.0.0")
-  assert_eq(a_children.length(), 2)
+  inspect!(a_children.length(), content="2")
 
   let b_parents = graph.get_parents("B", "1.0.0")
-  assert_eq(b_parents.length(), 1)
-  assert_eq(b_parents[0], "A@1.0.0")
+  inspect!(b_parents.length(), content="1")
+  inspect!(b_parents[0], content="A@1.0.0")
 }
 
 test "topological sort on DAG" {
@@ -37,7 +37,7 @@ test "topological sort on DAG" {
   let sorted = graph.topological_sort()
   match sorted {
     Ok(ids) => {
-      assert_eq(ids.length(), 4)
+      inspect!(ids.length(), content="4")
       assert_true(appears_before(ids, "A@1.0.0", "B@1.0.0"))
       assert_true(appears_before(ids, "B@1.0.0", "C@1.0.0"))
       assert_true(appears_before(ids, "B@1.0.0", "D@1.0.0"))
@@ -83,7 +83,7 @@ test "check_cycles returns empty for acyclic graph" {
   graph.add_edge("A", "1.0.0", "B", "1.0.0")
 
   let diags = graph.check_cycles()
-  assert_eq(diags.length(), 0)
+  inspect!(diags.length(), content="0")
 }
 
 test "check_cycles returns critical diagnostic for cycle" {
@@ -97,15 +97,15 @@ test "check_cycles returns critical diagnostic for cycle" {
   graph.add_edge("C", "1.0.0", "A", "1.0.0")
 
   let diags = graph.check_cycles()
-  assert_eq(diags.length(), 1)
+  inspect!(diags.length(), content="1")
 
   let d = diags[0]
-  assert_eq(d.level, @report.LEVEL_CRITICAL)
-  assert_eq(d.code, "CYCLE-001")
-  assert_eq(d.message, "Circular dependency detected")
+  inspect!(d.level, content="Critical")
+  inspect!(d.code, content="CYCLE-001")
+  inspect!(d.message, content="Circular dependency detected")
   assert_true(d.path.length() > 0)
-  assert_eq(d.suggestions.length(), 1)
-  assert_eq(d.suggestions[0], "Review the dependency chain and remove one of the edges to break the cycle.")
+  inspect!(d.suggestions.length(), content="1")
+  inspect!(d.suggestions[0], content="Review the dependency chain and remove one of the edges to break the cycle.")
 }
 
 test "performance: find_cycle on 150 node linear chain" {
@@ -125,7 +125,7 @@ test "performance: find_cycle on 150 node linear chain" {
   }
 
   let cycle = graph.find_cycle()
-  assert_eq(cycle.length(), 0)
+  inspect!(cycle.length(), content="0")
 }
 
 test "performance: topological_sort on 150 node DAG" {
@@ -145,7 +145,7 @@ test "performance: topological_sort on 150 node DAG" {
   }
 
   match graph.topological_sort() {
-    Ok(sorted) => assert_eq(sorted.length(), n)
+    Ok(sorted) => inspect!(sorted.length().to_string(), content="150")
     Err(msg) => fail("Should sort DAG: " + msg)
   }
 }
@@ -169,10 +169,10 @@ test "real package graph: moonbitlang/x has no cycle" {
   }
 
   // 真实包目前大多没有外部 deps，所以图只有 1 个节点
-  assert_eq(graph.size(), 1)
+  inspect!(graph.size(), content="1")
 
   let diags = graph.check_cycles()
-  assert_eq(diags.length(), 0)
+  inspect!(diags.length(), content="0")
 }
 
 test "real package graph: inject artificial cycle on real data" {
@@ -191,11 +191,11 @@ test "real package graph: inject artificial cycle on real data" {
     Err(msg) => fail("Build failed: " + msg)
   }
 
-  assert_eq(graph.size(), 2)
+  inspect!(graph.size(), content="2")
 
   let diags = graph.check_cycles()
-  assert_eq(diags.length(), 1)
-  assert_eq(diags[0].code, "CYCLE-001")
+  inspect!(diags.length(), content="1")
+  inspect!(diags[0].code, content="CYCLE-001")
 }
 
 test "render_tree basic structure" {
@@ -241,7 +241,7 @@ test "find_cycle on acyclic graph" {
   graph.add_edge("B", "1.0.0", "C", "1.0.0")
 
   let cycle = graph.find_cycle()
-  assert_eq(cycle.length(), 0)
+  inspect!(cycle.length(), content="0")
 }
 
 test "find_cycle detects three node cycle" {

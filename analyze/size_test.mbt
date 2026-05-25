@@ -9,7 +9,7 @@ test "single node transitive size" {
     Some(s) => s
     None => 0
   }
-  assert_eq(root_size, 100)
+  inspect!(root_size, content="100")
 }
 
 test "chain transitive size" {
@@ -40,9 +40,9 @@ test "chain transitive size" {
     Some(s) => s
     None => 0
   }
-  assert_eq(c_size, 300)
-  assert_eq(b_size, 500)
-  assert_eq(a_size, 600)
+  inspect!(c_size, content="300")
+  inspect!(b_size, content="500")
+  inspect!(a_size, content="600")
 }
 
 test "fork transitive size" {
@@ -73,9 +73,9 @@ test "fork transitive size" {
     Some(s) => s
     None => 0
   }
-  assert_eq(root_size, 350)
-  assert_eq(a_size, 100)
-  assert_eq(b_size, 200)
+  inspect!(root_size, content="350")
+  inspect!(a_size, content="100")
+  inspect!(b_size, content="200")
 }
 
 test "find size offenders" {
@@ -94,23 +94,23 @@ test "find size offenders" {
   }
 
   let offenders = find_size_offenders(graph, self_sizes, 2)
-  assert_eq(offenders.length(), 2)
-  assert_eq(offenders[0].node_id, "root@1.0.0")
-  assert_eq(offenders[0].transitive_size, 350)
-  assert_eq(offenders[1].node_id, "b@1.0.0")
-  assert_eq(offenders[1].transitive_size, 200)
+  inspect!(offenders.length(), content="2")
+  inspect!(offenders[0].node_id, content="root@1.0.0")
+  inspect!(offenders[0].transitive_size, content="350")
+  inspect!(offenders[1].node_id, content="b@1.0.0")
+  inspect!(offenders[1].transitive_size, content="200")
 }
 
 test "format size bytes" {
-  assert_eq(format_size(512), "512 B")
+  inspect!(format_size(512), content="512 B")
 }
 
 test "format size kb" {
-  assert_eq(format_size(12 * 1024), "12 KB")
+  inspect!(format_size(12 * 1024), content="12 KB")
 }
 
 test "format size mb" {
-  assert_eq(format_size(3 * 1024 * 1024), "3 MB")
+  inspect!(format_size(3 * 1024 * 1024), content="3 MB")
 }
 
 test "render size report" {

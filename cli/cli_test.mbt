@@ -62,24 +62,24 @@ test "parse_args rejects missing command" {
 
 test "help_text contains key sections" {
   let text = help_text()
-  assert_eq(text.contains("MoonBit Depsight"), true)
-  assert_eq(text.contains("tree"), true)
-  assert_eq(text.contains("audit"), true)
-  assert_eq(text.contains("report"), true)
-  assert_eq(text.contains("--help"), true)
+  assert_true(text.contains("MoonBit Depsight"))
+  assert_true(text.contains("tree"))
+  assert_true(text.contains("audit"))
+  assert_true(text.contains("report"))
+  assert_true(text.contains("--help"))
 }
 
 test "tree_help_text contains depth option" {
   let text = tree_help_text()
-  assert_eq(text.contains("--depth"), true)
+  assert_true(text.contains("--depth"))
 }
 
 test "audit_help_text contains json option" {
   let text = audit_help_text()
-  assert_eq(text.contains("--json"), true)
+  assert_true(text.contains("--json"))
 }
 
 test "report_help_text contains html option" {
   let text = report_help_text()
-  assert_eq(text.contains("--html"), true)
+  assert_true(text.contains("--html"))
 }

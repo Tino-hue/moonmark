@@ -7,8 +7,8 @@ test "parse simple moon.mod.json" {
   let result = @parse.parse_mod_json(content)
   match result {
     Ok(pkg) => {
-      assert_eq(pkg.name, "test/simple")
-      assert_eq(pkg.version, "0.1.0")
+      inspect!(pkg.name, content="test/simple")
+      inspect!(pkg.version, content="0.1.0")
       assert_true(pkg.deps.is_empty())
       assert_true(pkg.keywords.is_empty())
     }
@@ -34,14 +34,14 @@ test "parse full moon.mod.json" {
   let result = @parse.parse_mod_json(content)
   match result {
     Ok(pkg) => {
-      assert_eq(pkg.name, "LittleFish/depsight")
-      assert_eq(pkg.version, "0.1.0")
-      assert_eq(pkg.readme, Some("README.md"))
-      assert_eq(pkg.license, Some("Apache-2.0"))
-      assert_eq(pkg.description, Some("A tool"))
-      assert_eq(pkg.source, Some("src"))
-      assert_eq(pkg.keywords.length(), 2)
-      assert_eq(pkg.deps.length(), 2)
+      inspect!(pkg.name, content="LittleFish/depsight")
+      inspect!(pkg.version, content="0.1.0")
+      inspect!(pkg.readme, content="Some(\"README.md\")")
+      inspect!(pkg.license, content="Some(\"Apache-2.0\")")
+      inspect!(pkg.description, content="Some(\"A tool\")")
+      inspect!(pkg.source, content="Some(\"src\")")
+      inspect!(pkg.keywords.length(), content="2")
+      inspect!(pkg.deps.length(), content="2")
       match pkg.deps.get("user/helper") {
         Some("0.2.0") => ()
         _ => fail("Expected Some(\"0.2.0\")")

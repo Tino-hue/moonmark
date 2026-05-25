@@ -45,7 +45,7 @@ pub fn run_cli_with_args(args : Array[String]) -> Unit {
 
 // ========== 数据结构 ==========
 
-pub(struct) CliOptions {
+pub struct CliOptions {
   pub command : String
   pub target_pkg : String
   pub depth : Int
