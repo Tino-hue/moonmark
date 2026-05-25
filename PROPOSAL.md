@@ -9,7 +9,7 @@
 | **申报人** | 肖若愚 |
 | **团队名称** | 鱼仔爱开发 |
 | **GitHub 仓库** | https://github.com/Tino-hue/moonmark |
-| **GitLink 仓库** | https://www.gitlink.org.cn/LittleFish/moonmark |  https://github.com/Tino-hue/moonmark
+| **GitLink 仓库** | https://www.gitlink.org.cn/LittleFish/moonmark |
 | **主要实现语言** | MoonBit |
 | **目标平台** | mooncakes.io |
 | **项目类型** | 生态工具（CLI + 可视化报告） |
@@ -70,7 +70,7 @@ MoonBit Depsight 是一个面向 MoonBit 生态的依赖健康诊断 CLI 工具�
   - 版本新鲜度（25%）：当前版本与最新版本的距离
   - 协议合规性（20%）：是否包含高风险协议
   - 废弃 API 密度（25%）：废弃 API 占总公开 API 的比例
-  - 体积合理性（20%：传递依赖体积是否在合理范围
+  - 体积合理性（20%）：传递依赖体积是否在合理范围
   - 维护活跃度（10%）：预留维度，待接入 Git 提交活跃度
 - 为根项目计算整体健康分（所有直接依赖的加权平均）
 
@@ -166,3 +166,38 @@ MoonBit Depsight 的核心设计（五维健康评分模型、跨包废弃 API �
 - **技术栈**：MoonBit / WASM / JavaScript FFI / HTML/CSS
 - **开源协议**：Apache-2.0
 - **依赖声明**：除 `@moonbitlang/core` 外，不引入第三方 MoonBit 依赖；构建时工具链使用 Node.js 18+。
+
+---
+
+## 八、当前实现进度（截至 2026-05-25）
+
+### 已完成模块
+
+| 模块 | 文件 | 状态 | 说明 |
+|------|------|------|------|
+| `moon.mod.json` 解析器 | `parse/module.mbt` | ✅ 已完成 | 完整字段解析，含 deps/keywords/license 等 |
+| 依赖图数据结构 | `graph/graph.mbt` | ✅ 已完成 | DAG 增删查 + 拓扑排序 + DFS 环检测 + 树渲染 |
+| 传递依赖构建器 | `graph/builder.mbt` | ✅ 已完成 | 递归+缓存，版本冲突隔离，深度限制 |
+| SemVer 解析/约束 | `analyze/semver.mbt` | ✅ 已完成 | 支持 ^/~/~>/>=/>/<=/</= 和预发布版本 |
+| 许可证识别 | `analyze/license.mbt` | ✅ 已完成 | 12 种 SPDX 协议识别 + 高风险标记 |
+| 废弃 API 扫描 | `analyze/deprecated.mbt` | ✅ 已完成 | 支持 fn/let/const/struct/enum/trait 六种声明 |
+| 跨包废弃传播 | `analyze/deprecated_propagate.mbt` | ✅ 已完成 | BFS 逆向传播，区分 direct/indirect |
+| 体积归因 | `analyze/size.mbt` | ✅ 已完成 | DFS+Memo 传递大小计算 + Top-N 排序 |
+| 健康评分模型 | `analyze/health_score.mbt` | ⚠️ 4/5 完成 | 维护活跃度维度硬编码满分，待接入 API |
+| 诊断数据结构 | `report/diagnostic.mbt` | ✅ 已完成 | Critical/Warning/Info + JSON 序列化 |
+| 终端报告渲染 | `analyze/terminal_reporter.mbt` | ✅ 已完成 | ANSI 彩色表格 + 诊断 + 依赖树 |
+| 审计报告 | `analyze/audit_reporter.mbt` | ✅ 已完成 | npm audit 风格 + JSON 输出 |
+| HTML 报告 | `analyze/html_reporter.mbt` | ✅ 已完成 | 单文件 + CSS + 折叠依赖树 + XSS 防护 |
+| CLI 参数解析 | `cli/cli.mbt` | ✅ 已完成 | tree/audit/report 三命令 + 完整选项 |
+| 注册表抽象 | `fetch/fetch.mbt` | ✅ 已完成 | GitHub raw + main/master 回退 |
+
+### 待完成项
+
+| 优先级 | 功能 | 计划完成时间 |
+|--------|------|-------------|
+| P0 | 读取本地 `moon.mod.json` 替换 mock 数据 | Week 4 Day 22 |
+| P0 | 文件 I/O：`-o` 真实写文件 | Week 4 Day 22 |
+| P1 | 缓存系统（`--cache-dir` / `--offline` / TTL） | Week 3 Day 19 |
+| P1 | CI 退出码（`--fail-on-score` / `--fail-on-critical`） | Week 3 Day 20 |
+| P2 | 维护活跃度评分接入真实 API | Week 5 |
+| P2 | mooncakes.io 发布 | Week 5 Day 29 |

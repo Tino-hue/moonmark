@@ -1,114 +1,76 @@
-# Contributing to MoonHighlight
+# Contributing to MoonBit Depsight
 
-Thank you for your interest in contributing to MoonHighlight! 🌙
+Thank you for your interest in contributing to MoonBit Depsight!
 
 ## Project Overview
 
-MoonHighlight is a Tree-sitter based syntax highlighting grammar for MoonBit v0.9.2. The goal is to provide precise, semantic-aware syntax highlighting for all MoonBit constructs across multiple editors (VSCode, Neovim, Helix, Zed).
-
-## Development Phases
-
-### Phase 1: Grammar Foundation (Current)
-- [x] Project structure
-- [ ] grammar.js — Core grammar rules (in progress)
-- [ ] externals scanner — String interpolation handling
-- [ ] corpus tests — Test files from official docs
-
-### Phase 2: Editor Integrations
-- [ ] VSCode Extension
-- [ ] Neovim (nvim-treesitter)
-- [ ] Helix language.toml
-- [ ] Zed Language Server
+MoonBit Depsight is a dependency health diagnostic CLI tool for the MoonBit ecosystem. It reads `moon.mod.json`, recursively builds the transitive dependency graph, scores each dependency across five dimensions, and generates terminal/HTML/JSON reports.
 
 ## Development Setup
 
 ### Prerequisites
 
-```bash
-# Install Node.js (for tree-sitter CLI)
-# Install tree-sitter CLI
-npm install -g tree-sitter-cli
+- [MoonBit](https://www.moonbitlang.cn/) toolchain (`moon` CLI)
+- Node.js 18+ (for running WASM/JS build output)
 
-# Or via Rust cargo
-cargo install tree-sitter-cli
-```
-
-### Workflow
+### Build & Test
 
 ```bash
-# 1. Parse grammar.js and generate parser
-tree-sitter generate
+# Install dependencies
+moon install
 
-# 2. Run tests
-tree-sitter test
+# Build
+moon build --target js
 
-# 3. Visualize parse tree
-tree-sitter parse path/to/example.mbt
+# Run tests
+moon test --target js
 
-# 4. Build for specific editor
-# VSCode: tree-sitter generate --no-bindings
-# Neovim: use nvim-treesitter plugin
+# Format check
+moon fmt --check
 ```
 
-### Grammar Development Tips
+## Project Structure
 
-1. **Incremental development** — Build grammar rule by rule
-2. **Test first** — Each new rule needs test corpus entries
-3. **Check MoonBit docs** — Reference https://docs.moonbitlang.cn
-4. **Use Rust tree-sitter as reference** — tree-sitter/tree-sitter-rust
+| Directory | Responsibility |
+|-----------|---------------|
+| `parse/` | `moon.mod.json` parser, `Module` data structure |
+| `fetch/` | Registry abstraction, GitHub raw content fetcher |
+| `graph/` | `DependencyGraph`, `GraphBuilder`, topological sort, cycle detection |
+| `analyze/` | SemVer, license, deprecated API, health score, size attribution, report renderers |
+| `report/` | `Diagnostic` data structure (Critical/Warning/Info + JSON) |
+| `cli/` | CLI argument parsing & command dispatch |
+| `test/` | Test fixture JSON files |
 
-## Test Corpus Format
+## Development Guidelines
 
-Tests go in `corpus/test_moonbit.mbt`:
+1. **All core logic in MoonBit** — No external dependencies beyond `@moonbitlang/core`
+2. **Test-driven** — Every new feature needs corresponding test coverage
+3. **Mock data for tests** — Network-dependent code uses injected fetch closures, not real HTTP
+4. **No dynamic allocation in hot paths** — Prefer pre-allocated arrays and memoization
 
-```lisp
-;; Basic declarations
-(fn_declaration
-  "pub fn add(a : Int, b : Int) -> Int { a + b }"
-  (function_declaration
-    (visibility_modifier)
-    (identifier)
-    (parameter_list
-      (parameter (identifier) (type (builtin_type)))
-    (type (builtin_type))
-    (block)))
+## Adding a New Analysis Dimension
 
-;; Keywords
-(match_expression
-  "match x { Some(v) => v\n  None => 0 }"
-  (match_expression
-    (identifier)
-    (match_arm
-      (constructor_pattern (identifier) (identifier))
-      (identifier))
-    (match_arm
-      (identifier)
-      (integer_literal))))
-```
-
-## Style Guide
-
-- Use MoonBit style comments (`/// doc`, `// line`, `/* block */`)
-- Keep functions small and focused
-- Prefer descriptive variable names over abbreviations
-- Follow the Tree-sitter grammar conventions
+1. Define the scoring function in `analyze/`
+2. Add the dimension to `NodeScoreInput` and `HealthScore` in `analyze/health_score.mbt`
+3. Update `calculate_health_score()` with the new weight
+4. Add diagnostic generation in `analyze/analyzer.mbt`
+5. Update report renderers (terminal, HTML, JSON) to display the new dimension
+6. Write tests in a corresponding `*_test.mbt` file
 
 ## Pull Request Checklist
 
-- [ ] `tree-sitter generate` runs without errors
-- [ ] `tree-sitter test` passes
-- [ ] New syntax rules have corpus tests
-- [ ] README updated if adding public APIs
+- [ ] `moon build --target js` passes
+- [ ] `moon test --target js` passes
+- [ ] New features have test coverage
+- [ ] No unused variables or dead code
 - [ ] Commit messages are descriptive
 
 ## Resources
 
-- [Tree-sitter Documentation](https://tree-sitter.github.io/tree-sitter/)
-- [MoonBit Official Docs](https://docs.moonbitlang.cn)
-- [MoonBit Language Specification](https://www.moonbitlang.cn/docs/)
-- [tree-sitter Rust Reference](https://github.com/tree-sitter/tree-sitter-rust)
-- [tree-sitter OCaml Reference](https://github.com/tree-sitter/tree-sitter-ocaml)
+- [MoonBit Official Docs](https://www.moonbitlang.cn/docs/)
+- [MoonBit Standard Library](https://github.com/moonbitlang/core)
+- [mooncakes.io Package Registry](https://mooncakes.io/)
 
 ---
 
-*Built with 🌙 MoonBit for the 国产基础软件生态*
+*Built with MoonBit for the open-source ecosystem*
