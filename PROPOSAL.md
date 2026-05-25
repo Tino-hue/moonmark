@@ -8,7 +8,8 @@
 |------|------|
 | **申报人** | 肖若愚 |
 | **团队名称** | 鱼仔爱开发 |
-| **仓库地址** | https://www.gitlink.org.cn/LittleFish/moonmark |
+| **GitHub 仓库** | https://github.com/Tino-hue/moonmark |
+| **GitLink 仓库** | https://www.gitlink.org.cn/LittleFish/moonmark |  https://github.com/Tino-hue/moonmark
 | **主要实现语言** | MoonBit |
 | **目标平台** | mooncakes.io |
 | **项目类型** | 生态工具（CLI + 可视化报告） |
