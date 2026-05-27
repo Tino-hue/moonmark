@@ -89,11 +89,11 @@ test "Apache is not high risk" {
 }
 
 test "license name mapping" {
-  inspect!(license_name("MIT"), content="MIT License")
-  inspect!(license_name("Apache-2.0"), content="Apache License 2.0")
-  inspect!(license_name("GPL-3.0"), content="GNU General Public License v3.0")
-  inspect!(license_name("AGPL-3.0"), content="GNU Affero General Public License v3.0")
-  inspect!(license_name("Unknown-X"), content="Unknown License")
+  assert_true(license_name("MIT") == "MIT License")
+  assert_true(license_name("Apache-2.0") == "Apache License 2.0")
+  assert_true(license_name("GPL-3.0") == "GNU General Public License v3.0")
+  assert_true(license_name("AGPL-3.0") == "GNU Affero General Public License v3.0")
+  assert_true(license_name("Unknown-X") == "Unknown License")
 }
 
 test "LGPL does not match GPL" {
