@@ -44,9 +44,9 @@ fn html_header() -> String {
 }
 
 fn html_overview(report : AnalysisReport) -> String {
-  let critical = count_level(report.diagnostics, @report.LEVEL_CRITICAL)
-  let warning = count_level(report.diagnostics, @report.LEVEL_WARNING)
-  let info = count_level(report.diagnostics, @report.LEVEL_INFO)
+  let critical = count_level(report.diagnostics, @report.level_critical())
+  let warning = count_level(report.diagnostics, @report.level_warning())
+  let info = count_level(report.diagnostics, @report.level_info())
 
   let parts : Array[String] = []
   parts.push("<section class=\"overview\">")
@@ -275,8 +275,8 @@ fn score_css_class(score : Int) -> String {
 fn split_at_id(node_id : String) -> (String, String) {
   let mut i = 0
   while i < node_id.length() {
-    if node_id[i] == '@' {
-      return (node_id[:i].to_owned(), node_id[i + 1:].to_owned())
+    if node_id[i].to_int() == '@'.to_int() {
+      return (substring(node_id, 0, i), substring(node_id, i + 1, node_id.length() - i - 1))
     }
     i = i + 1
   }
@@ -297,12 +297,12 @@ fn escape_html(s : String) -> String {
 
 fn escape_html_loop(s : String, idx : Int, acc : Array[String]) -> String {
   if idx >= s.length() { return join_inline(acc) }
-  let ch = s[idx]
-  if ch == '&' { acc.push("&amp;") }
-  else if ch == '<' { acc.push("&lt;") }
-  else if ch == '>' { acc.push("&gt;") }
-  else if ch == '"' { acc.push("&quot;") }
-  else { acc.push(char_to_html_string(ch)) }
+  let code = s[idx].to_int()
+  if code == '&'.to_int() { acc.push("&amp;") }
+  else if code == '<'.to_int() { acc.push("&lt;") }
+  else if code == '>'.to_int() { acc.push("&gt;") }
+  else if code == '"'.to_int() { acc.push("&quot;") }
+  else { acc.push(char_code_to_html_string(s[idx])) }
   escape_html_loop(s, idx + 1, acc)
 }
 
@@ -316,8 +316,8 @@ fn join_inline(parts : Array[String]) -> String {
   result
 }
 
-fn char_to_html_string(ch : UInt16) -> String {
-  let c = ch.to_int().unsafe_to_char()
+fn char_code_to_html_string(code : UInt16) -> String {
+  let c = code.to_int().unsafe_to_char()
   let arr : Array[String] = [c.to_string()]
   join_html_parts(arr)
 }

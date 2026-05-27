@@ -44,9 +44,9 @@ test "color_score returns colored string" {
 }
 
 test "color_level returns level labels" {
-  let crit = color_level(@report.LEVEL_CRITICAL)
-  let warn = color_level(@report.LEVEL_WARNING)
-  let info = color_level(@report.LEVEL_INFO)
+  let crit = color_level(@report.level_critical())
+  let warn = color_level(@report.level_warning())
+  let info = color_level(@report.level_info())
   assert_true(crit.contains("[CRIT]"))
   assert_true(warn.contains("[WARN]"))
   assert_true(info.contains("[INFO]"))

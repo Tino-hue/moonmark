@@ -5,38 +5,38 @@
 
 // ========== ANSI 颜色常量 ==========
 
-pub const COLOR_RED : String = "\u{001b}[31m"
-pub const COLOR_GREEN : String = "\u{001b}[32m"
-pub const COLOR_YELLOW : String = "\u{001b}[33m"
-pub const COLOR_BOLD : String = "\u{001b}[1m"
-pub const COLOR_DIM : String = "\u{001b}[2m"
-pub const COLOR_RESET : String = "\u{001b}[0m"
+fn color_red() -> String { "\u{001b}[31m" }
+fn color_green() -> String { "\u{001b}[32m" }
+fn color_yellow() -> String { "\u{001b}[33m" }
+fn color_bold() -> String { "\u{001b}[1m" }
+fn color_dim() -> String { "\u{001b}[2m" }
+fn color_reset() -> String { "\u{001b}[0m" }
 
 // ========== 颜色包装函数 ==========
 
 /// 红色文本（用于 Critical / 低分）
 pub fn red(text : String) -> String {
-  COLOR_RED + text + COLOR_RESET
+  color_red() + text + color_reset()
 }
 
 /// 绿色文本（用于 OK / 高分）
 pub fn green(text : String) -> String {
-  COLOR_GREEN + text + COLOR_RESET
+  color_green() + text + color_reset()
 }
 
 /// 黄色文本（用于 Warning / 中等分数）
 pub fn yellow(text : String) -> String {
-  COLOR_YELLOW + text + COLOR_RESET
+  color_yellow() + text + color_reset()
 }
 
 /// 加粗文本
 pub fn bold(text : String) -> String {
-  COLOR_BOLD + text + COLOR_RESET
+  color_bold() + text + color_reset()
 }
 
 /// 暗淡文本（次要信息）
 pub fn dim(text : String) -> String {
-  COLOR_DIM + text + COLOR_RESET
+  color_dim() + text + color_reset()
 }
 
 /// 根据 0-100 分数返回带颜色的字符串
@@ -49,8 +49,8 @@ pub fn color_score(score : Int) -> String {
 
 /// 根据诊断级别返回带颜色的标签
 pub fn color_level(level : String) -> String {
-  if level == @report.LEVEL_CRITICAL { return red("[CRIT]") }
-  if level == @report.LEVEL_WARNING { return yellow("[WARN]") }
+  if level == @report.level_critical() { return red("[CRIT]") }
+  if level == @report.level_warning() { return yellow("[WARN]") }
   green("[INFO]")
 }
 
@@ -89,9 +89,9 @@ fn string_length(text : String) -> Int {
 
 fn strip_ansi_length(text : String, idx : Int, count : Int) -> Int {
   if idx >= text.length() { return count }
-  let ch = text[idx]
+  let code = text[idx].to_int()
   // 检测 ANSI 开始 \u{001b}[
-  if ch == '\u{001b}' && idx + 1 < text.length() && text[idx + 1] == '[' {
+  if code == '\u{001b}'.to_int() && idx + 1 < text.length() && text[idx + 1].to_int() == '['.to_int() {
     let new_idx = skip_ansi_seq(text, idx + 2)
     strip_ansi_length(text, new_idx, count)
   } else {
@@ -101,8 +101,8 @@ fn strip_ansi_length(text : String, idx : Int, count : Int) -> Int {
 
 fn skip_ansi_seq(text : String, idx : Int) -> Int {
   if idx >= text.length() { return idx }
-  let ch = text[idx]
-  if ch == 'm' { return idx + 1 }
+  let code = text[idx].to_int()
+  if code == 'm'.to_int() { return idx + 1 }
   skip_ansi_seq(text, idx + 1)
 }
 

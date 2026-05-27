@@ -1,7 +1,7 @@
 /// 诊断级别常量
-pub const LEVEL_CRITICAL : String = "Critical"
-pub const LEVEL_WARNING : String = "Warning"
-pub const LEVEL_INFO : String = "Info"
+pub fn level_critical() -> String { "Critical" }
+pub fn level_warning() -> String { "Warning" }
+pub fn level_info() -> String { "Info" }
 
 /// 单条诊断信息
 ///
@@ -29,7 +29,7 @@ pub fn Diagnostic::critical(
   message : String,
   path : Array[String]
 ) -> Diagnostic {
-  { level: LEVEL_CRITICAL, code, message, path, suggestions: [] }
+  { level: level_critical(), code, message, path, suggestions: [] }
 }
 
 /// 创建一条 Warning 级别诊断
@@ -38,7 +38,7 @@ pub fn Diagnostic::warning(
   message : String,
   path : Array[String]
 ) -> Diagnostic {
-  { level: LEVEL_WARNING, code, message, path, suggestions: [] }
+  { level: level_warning(), code, message, path, suggestions: [] }
 }
 
 /// 创建一条 Info 级别诊断
@@ -47,7 +47,7 @@ pub fn Diagnostic::info(
   message : String,
   path : Array[String]
 ) -> Diagnostic {
-  { level: LEVEL_INFO, code, message, path, suggestions: [] }
+  { level: level_info(), code, message, path, suggestions: [] }
 }
 
 /// 添加修复建议（返回新的 Diagnostic，不改变原对象）
@@ -62,17 +62,17 @@ pub fn Diagnostic::with_suggestion(self : Diagnostic, suggestion : String) -> Di
 
 /// 是否为 Critical 级别
 pub fn Diagnostic::is_critical(self : Diagnostic) -> Bool {
-  self.level == LEVEL_CRITICAL
+  self.level == level_critical()
 }
 
 /// 是否为 Warning 级别
 pub fn Diagnostic::is_warning(self : Diagnostic) -> Bool {
-  self.level == LEVEL_WARNING
+  self.level == level_warning()
 }
 
 /// 是否为 Info 级别
 pub fn Diagnostic::is_info(self : Diagnostic) -> Bool {
-  self.level == LEVEL_INFO
+  self.level == level_info()
 }
 
 /// 将诊断转为可阅读的字符串（单行格式，适合终端表格）
@@ -143,21 +143,21 @@ fn escape_json(s : String) -> String {
 
 fn escape_json_loop(s : String, idx : Int, acc : Array[String]) -> String {
   if idx >= s.length() { return join_string_array(acc) }
-  let ch = s[idx]
-  if ch == '"' {
+  let code = s[idx].to_int()
+  if code == '"'.to_int() {
     acc.push("\\\"")
-  } else if ch == '\\' {
+  } else if code == '\\'.to_int() {
     acc.push("\\\\")
-  } else if ch == '\n' {
+  } else if code == '\n'.to_int() {
     acc.push("\\n")
   } else {
-    acc.push(char_to_string(ch))
+    acc.push(char_code_to_string(s[idx]))
   }
   escape_json_loop(s, idx + 1, acc)
 }
 
-fn char_to_string(ch : UInt16) -> String {
-  let c = ch.to_int().unsafe_to_char()
+fn char_code_to_string(code : UInt16) -> String {
+  let c = code.to_int().unsafe_to_char()
   let arr : Array[String] = [c.to_string()]
   join_string_array(arr)
 }

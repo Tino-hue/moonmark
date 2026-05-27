@@ -1,0 +1,13 @@
+https://docs.moonbitlang.cn/language/introduction.html
+https://docs.moonbitlang.cn/language/fundamentals.html
+https://docs.moonbitlang.cn/language/methods.html
+https://docs.moonbitlang.cn/language/derive.html
+https://docs.moonbitlang.cn/language/error-handling.html
+https://docs.moonbitlang.cn/language/packages.html
+https://docs.moonbitlang.cn/language/tests.html
+https://docs.moonbitlang.cn/language/benchmarks.html
+https://docs.moonbitlang.cn/language/docs.html
+https://docs.moonbitlang.cn/language/attributes.html
+https://docs.moonbitlang.cn/language/ffi.html
+https://docs.moonbitlang.cn/language/async-experimental.html
+https://docs.moonbitlang.cn/language/verification.html

@@ -89,7 +89,7 @@ fn render_score_table(scores : Array[HealthScore]) -> Array[String] {
 /// 截断过长字符串并附加省略号
 fn truncate(text : String, max_len : Int) -> String {
   if text.length() <= max_len { return text }
-  text[:max_len - 1].to_owned() + "\u{2026}"
+  substring(text, 0, max_len - 1) + "\u{2026}"
 }
 
 /// 单元格数值显示（暗淡色）

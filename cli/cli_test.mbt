@@ -2,11 +2,11 @@ test "parse_args recognizes tree command" {
   let args = ["tree", "myPkg"]
   match parse_args(args) {
     Ok(opts) => {
-      inspect!(opts.command, content="tree")
-      inspect!(opts.target_pkg, content="myPkg")
-      inspect!(opts.depth.to_string(), content="10")
+      assert_true(opts.command == "tree")
+      assert_true(opts.target_pkg == "myPkg")
+      assert_true(opts.depth == 10)
     }
-    Err(_) => abort()
+    Err(_) => abort("test failed")
   }
 }
 
@@ -14,10 +14,10 @@ test "parse_args recognizes audit command with --json" {
   let args = ["audit", "--json"]
   match parse_args(args) {
     Ok(opts) => {
-      inspect!(opts.command, content="audit")
-      inspect!(opts.format, content="json")
+      assert_true(opts.command == "audit")
+      assert_true(opts.format == "json")
     }
-    Err(_) => abort()
+    Err(_) => abort("test failed")
   }
 }
 
@@ -25,29 +25,29 @@ test "parse_args recognizes report command with --html and -o" {
   let args = ["report", "--html", "-o", "out.html"]
   match parse_args(args) {
     Ok(opts) => {
-      inspect!(opts.command, content="report")
-      inspect!(opts.format, content="html")
+      assert_true(opts.command == "report")
+      assert_true(opts.format == "html")
       match opts.output {
-        Some(path) => inspect!(path, content="out.html")
-        None => abort()
+        Some(path) => assert_true(path == "out.html")
+        None => abort("test failed")
       }
     }
-    Err(_) => abort()
+    Err(_) => abort("test failed")
   }
 }
 
 test "parse_args parses --depth value" {
   let args = ["tree", "--depth", "3"]
   match parse_args(args) {
-    Ok(opts) => inspect!(opts.depth.to_string(), content="3")
-    Err(_) => abort()
+    Ok(opts) => assert_true(opts.depth == 3)
+    Err(_) => abort("test failed")
   }
 }
 
 test "parse_args rejects unknown option" {
   let result = parse_args(["tree", "--unknown"])
   match result {
-    Ok(_) => abort()
+    Ok(_) => abort("test failed")
     Err(_) => ()
   }
 }
@@ -55,7 +55,7 @@ test "parse_args rejects unknown option" {
 test "parse_args rejects missing command" {
   let result : Result[CliOptions, String] = parse_args([])
   match result {
-    Ok(_) => abort()
+    Ok(_) => abort("test failed")
     Err(_) => ()
   }
 }

@@ -237,20 +237,6 @@ fn index_of_char(s : String, ch : Char) -> Int {
   -1
 }
 
-fn substring(s : String, start : Int, len : Int) -> String {
-  if start < 0 || len <= 0 || start >= s.length() {
-    return ""
-  }
-  let end = if start + len > s.length() { s.length() } else { start + len }
-  let mut result = ""
-  let mut i = start
-  while i < end {
-    result = result + char_at(s, i).to_string()
-    i = i + 1
-  }
-  result
-}
-
 fn split_by_dot(s : String) -> Array[String] {
   let result : Array[String] = []
   let mut current = ""

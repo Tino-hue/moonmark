@@ -111,7 +111,7 @@ pub fn parse_args(args : Array[String]) -> Result[CliOptions, String] {
       cache_dir = Some(args[i])
     } else if arg == "--offline" {
       offline = true
-    } else if arg.length() > 0 && arg[0] == '-' {
+    } else if arg.length() > 0 && arg[0].to_int() == '-'.to_int() {
       return Err("Unknown option: " + arg)
     } else if command == "" {
       command = arg
@@ -146,9 +146,9 @@ fn parse_int(s : String) -> Int? {
   let mut result = 0
   let mut i = 0
   while i < s.length() {
-    let ch = s[i]
-    if ch < '0' || ch > '9' { return None }
-    result = result * 10 + (ch.to_int() - '0'.to_int())
+    let code = s[i].to_int()
+    if code < '0'.to_int() || code > '9'.to_int() { return None }
+    result = result * 10 + (code - '0'.to_int())
     i = i + 1
   }
   Some(result)

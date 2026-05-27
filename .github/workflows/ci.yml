@@ -10,37 +10,17 @@ jobs:
   build-and-test:
     name: Build & Test
     runs-on: ubuntu-latest
-    env:
-      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     steps:
-      - uses: actions/checkout@v5
-
-      - name: Cache MoonBit CLI
-        uses: actions/cache@v5
-        id: moonbit-cache
-        with:
-          path: ~/.moon
-          key: moonbit-cli-${{ runner.os }}-${{ hashFiles('**/moon.mod.json') }}
-          restore-keys: |
-            moonbit-cli-${{ runner.os }}-
+      - uses: actions/checkout@v4
 
       - name: Install MoonBit CLI
-        if: steps.moonbit-cache.outputs.cache-hit != 'true'
         run: |
-          for i in 1 2 3; do
-            echo "Attempt $i to install MoonBit..."
-            if curl -fsSL --retry 5 --retry-delay 10 --retry-all-errors https://cli.moonbitlang.cn/install/unix.sh | bash; then
-              echo "Install succeeded"
-              break
-            fi
-            echo "Install failed, waiting 30s before retry..."
-            sleep 30
-          done
+          curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
 
       - name: Verify MoonBit installation
         run: |
           export PATH="$HOME/.moon/bin:$PATH"
-          moon version
+          moon version --all
 
       - name: Update MoonBit registry
         run: |
@@ -50,7 +30,7 @@ jobs:
       - name: Type check
         run: |
           export PATH="$HOME/.moon/bin:$PATH"
-          moon check || (echo "=== TYPE CHECK FAILED ===" && exit 1)
+          moon check
 
       - name: Build for JS target
         run: |

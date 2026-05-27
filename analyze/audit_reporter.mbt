@@ -95,11 +95,11 @@ pub fn render_audit_json(report : AnalysisReport) -> String {
   }
 
   parts.push("],\"summary\":{\"critical\":")
-  parts.push(count_by_level(report.diagnostics, @report.LEVEL_CRITICAL).to_string())
+  parts.push(count_by_level(report.diagnostics, @report.level_critical()).to_string())
   parts.push(",\"warning\":")
-  parts.push(count_by_level(report.diagnostics, @report.LEVEL_WARNING).to_string())
+  parts.push(count_by_level(report.diagnostics, @report.level_warning()).to_string())
   parts.push(",\"info\":")
-  parts.push(count_by_level(report.diagnostics, @report.LEVEL_INFO).to_string())
+  parts.push(count_by_level(report.diagnostics, @report.level_info()).to_string())
   parts.push("}}")
 
   join_audit_parts(parts)
