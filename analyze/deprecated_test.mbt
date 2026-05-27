@@ -7,8 +7,8 @@ test "detect deprecated function" {
   let apis = scan_deprecated_apis(source)
   inspect!(apis.length(), content="1")
   inspect!(apis[0].name, content="old_fn")
-  inspect!(apis[0].since, content="Some(\"0.1.0\")")
-  inspect!(apis[0].message, content="Some(\"Use new_fn instead\")")
+  assert_true(apis[0].since == Some("0.1.0"))
+  assert_true(apis[0].message == Some("Use new_fn instead"))
 }
 
 test "detect deprecated without since" {
@@ -20,8 +20,8 @@ test "detect deprecated without since" {
   let apis = scan_deprecated_apis(source)
   inspect!(apis.length(), content="1")
   inspect!(apis[0].name, content="obsolete")
-  inspect!(apis[0].since, content="None")
-  inspect!(apis[0].message, content="Some(\"This function is obsolete\")")
+  assert_true(apis[0].since == None)
+  assert_true(apis[0].message == Some("This function is obsolete"))
 }
 
 test "no deprecated in source" {
@@ -40,7 +40,7 @@ test "detect deprecated let binding" {
   let apis = scan_deprecated_apis(source)
   inspect!(apis.length(), content="1")
   inspect!(apis[0].name, content="OLD_VALUE")
-  inspect!(apis[0].since, content="Some(\"0.2.0\")")
+  assert_true(apis[0].since == Some("0.2.0"))
 }
 
 test "detect deprecated struct" {
@@ -52,8 +52,8 @@ test "detect deprecated struct" {
   let apis = scan_deprecated_apis(source)
   inspect!(apis.length(), content="1")
   inspect!(apis[0].name, content="OldStruct")
-  inspect!(apis[0].since, content="Some(\"1.0.0\")")
-  inspect!(apis[0].message, content="Some(\"Use NewStruct\")")
+  assert_true(apis[0].since == Some("1.0.0"))
+  assert_true(apis[0].message == Some("Use NewStruct"))
 }
 
 test "multiple deprecated apis" {

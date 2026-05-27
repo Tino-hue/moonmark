@@ -10,7 +10,7 @@ test "parse simple version" {
   inspect!(v.major, content="1")
   inspect!(v.minor, content="2")
   inspect!(v.patch, content="3")
-  inspect!(v.prerelease, content="None")
+  assert_true(v.prerelease == None)
 }
 
 test "parse version with prerelease" {
@@ -18,7 +18,7 @@ test "parse version with prerelease" {
   inspect!(v.major, content="2")
   inspect!(v.minor, content="0")
   inspect!(v.patch, content="0")
-  inspect!(v.prerelease, content="Some(\"alpha\")")
+  assert_true(v.prerelease == Some("alpha"))
 }
 
 test "parse invalid version" {
