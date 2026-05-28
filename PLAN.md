@@ -224,10 +224,10 @@
 
 ### Day 21 — Week 3 验收 + 文档
 
-- ⬜ 在 5 个真实 MoonBit 项目上运行 `depsight audit`，收集报告样本
-- ⬜ 对比不同项目的健康分，验证评分合理性
-- ⬜ 写 `docs/week3.md`：CLI 设计思路、报告渲染技术选型
-- ⬜ 提交代码：`git commit -m "week3: cli + reporter + cache"`
+- ⬜ 在 5 个真实 MoonBit 项目上运行 `depsight audit`，收集报告样本（延至 Week 4，待网络请求层完成）
+- ⬜ 对比不同项目的健康分，验证评分合理性（延至 Week 4，待网络请求层完成）
+- ☑️ 写 `docs/week3.md`：CLI 设计思路、报告渲染技术选型、缓存系统技术决策
+- ☑️ 提交代码：`git commit -m "week3: cli + reporter + cache"`
 
 **Week 3 里程碑**：`depsight` CLI 可用，支持 tree/audit/report 三种模式，有终端和 HTML 两种输出，可集成 CI。
 
