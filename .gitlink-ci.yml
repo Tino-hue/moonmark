@@ -21,7 +21,7 @@ build:
     - moon build --target js
   artifacts:
     paths:
-      - target/js/release/build/
+      - _build/js/debug/build/
     expire_in: 1 week
 
 audit:
@@ -31,7 +31,7 @@ audit:
     - build
   script:
     - export PATH="$HOME/.moon/bin:$PATH"
-    - node target/js/release/build/main.js audit --fail-on-score 70 --fail-on-critical --html -o depsight-report.html
+    - node _build/js/debug/build/depsight.js audit --fail-on-score 70 --fail-on-critical --html -o depsight-report.html
   artifacts:
     paths:
       - depsight-report.html

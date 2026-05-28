@@ -29,7 +29,7 @@ jobs:
 
       - name: Run depsight audit
         run: |
-          node target/js/release/build/main.js audit --fail-on-score 70 --fail-on-critical
+          node _build/js/debug/build/depsight.js audit --fail-on-score 70 --fail-on-critical
 
       - name: Upload audit report
         if: always()
