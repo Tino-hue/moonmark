@@ -330,9 +330,8 @@
 
 ### Day 29 — mooncakes.io 发布准备
 
-- ⬜ 阅读 mooncakes.io 发布文档，确认包格式和元数据要求
-- ⬜ 完善 `moon.mod.json`：补充 description、keywords、repository、license
-- ⬜ 确保 `README.md` 包含：项目介绍、安装命令、快速开始、截图、API 概览
+- ☑️ 完善 `moon.mod`：补充 `description`、扩展 `keywords`（添加 "moonbit"）
+- ☑️ 验证 `README.md` 已包含：项目介绍、源码构建指南、CLI 用法、CI Actions 示例
 - ⬜ 运行 `moon publish`（或对应发布命令），解决发布过程中的报错
 - ⬜ 验证发布成功：在 mooncakes.io 搜索 `LittleFish/depsight` 能找到
 
@@ -340,10 +339,11 @@
 
 ### Day 30 — 用户文档与示例
 
-- ⬜ 写 `docs/USAGE.md`：详细讲解 `tree`、`audit`、`report` 三个命令
-- ⬜ 写 `docs/CI_INTEGRATION.md`：GitHub Actions / GitLink CI 配置示例
-- ⬜ 在 `examples/` 目录放 2-3 个示例 MoonBit 项目，展示不同健康分的结果
-- ⬜ 写 `CHANGELOG.md`，记录 v0.1.0 的功能列表
+- ☑️ 写 `docs/USAGE.md`：快速开始、`tree`/`audit`/`report` 详解、健康评分说明
+- ☑️ 写 `docs/CI_INTEGRATION.md`：GitHub Actions、GitLink CI、本地预提交钩子、JSON 格式说明
+- ☑️ 在 `examples/` 放 3 个示例 `moon.mod.json`（healthy/outdated/risky）
+- ☑️ 更新 `CHANGELOG.md`，记录 v0.3.0 Week 4 完整功能列表
+- ☑️ `moon test --target js` 214/214 通过
 
 **验收标准**：一个从未用过 Depsight 的开发者，按照文档能在 5 分钟内跑通第一个审计。
 

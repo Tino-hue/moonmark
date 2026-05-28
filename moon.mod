@@ -8,4 +8,6 @@ repository = "https://github.com/Tino-hue/moonmark"
 
 license = "Apache-2.0"
 
-keywords = ["depsight", "dependency", "audit", "health"]
+keywords = ["depsight", "dependency", "audit", "health", "moonbit"]
+
+description = "Dependency health diagnostic tool for the MoonBit ecosystem"
