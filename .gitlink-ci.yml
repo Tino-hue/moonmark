@@ -14,7 +14,7 @@ cache:
 
 build:
   stage: build
-  image: node:20
+  image: node:22
   script:
     - curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
     - export PATH="$HOME/.moon/bin:$PATH"
@@ -26,7 +26,7 @@ build:
 
 audit:
   stage: audit
-  image: node:20
+  image: node:22
   dependencies:
     - build
   script:
