@@ -49,17 +49,17 @@ pub fn run_cli_with_args(args : Array[String]) -> Int {
 // ========== 数据结构 ==========
 
 pub struct CliOptions {
-  pub command : String
-  pub target_pkg : String
-  pub depth : Int
-  pub output : String?
-  pub format : String
-  pub fail_on_score : Int?
-  pub fail_on_critical : Bool
-  pub cache_dir : String?
-  pub offline : Bool
-  pub help : Bool
-  pub version : Bool
+  command : String
+  target_pkg : String
+  depth : Int
+  output : String?
+  format : String
+  fail_on_score : Int?
+  fail_on_critical : Bool
+  cache_dir : String?
+  offline : Bool
+  help : Bool
+  version : Bool
 }
 
 // ========== 参数解析 ==========

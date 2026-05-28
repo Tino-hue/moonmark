@@ -30,15 +30,15 @@ pub fn parse_version(s : String) -> Result[Version, String] {
   }
 
   let major = match parse_int(parts[0]) {
-    Some(n) => n
+    Some(n) => if n < 0 { return Err("Negative major version: " + parts[0]) } else { n }
     None => return Err("Invalid major version: " + parts[0])
   }
   let minor = match parse_int(parts[1]) {
-    Some(n) => n
+    Some(n) => if n < 0 { return Err("Negative minor version: " + parts[1]) } else { n }
     None => return Err("Invalid minor version: " + parts[1])
   }
   let patch = match parse_int(parts[2]) {
-    Some(n) => n
+    Some(n) => if n < 0 { return Err("Negative patch version: " + parts[2]) } else { n }
     None => return Err("Invalid patch version: " + parts[2])
   }
 

@@ -7,8 +7,8 @@ test "parse simple moon.mod.json" {
   let result = @parse.parse_mod_json(content)
   match result {
     Ok(pkg) => {
-      inspect!(pkg.name, content="test/simple")
-      inspect!(pkg.version, content="0.1.0")
+      inspect(pkg.name, content="test/simple")
+      inspect(pkg.version, content="0.1.0")
       assert_true(pkg.deps.is_empty())
       assert_true(pkg.keywords.is_empty())
     }
@@ -34,14 +34,14 @@ test "parse full moon.mod.json" {
   let result = @parse.parse_mod_json(content)
   match result {
     Ok(pkg) => {
-      inspect!(pkg.name, content="LittleFish/depsight")
-      inspect!(pkg.version, content="0.1.0")
+      inspect(pkg.name, content="LittleFish/depsight")
+      inspect(pkg.version, content="0.1.0")
       assert_true(pkg.readme == Some("README.md"))
       assert_true(pkg.license == Some("Apache-2.0"))
       assert_true(pkg.description == Some("A tool"))
       assert_true(pkg.source == Some("src"))
-      inspect!(pkg.keywords.length(), content="2")
-      inspect!(pkg.deps.length(), content="2")
+      inspect(pkg.keywords.length(), content="2")
+      inspect(pkg.deps.length(), content="2")
       match pkg.deps.get("user/helper") {
         Some("0.2.0") => ()
         _ => fail("Expected Some(\"0.2.0\")")
@@ -149,7 +149,7 @@ test "parse keywords with non-string items" {
   let result = @parse.parse_mod_json(content)
   match result {
     Ok(pkg) => {
-      inspect!(pkg.keywords.length(), content="2")
+      inspect(pkg.keywords.length(), content="2")
     }
     Err(msg) => fail("Should parse with skipped non-string keywords: " + msg)
   }

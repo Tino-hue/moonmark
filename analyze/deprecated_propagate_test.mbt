@@ -21,22 +21,22 @@ test "three-level propagation" {
   }
 
   let props = find_deprecated_propagation(graph, deprecated_map)
-  inspect!(props.length(), content="2")
+  inspect(props.length(), content="2")
 
   let b_prop = match find_prop_by_node(props, "B@1.0.0") {
     Some(p) => p
     None => panic()
   }
-  inspect!(b_prop.level, content="direct")
-  inspect!(b_prop.api_name, content="old_fn")
-  inspect!(b_prop.source_node_id, content="A@1.0.0")
+  inspect(b_prop.level, content="direct")
+  inspect(b_prop.api_name, content="old_fn")
+  inspect(b_prop.source_node_id, content="A@1.0.0")
 
   let c_prop = match find_prop_by_node(props, "C@1.0.0") {
     Some(p) => p
     None => panic()
   }
-  inspect!(c_prop.level, content="indirect")
-  inspect!(c_prop.api_name, content="old_fn")
+  inspect(c_prop.level, content="indirect")
+  inspect(c_prop.api_name, content="old_fn")
 }
 
 test "direct and indirect mixed" {
@@ -54,16 +54,16 @@ test "direct and indirect mixed" {
   }
 
   let props = find_deprecated_propagation(graph, deprecated_map)
-  inspect!(props.length(), content="3")
+  inspect(props.length(), content="3")
 
   let b = find_prop_by_node(props, "B@1.0.0").unwrap()
-  inspect!(b.level, content="direct")
+  inspect(b.level, content="direct")
 
   let c = find_prop_by_node(props, "C@1.0.0").unwrap()
-  inspect!(c.level, content="direct")
+  inspect(c.level, content="direct")
 
   let d = find_prop_by_node(props, "D@1.0.0").unwrap()
-  inspect!(d.level, content="indirect")
+  inspect(d.level, content="indirect")
 }
 
 test "no deprecated nodes" {
@@ -74,7 +74,7 @@ test "no deprecated nodes" {
 
   let deprecated_map : Map[String, Array[DeprecatedApi]] = {}
   let props = find_deprecated_propagation(graph, deprecated_map)
-  inspect!(props.length(), content="0")
+  inspect(props.length(), content="0")
 }
 
 test "multiple deprecated apis" {
@@ -91,7 +91,7 @@ test "multiple deprecated apis" {
   }
 
   let props = find_deprecated_propagation(graph, deprecated_map)
-  inspect!(props.length(), content="2")
+  inspect(props.length(), content="2")
 }
 
 test "self deprecated not included" {
@@ -103,5 +103,5 @@ test "self deprecated not included" {
   }
 
   let props = find_deprecated_propagation(graph, deprecated_map)
-  inspect!(props.length(), content="0")
+  inspect(props.length(), content="0")
 }

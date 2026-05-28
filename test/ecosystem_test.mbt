@@ -239,10 +239,12 @@ test "ecosystem sampling builds complete graph" {
 
   match result {
     Ok((graph, report, eco)) => {
-      inspect!(graph.size(), content="10")
-      inspect!(report.node_count, content="10")
-      inspect!(eco.total_nodes, content="10")
-      inspect!(eco.cycle_detected, content="false")
+      inspect(graph.size(), content="10")
+      inspect(report.node_count, content="10")
+      inspect(eco.total_nodes, content="10")
+      inspect(eco.total_packages, content="10")
+      inspect(eco.overall_health_score, content="100")
+      inspect(eco.cycle_detected, content="false")
     }
     Err(msg) => fail("Ecosystem sampling failed: " + msg)
   }
@@ -254,8 +256,8 @@ test "ecosystem stats identify core as most depended" {
 
   match result {
     Ok((_, _, eco)) => {
-      inspect!(eco.most_depended, content="moonbitlang/core")
-      inspect!(eco.most_depended_count > 0, content="true")
+      inspect(eco.most_depended, content="moonbitlang/core")
+      inspect(eco.most_depended_count > 0, content="true")
     }
     Err(msg) => fail("Ecosystem sampling failed: " + msg)
   }
@@ -267,8 +269,8 @@ test "ecosystem depth stats are reasonable" {
 
   match result {
     Ok((_, _, eco)) => {
-      inspect!(eco.max_depth >= 0, content="true")
-      inspect!(eco.avg_depth >= 0.0, content="true")
+      inspect(eco.max_depth >= 0, content="true")
+      inspect(eco.avg_depth >= 0.0, content="true")
     }
     Err(msg) => fail("Ecosystem sampling failed: " + msg)
   }
@@ -288,8 +290,8 @@ test "ecosystem license distribution includes MIT and Apache" {
         Some(c) => c > 0
         None => false
       }
-      inspect!(has_mit, content="true")
-      inspect!(has_apache, content="true")
+      inspect(has_mit, content="true")
+      inspect(has_apache, content="true")
     }
     Err(msg) => fail("Ecosystem sampling failed: " + msg)
   }
@@ -301,8 +303,8 @@ test "ecosystem sampling on smaller root" {
 
   match result {
     Ok((graph, _, eco)) => {
-      inspect!(graph.size(), content="3")
-      inspect!(eco.total_nodes, content="3")
+      inspect(graph.size(), content="3")
+      inspect(eco.total_nodes, content="3")
     }
     Err(msg) => fail("Ecosystem sampling failed: " + msg)
   }
@@ -330,7 +332,7 @@ test "ecosystem sampling detects artificial cycle" {
 
   match result {
     Ok((_, report, eco)) => {
-      inspect!(eco.cycle_detected, content="true")
+      inspect(eco.cycle_detected, content="true")
       assert_true(report.diagnostics.length() > 0)
     }
     Err(msg) => fail("Ecosystem sampling failed: " + msg)
