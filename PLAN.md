@@ -287,10 +287,15 @@
 
 ### Day 26 — 端到端集成测试
 
-- ⬜ 写一个完整的 E2E 测试脚本：从空目录初始化 MoonBit 项目 → 添加依赖 → 运行 Depsight
-- ⬜ 验证完整工作流：本地 `moon.mod.json` → 依赖图 → 审计报告 → HTML 输出
-- ⬜ 测试 `--offline`、`--json`、`--html` 的组合使用
-- ⬜ 测试不同 MoonBit 版本生成的 `moon.mod.json` 兼容性
+- ☑️ 扩展 `cli/cli_test.mbt`：12 个 CLI 参数解析测试（`--offline`、`-o`、组合参数、顺序无关性、错误输入）
+- ☑️ 新建 `test/e2e_test.mbt`：13 个端到端集成测试，覆盖完整 pipeline
+  - 最小/多依赖/全可选字段 moon.mod.json 解析 → GraphBuilder → Analysis → Report
+  - 兼容性：无 deps 字段、空版本字符串
+  - 离线场景：本地 registry mock
+  - 报告格式：HTML 结构完整性、JSON schema 验证
+  - 异常路径：畸形 JSON、fetch 失败、循环依赖检测
+- ☑️ 验证 `--json`、`--html`、terminal 三种输出格式在 pipeline 中正确生成
+- ☑️ `moon test --target js` 204/204 通过
 
 **验收标准**：一个新创建的 MoonBit 项目，能在 30 秒内完成从安装到出报告的全流程。
 
