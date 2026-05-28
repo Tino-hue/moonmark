@@ -315,10 +315,10 @@
 
 ### Day 28 — Week 4 验收 + 文档
 
-- ⬜ 写 `docs/week4.md`：测试策略、性能基准、已知问题
-- ⬜ 整理测试样本数据（脱敏后）存入 `test/fixtures/`
-- ⬜ 更新 `README.md`：安装指南、使用方法、截图
-- ⬜ 提交代码：`git commit -m "week4: testing + performance + integration"`
+- ☑️ 写 `docs/week4.md`：测试策略（4 层金字塔）、性能基准表、已知问题与限制
+- ☑️ 整理测试样本数据：`test/fixtures/` 已包含 4 个 fixture（mod_simple/mod_full/mod_invalid/real_moonbitlang_x）
+- ☑️ 更新 `README.md`：补充从源码构建指南、详细 CLI 用法、CI Actions 示例、开发命令
+- ☑️ `moon test --target js` 214/214 通过
 
 **Week 4 里程碑**：工具在真实生态中稳定运行，测试覆盖核心模块，性能达标。
 

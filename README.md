@@ -35,38 +35,79 @@ MoonBit Depsight analyzes your `moon.mod.json` and recursively inspects the enti
 
 ## Installation
 
+### 从源码构建
+
+```bash
+git clone https://github.com/Tino-hue/moonmark.git
+cd moonmark
+moon build --target js
+```
+
+### 作为 MoonBit 包依赖
+
 ```bash
 moon add LittleFish/depsight
 ```
 
 ## Usage
 
+### 命令概览
+
 ```bash
-# Show dependency tree
-depsight tree [package]
-depsight tree --depth 3
+# 查看依赖树（ASCII 格式）
+node _build/js/debug/build/depsight.js tree [package]
+node _build/js/debug/build/depsight.js tree --depth 3
 
-# Run dependency audit
-depsight audit
-depsight audit --json
-depsight audit --fail-on-score 80 --fail-on-critical
+# 运行依赖审计（终端彩色输出）
+node _build/js/debug/build/depsight.js audit
 
-# Generate full report
-depsight report
-depsight report --html -o report.html
+# JSON 格式输出（供 CI 消费）
+node _build/js/debug/build/depsight.js audit --json
+
+# 生成完整报告
+node _build/js/debug/build/depsight.js report
+node _build/js/debug/build/depsight.js report --html -o report.html
+node _build/js/debug/build/depsight.js report --json -o report.json
+```
+
+### CI 集成
+
+```bash
+# 健康分低于 80 时返回 exit code 1
+node _build/js/debug/build/depsight.js audit --fail-on-score 80
+
+# 发现 critical 问题时返回 exit code 1
+node _build/js/debug/build/depsight.js audit --fail-on-critical
+
+# 离线模式（仅使用本地缓存）
+node _build/js/debug/build/depsight.js audit --offline --cache-dir ./cache
+```
+
+### GitHub Actions 示例
+
+```yaml
+- name: Dependency Health Audit
+  run: node depsight.js audit --html -o depsight-report.html
+- uses: actions/upload-artifact@v6
+  with:
+    name: depsight-report
+    path: depsight-report.html
 ```
 
 ## Development
 
 ```bash
-# Build for JS target
+# 构建 JS 产物
 moon build --target js
 
-# Run tests
+# 运行测试（204 个，秒级完成）
 moon test --target js
 
-# Run all tests (native)
-moon test
+# 运行所有测试（含 8 个性能测试，约 30-60 秒）
+moon test --target js --no-skip
+
+# 运行 linter
+moon check
 ```
 
 ## Project Structure
