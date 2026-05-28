@@ -4,7 +4,7 @@ fn cleanup_test_cache(fs : @cache.FileSystem) -> Unit {
   match (fs.readdir)(test_cache_dir) {
     Some(files) => {
       for file in files {
-        (fs.unlink)(test_cache_dir + "/" + file)
+        (fs.unlink)(join_path(test_cache_dir, file))
       }
       (fs.rmdir)(test_cache_dir)
     }

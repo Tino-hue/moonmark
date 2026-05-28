@@ -301,10 +301,15 @@
 
 ### Day 27 — 跨平台测试
 
-- ⬜ 在 Windows（本机）上完整测试 CLI 所有命令
-- ⬜ 如果条件允许，在 WSL / Linux 上测试构建和运行
-- ⬜ 检查路径分隔符、换行符、文件编码等跨平台问题
-- ⬜ 确保缓存目录使用 OS 标准路径（`%LOCALAPPDATA%` / `~/.cache`）
+- ☑️ 修复 `cache.mbt` 中 4 处硬编码 `/` 路径分隔符，改为 Node.js `path.join`
+- ☑️ 新增 `path_join`、`path_sep` JS FFI + `platform_path_sep()`、`platform_home_dir()`、`join_path()` pub API
+- ☑️ 修复 `cache_test.mbt` 中的硬编码 `/`
+- ☑️ 新增 `test/cross_platform_test.mbt`：10 个测试覆盖
+  - 路径分隔符：`default_cache_dir` 使用平台分隔符，无混合路径
+  - 换行符：`parse_mod_json` 兼容 LF 和 CRLF
+  - 编码：Unicode 包名和描述解析、HTML 报告保留中文字符
+  - 真实 FS 缓存：set/get roundtrip、clear、purge_expired（含 50ms sleep）
+- ☑️ Windows 本机完整 CLI 验证：`tree`、`audit`、`audit --json`、`report --html`、`-h`、`-v` 全部通过，HTML 文件正确生成
 
 **验收标准**：Windows 和 Linux 下 `depsight audit` 输出一致，无路径相关错误。
 

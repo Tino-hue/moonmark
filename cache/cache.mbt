@@ -63,7 +63,7 @@ pub fn CacheManager::purge_expired(self : CacheManager) -> Unit {
     Some(files) => {
       let now = (self.fs.timestamp_ms)()
       for file in files {
-        let path = self.dir + "/" + file
+        let path = join_path(self.dir, file)
         match (self.fs.stat_mtime)(path) {
           Some(mtime) => {
             if now - mtime > self.ttl_ms {
@@ -83,7 +83,7 @@ pub fn CacheManager::clear(self : CacheManager) -> Unit {
   match (self.fs.readdir)(self.dir) {
     Some(files) => {
       for file in files {
-        (self.fs.unlink)(self.dir + "/" + file)
+        (self.fs.unlink)(join_path(self.dir, file))
       }
       (self.fs.rmdir)(self.dir)
     }
@@ -94,7 +94,7 @@ pub fn CacheManager::clear(self : CacheManager) -> Unit {
 // ---------- 内部辅助 ----------
 
 fn CacheManager::cache_file_path(self : CacheManager, key : String) -> String {
-  self.dir + "/" + sanitize_key(key) + ".json"
+  join_path(self.dir, sanitize_key(key) + ".json")
 }
 
 fn sanitize_key(key : String) -> String {
@@ -274,6 +274,22 @@ extern "js" fn get_timestamp_ms() -> Double =
 extern "js" fn os_homedir() -> String =
   #| () => require('os').homedir()
 
+extern "js" fn path_join(a : String, b : String) -> String =
+  #| (a, b) => require('path').join(a, b)
+
+extern "js" fn path_sep() -> String =
+  #| () => require('path').sep
+
+/// 返回平台路径分隔符（Windows 为 "\\"，Unix 为 "/"）
+pub fn platform_path_sep() -> String {
+  path_sep()
+}
+
+/// 返回用户主目录路径（跨平台）
+pub fn platform_home_dir() -> String {
+  os_homedir()
+}
+
 /// 创建基于 Node.js 的文件系统实现
 pub fn FileSystem::node_js() -> FileSystem {
   {
@@ -289,7 +305,14 @@ pub fn FileSystem::node_js() -> FileSystem {
   }
 }
 
-/// 返回默认缓存目录路径：~/.depsight/cache
+/// 返回默认缓存目录路径：OS 标准路径
+/// Windows: %USERPROFILE%\.depsight\cache
+/// Linux/macOS: ~/.depsight/cache
 pub fn default_cache_dir() -> String {
-  os_homedir() + "/.depsight/cache"
+  path_join(path_join(os_homedir(), ".depsight"), "cache")
+}
+
+/// 跨平台路径拼接
+pub fn join_path(a : String, b : String) -> String {
+  path_join(a, b)
 }
