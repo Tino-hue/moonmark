@@ -29,11 +29,11 @@ jobs:
 
       - name: Run depsight audit
         run: |
-          node _build/js/debug/build/depsight.js audit --fail-on-score 70 --fail-on-critical
+          node _build/js/debug/build/depsight.js audit --html -o depsight-report.html --fail-on-score 70 --fail-on-critical
 
       - name: Upload audit report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: depsight-report
           path: depsight-report.html

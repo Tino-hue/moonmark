@@ -203,14 +203,16 @@ fn run_audit(opts : CliOptions) -> Int {
 
   let output_text = if opts.format == "json" {
     @analyze.render_audit_json(report)
+  } else if opts.format == "html" {
+    @analyze.render_html_report(report, graph, root_id)
   } else {
     @analyze.render_audit_report(report)
   }
 
   match opts.output {
     Some(path) => {
-      println("Audit report would be written to: " + path)
-      println(output_text)
+      let fs = @cache.FileSystem::node_js()
+      (fs.write_file)(path, output_text)
     }
     None => println(output_text)
   }
@@ -253,8 +255,8 @@ fn run_report(opts : CliOptions) -> Int {
 
   match opts.output {
     Some(path) => {
-      println("Report would be written to: " + path)
-      println(output_text)
+      let fs = @cache.FileSystem::node_js()
+      (fs.write_file)(path, output_text)
     }
     None => println(output_text)
   }
