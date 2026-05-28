@@ -1,0 +1,39 @@
+name: Depsight Audit
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  schedule:
+    # 每周一凌晨 3 点自动运行
+    - cron: '0 3 * * 1'
+
+jobs:
+  depsight-audit:
+    name: Dependency Health Audit
+    runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup MoonBit
+        run: |
+          curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
+          echo "$HOME/.moon/bin" >> $GITHUB_PATH
+
+      - name: Build depsight
+        run: |
+          moon build --target js
+
+      - name: Run depsight audit
+        run: |
+          node target/js/release/build/main.js audit --fail-on-score 70 --fail-on-critical
+
+      - name: Upload audit report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: depsight-report
+          path: depsight-report.html

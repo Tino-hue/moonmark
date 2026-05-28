@@ -1,0 +1,39 @@
+# GitLink CI 配置示例：集成 MoonBit Depsight 依赖健康审计
+# 文档：https://www.gitlink.org.cn/docs/ci
+
+stages:
+  - build
+  - audit
+
+variables:
+  MOONBIT_VERSION: "latest"
+
+cache:
+  paths:
+    - ~/.depsight/cache/
+
+build:
+  stage: build
+  image: node:20
+  script:
+    - curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
+    - export PATH="$HOME/.moon/bin:$PATH"
+    - moon build --target js
+  artifacts:
+    paths:
+      - target/js/release/build/
+    expire_in: 1 week
+
+audit:
+  stage: audit
+  image: node:20
+  dependencies:
+    - build
+  script:
+    - export PATH="$HOME/.moon/bin:$PATH"
+    - node target/js/release/build/main.js audit --fail-on-score 70 --fail-on-critical --html -o depsight-report.html
+  artifacts:
+    paths:
+      - depsight-report.html
+    expire_in: 30 days
+  allow_failure: false

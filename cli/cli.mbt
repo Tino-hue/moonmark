@@ -6,23 +6,25 @@
 // ========== 公共入口 ==========
 
 /// 运行 CLI（无参数入口，供 main 调用）
-pub fn run_cli() -> Unit {
+/// 返回进程退出码（0 成功，1 失败）
+pub fn run_cli() -> Int {
   // MoonBit main 不支持 args，此处使用演示数据
   run_cli_with_args(["tree", "root"])
 }
 
 /// 运行 CLI，接收命令行参数数组
-pub fn run_cli_with_args(args : Array[String]) -> Unit {
+/// 返回进程退出码（0 成功，1 失败）
+pub fn run_cli_with_args(args : Array[String]) -> Int {
   if args.length() == 0 {
     print_help()
-    return
+    return 0
   }
 
   match parse_args(args) {
     Ok(opts) => {
       if opts.version {
         println("MoonBit Depsight v0.1.0")
-        return
+        return 0
       }
       if opts.help {
         match opts.command {
@@ -31,7 +33,7 @@ pub fn run_cli_with_args(args : Array[String]) -> Unit {
           "report" => print_report_help()
           _ => print_help()
         }
-        return
+        return 0
       }
       execute_command(opts)
     }
@@ -39,6 +41,7 @@ pub fn run_cli_with_args(args : Array[String]) -> Unit {
       println(@analyze.red("Error: " + msg))
       println("")
       print_help()
+      return 1
     }
   }
 }
@@ -156,7 +159,7 @@ fn parse_int(s : String) -> Int? {
 
 // ========== 命令执行 ==========
 
-fn execute_command(opts : CliOptions) -> Unit {
+fn execute_command(opts : CliOptions) -> Int {
   match opts.command {
     "tree" => run_tree(opts)
     "audit" => run_audit(opts)
@@ -165,6 +168,7 @@ fn execute_command(opts : CliOptions) -> Unit {
       println(@analyze.red("Unknown command: " + opts.command))
       println("")
       print_help()
+      1
     }
   }
 }
@@ -181,15 +185,16 @@ fn resolve_cache_manager(opts : CliOptions) -> @cache.CacheManager? {
   Some(@cache.CacheManager::new(dir, fs))
 }
 
-fn run_tree(opts : CliOptions) -> Unit {
+fn run_tree(opts : CliOptions) -> Int {
   let _cache = resolve_cache_manager(opts)
   let graph = build_mock_graph(opts.target_pkg)
   let root_id = opts.target_pkg + "@1.0.0"
   let tree = graph.render_tree(root_id, opts.depth)
   println(tree)
+  0
 }
 
-fn run_audit(opts : CliOptions) -> Unit {
+fn run_audit(opts : CliOptions) -> Int {
   let _cache = resolve_cache_manager(opts)
   let graph = build_mock_graph(opts.target_pkg)
   let root_id = opts.target_pkg + "@1.0.0"
@@ -211,23 +216,27 @@ fn run_audit(opts : CliOptions) -> Unit {
   }
 
   // CI 集成：fail-on-score 和 fail-on-critical
+  let mut exit_code = 0
   if opts.fail_on_critical {
     let has_critical = report.diagnostics.iter().any(fn(d) { d.is_critical() })
     if has_critical {
       println(@analyze.red("Critical issues found!"))
+      exit_code = 1
     }
   }
   match opts.fail_on_score {
     Some(threshold) => {
       if report.overall_score < threshold {
         println(@analyze.red("Health score " + report.overall_score.to_string() + " is below threshold " + threshold.to_string()))
+        exit_code = 1
       }
     }
     None => ()
   }
+  exit_code
 }
 
-fn run_report(opts : CliOptions) -> Unit {
+fn run_report(opts : CliOptions) -> Int {
   let _cache = resolve_cache_manager(opts)
   let graph = build_mock_graph(opts.target_pkg)
   let root_id = opts.target_pkg + "@1.0.0"
@@ -249,6 +258,7 @@ fn run_report(opts : CliOptions) -> Unit {
     }
     None => println(output_text)
   }
+  0
 }
 
 // ========== Mock 数据构建器 ==========
