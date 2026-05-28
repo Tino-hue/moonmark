@@ -59,6 +59,11 @@ pub fn DependencyGraph::get_node(self : DependencyGraph, name : String, version 
   self.nodes.get(node_id(name, version))
 }
 
+/// 通过节点 ID 获取节点
+pub fn DependencyGraph::get_node_by_id(self : DependencyGraph, id : String) -> DependencyNode? {
+  self.nodes.get(id)
+}
+
 /// 获取子节点 ID 列表
 pub fn DependencyGraph::get_children(self : DependencyGraph, name : String, version : String) -> Array[String] {
   let id = node_id(name, version)
