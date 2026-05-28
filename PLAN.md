@@ -239,11 +239,11 @@
 
 ### Day 22 — 单元测试矩阵
 
-- ⬜ 为 `parse/` 模块写测试：10 个 `moon.mod.json` 样本（合法 + 边界 + 畸形）
-- ⬜ 为 `graph/` 模块写测试：空图、单节点、深树、环图、DAG
-- ⬜ 为 `analyze/` 模块写测试：版本比较、许可证识别、废弃 API 提取、评分计算
-- ⬜ 为 `report/` 模块写测试：JSON 输出格式校验、HTML 生成不抛异常
-- ⬜ 配置 `moon test`，确保 `moon test --target js` 全部通过
+- ☑️ 为 `parse/` 模块写测试：12 个样本（合法 + 边界 + 畸形 JSON、空字段、类型错误）
+- ☑️ 为 `graph/` 模块写测试：空图、单节点、深树、环图、DAG、150 节点性能
+- ☑️ 为 `analyze/` 模块写测试：版本比较、许可证识别、废弃 API 提取、评分计算、空图
+- ☑️ 为 `report/` 模块写测试：Critical/Warning/Info 构造、to_string、to_json_string、空路径、多建议
+- ☑️ 配置 `moon test`，确保 `moon test --target js` 全部通过（162/162，通过率 100%）
 
 **验收标准**：`moon test` 运行后，通过率 >= 90%，无未捕获异常。
 
