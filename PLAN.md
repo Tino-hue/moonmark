@@ -214,11 +214,11 @@
 
 ### Day 20 — CI/CD 集成支持
 
-- ⬜ 实现 `--fail-on-score <n>`：当整体健康分低于阈值时，进程退出码非 0
-- ⬜ 实现 `--fail-on-critical`：发现 Critical 级别诊断时，退出码非 0
-- ⬜ 写 GitHub Actions 示例 `.github/workflows/depsight.yml`
-- ⬜ 写 GitLink CI 示例配置
-- ⬜ 在本地模拟 CI 环境测试退出码行为
+- ☑️ 实现 `--fail-on-score <n>`：当整体健康分低于阈值时，进程退出码非 0
+- ☑️ 实现 `--fail-on-critical`：发现 Critical 级别诊断时，退出码非 0
+- ☑️ 写 GitHub Actions 示例 `.github/workflows/depsight.yml`
+- ☑️ 写 GitLink CI 示例配置 `.gitlink-ci.yml`
+- ☑️ 在本地模拟 CI 环境测试退出码行为
 
 **验收标准**：`depsight audit --fail-on-score 80` 在健康分 70 时返回 exit code 1。
 
