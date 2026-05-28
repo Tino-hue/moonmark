@@ -32,3 +32,28 @@ test "invalid args returns 1" {
   let code = @cli.run_cli_with_args(["audit", "--unknown-flag"])
   assert_true(code == 1)
 }
+
+test "audit json format returns 0" {
+  let code = @cli.run_cli_with_args(["audit", "--json"])
+  assert_true(code == 0)
+}
+
+test "report html format returns 0" {
+  let code = @cli.run_cli_with_args(["report", "--html"])
+  assert_true(code == 0)
+}
+
+test "tree with depth returns 0" {
+  let code = @cli.run_cli_with_args(["tree", "root", "--depth", "2"])
+  assert_true(code == 0)
+}
+
+test "help returns 0" {
+  let code = @cli.run_cli_with_args(["--help"])
+  assert_true(code == 0)
+}
+
+test "version returns 0" {
+  let code = @cli.run_cli_with_args(["--version"])
+  assert_true(code == 0)
+}

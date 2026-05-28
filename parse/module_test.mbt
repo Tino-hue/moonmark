@@ -75,3 +75,116 @@ test "parse missing name" {
     Err(_) => ()
   }
 }
+
+test "parse missing version" {
+  let content =
+    #|{
+    #|  "name": "test/pkg"
+    #|}
+  let result = @parse.parse_mod_json(content)
+  match result {
+    Ok(_) => fail("Should fail on missing version")
+    Err(_) => ()
+  }
+}
+
+test "parse empty name" {
+  let content =
+    #|{
+    #|  "name": "",
+    #|  "version": "0.1.0"
+    #|}
+  let result = @parse.parse_mod_json(content)
+  match result {
+    Ok(pkg) => assert_true(pkg.name == "")
+    Err(_) => ()
+  }
+}
+
+test "parse malformed json" {
+  let content = "{ \"name\": \"test\", \"version\": "
+  let result = @parse.parse_mod_json(content)
+  match result {
+    Ok(_) => fail("Should fail on malformed json")
+    Err(_) => ()
+  }
+}
+
+test "parse root is array" {
+  let content = "[{\"name\": \"test\"}]"
+  let result = @parse.parse_mod_json(content)
+  match result {
+    Ok(_) => fail("Should fail when root is array")
+    Err(_) => ()
+  }
+}
+
+test "parse deps with non-string values" {
+  let content =
+    #|{
+    #|  "name": "test/pkg",
+    #|  "version": "0.1.0",
+    #|  "deps": {
+    #|    "a": "1.0.0",
+    #|    "b": 123
+    #|  }
+    #|}
+  let result = @parse.parse_mod_json(content)
+  match result {
+    Ok(pkg) => {
+      assert_true(pkg.deps.length() == 1)
+      assert_true(pkg.deps.get("a") == Some("1.0.0"))
+    }
+    Err(msg) => fail("Should parse with skipped non-string deps: " + msg)
+  }
+}
+
+test "parse keywords with non-string items" {
+  let content =
+    #|{
+    #|  "name": "test/pkg",
+    #|  "version": "0.1.0",
+    #|  "keywords": ["dep", 123, "tool"]
+    #|}
+  let result = @parse.parse_mod_json(content)
+  match result {
+    Ok(pkg) => {
+      inspect!(pkg.keywords.length(), content="2")
+    }
+    Err(msg) => fail("Should parse with skipped non-string keywords: " + msg)
+  }
+}
+
+test "parse empty deps" {
+  let content =
+    #|{
+    #|  "name": "test/pkg",
+    #|  "version": "0.1.0",
+    #|  "deps": {}
+    #|}
+  let result = @parse.parse_mod_json(content)
+  match result {
+    Ok(pkg) => assert_true(pkg.deps.is_empty())
+    Err(msg) => fail("Should parse empty deps: " + msg)
+  }
+}
+
+test "parse no optional fields" {
+  let content =
+    #|{
+    #|  "name": "test/pkg",
+    #|  "version": "0.1.0"
+    #|}
+  let result = @parse.parse_mod_json(content)
+  match result {
+    Ok(pkg) => {
+      assert_true(pkg.readme is None)
+      assert_true(pkg.license is None)
+      assert_true(pkg.description is None)
+      assert_true(pkg.source is None)
+      assert_true(pkg.keywords.is_empty())
+      assert_true(pkg.deps.is_empty())
+    }
+    Err(msg) => fail("Should parse minimal mod: " + msg)
+  }
+}
