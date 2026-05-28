@@ -1,11 +1,18 @@
 /// 包注册表：包名 -> 仓库地址
 pub struct Registry {
   packages : Map[String, String]
+  mut cache : @cache.CacheManager?
 }
 
 /// 创建空注册表
 pub fn Registry::new() -> Registry {
-  { packages: {} }
+  { packages: {}, cache: None }
+}
+
+/// 配置缓存管理器
+pub fn Registry::with_cache(self : Registry, cache : @cache.CacheManager) -> Registry {
+  self.cache = Some(cache)
+  self
 }
 
 /// 添加包映射
@@ -14,16 +21,49 @@ pub fn Registry::add(self : Registry, name : String, repo : String) -> Unit {
 }
 
 /// 从注册表获取包元数据（原始字符串）。
-/// 先尝试 `main` 分支，失败再回退 `master`。
+/// 先尝试缓存，再尝试网络。
+/// `offline` 为 true 时，仅使用缓存，不请求网络。
 /// `http_get` 是平台相关的请求函数，如 JS FFI 或 mock。
 pub fn Registry::fetch(
   self : Registry,
   http_get : (String) -> Result[String, String],
   name : String,
-  version : String
+  version : String,
+  offline : Bool
 ) -> Result[String, String] {
+  let cache_key = name + "@" + version
+
+  // 1. 尝试读缓存
+  match self.cache {
+    Some(cm) => {
+      match cm.get(cache_key) {
+        Some(content) => return Ok(content)
+        None => ()
+      }
+    }
+    None => ()
+  }
+
+  // 2. 离线模式：缓存未命中则报错
+  if offline {
+    return Err("Offline mode: cache miss for " + cache_key)
+  }
+
+  // 3. 网络请求
   match self.packages.get(name) {
-    Some(repo) => fetch_package_meta(http_get, name, version, repo)
+    Some(repo) => {
+      match fetch_package_meta(http_get, name, version, repo) {
+        Ok(content) => {
+          // 4. 写入缓存
+          match self.cache {
+            Some(cm) => cm.set(cache_key, content)
+            None => ()
+          }
+          Ok(content)
+        }
+        Err(e) => Err(e)
+      }
+    }
     None => Err("Unknown package: " + name)
   }
 }

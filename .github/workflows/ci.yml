@@ -32,7 +32,7 @@ jobs:
       - name: Type check
         run: |
           export PATH="$HOME/.moon/bin:$PATH"
-          moon check
+          moon check --target js
 
       - name: Build for JS target
         run: |

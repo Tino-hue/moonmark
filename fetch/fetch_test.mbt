@@ -63,7 +63,7 @@ test "Registry fetch known package" {
     Ok("{\"name\":\"moonbitlang/x\",\"version\":\"0.4.44\"}")
   }
 
-  let result = reg.fetch(mock_get, "moonbitlang/x", "0.4.44")
+  let result = reg.fetch(mock_get, "moonbitlang/x", "0.4.44", false)
   match result {
     Ok(content) => inspect!(content, content="{\"name\":\"moonbitlang/x\",\"version\":\"0.4.44\"}")
     Err(msg) => fail("Should succeed: " + msg)
@@ -77,7 +77,7 @@ test "Registry fetch unknown package returns error" {
     Ok("")
   }
 
-  let result = reg.fetch(mock_get, "unknown/pkg", "1.0.0")
+  let result = reg.fetch(mock_get, "unknown/pkg", "1.0.0", false)
   match result {
     Ok(_) => fail("Should fail")
     Err(msg) => assert_true(msg.contains("Unknown package"))

@@ -169,7 +169,20 @@ fn execute_command(opts : CliOptions) -> Unit {
   }
 }
 
+fn resolve_cache_manager(opts : CliOptions) -> @cache.CacheManager? {
+  if opts.offline == false && opts.cache_dir is None {
+    return None
+  }
+  let dir = match opts.cache_dir {
+    Some(d) => d
+    None => @cache.default_cache_dir()
+  }
+  let fs = @cache.FileSystem::node_js()
+  Some(@cache.CacheManager::new(dir, fs))
+}
+
 fn run_tree(opts : CliOptions) -> Unit {
+  let _cache = resolve_cache_manager(opts)
   let graph = build_mock_graph(opts.target_pkg)
   let root_id = opts.target_pkg + "@1.0.0"
   let tree = graph.render_tree(root_id, opts.depth)
@@ -177,6 +190,7 @@ fn run_tree(opts : CliOptions) -> Unit {
 }
 
 fn run_audit(opts : CliOptions) -> Unit {
+  let _cache = resolve_cache_manager(opts)
   let graph = build_mock_graph(opts.target_pkg)
   let root_id = opts.target_pkg + "@1.0.0"
   let metas : Map[String, @analyze.NodeMeta] = {}
@@ -214,6 +228,7 @@ fn run_audit(opts : CliOptions) -> Unit {
 }
 
 fn run_report(opts : CliOptions) -> Unit {
+  let _cache = resolve_cache_manager(opts)
   let graph = build_mock_graph(opts.target_pkg)
   let root_id = opts.target_pkg + "@1.0.0"
   let metas : Map[String, @analyze.NodeMeta] = {}
