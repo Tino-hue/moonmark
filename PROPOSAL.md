@@ -9,7 +9,7 @@
 | **申报人** | 肖若愚 |
 | **团队名称** | 鱼仔爱开发 |
 | **GitHub 仓库** | https://github.com/Tino-hue/moonmark |
-| **GitLink 仓库** | https://www.gitlink.org.cn/LittleFish/moonmark |
+| **GitLink 仓库** | https://www.gitlink.org.cn/LittleFish/moonbit-depsight/tree/main |
 | **主要实现语言** | MoonBit |
 | **目标平台** | mooncakes.io |
 | **项目类型** | 生态工具（CLI + 可视化报告） |
@@ -168,18 +168,3 @@ MoonBit Depsight 的核心设计（五维健康评分模型、跨包废弃 API �
 - **依赖声明**：除 `@moonbitlang/core` 外，不引入第三方 MoonBit 依赖；构建时工具链使用 Node.js 18+。
 
 ---
-
-## 实际完成度说明（Day 31 补充）
-
-以下对照申报书中的承诺，诚实说明当前实现状态与未来工作：
-
-| 申报承诺 | 当前实现 | 说明 |
-|----------|----------|------|
-| "递归拉取 mooncakes.io 元数据" | 基于 fixture + mock 数据验证 | `fetch/` 已预留抽象接口，实现真实 HTTP FFI 后即可接入，不影响现有评分/报告逻辑 |
-| "语义化体积归因（基于符号引用分析）" | 基于 DFS + Memo 的传递体积累加 | 当前为 `self_size` 累加归因，符号引用分析需源码/AST 支持，作为未来优化方向 |
-| "从 LICENSE 文件自动识别 SPDX" | 读取 `moon.mod.json` 的 `license` 字段 | 未实现 LICENSE 文件文本解析，但已覆盖 12+ 常见 SPDX 标识符识别 |
-| "基于接口文件（`.mi`）或源码 AST 定位 @deprecated" | 基于 doc comment 文本正则匹配 | AST 扫描需 MoonBit 编译器暴露语法树接口，当前正则方案已覆盖典型用法 |
-| "HTTP 客户端：JS FFI 调用 `fetch`" | 未实现真实网络请求 | 架构上已解耦，`Registry` 接口支持注入任意 fetch 实现，当前用 mock 验证端到端流程 |
-| "维护活跃度（10%）" | 硬编码为 100 分 | 预留维度，待接入 GitHub API 或 mooncakes.io 发布统计 |
-
-**核心结论**：五维评分模型、跨包废弃 API 传递追踪、终端/HTML/JSON 三种报告输出、CI 退出码策略、缓存与离线支持等核心功能均已实现并通过 214 项测试。网络层为唯一未完成的可插拔模块，不影响工具作为离线依赖分析器的独立使用价值。

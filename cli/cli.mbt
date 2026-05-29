@@ -187,8 +187,14 @@ fn resolve_cache_manager(opts : CliOptions) -> @cache.CacheManager? {
 
 fn run_tree(opts : CliOptions) -> Int {
   let _cache = resolve_cache_manager(opts)
-  let graph = build_mock_graph(opts.target_pkg)
-  let root_id = opts.target_pkg + "@1.0.0"
+  let (graph, root_id) = match build_graph_from_local_mod() {
+    Some(pair) => pair
+    None => {
+      let g = build_mock_graph(opts.target_pkg)
+      let rid = opts.target_pkg + "@1.0.0"
+      (g, rid)
+    }
+  }
   let tree = graph.render_tree(root_id, opts.depth)
   println(tree)
   0
@@ -196,8 +202,14 @@ fn run_tree(opts : CliOptions) -> Int {
 
 fn run_audit(opts : CliOptions) -> Int {
   let _cache = resolve_cache_manager(opts)
-  let graph = build_mock_graph(opts.target_pkg)
-  let root_id = opts.target_pkg + "@1.0.0"
+  let (graph, root_id) = match build_graph_from_local_mod() {
+    Some(pair) => pair
+    None => {
+      let g = build_mock_graph(opts.target_pkg)
+      let rid = opts.target_pkg + "@1.0.0"
+      (g, rid)
+    }
+  }
   let metas : Map[String, @analyze.NodeMeta] = {}
   let report = @analyze.run_analysis(graph, metas)
 
@@ -240,8 +252,14 @@ fn run_audit(opts : CliOptions) -> Int {
 
 fn run_report(opts : CliOptions) -> Int {
   let _cache = resolve_cache_manager(opts)
-  let graph = build_mock_graph(opts.target_pkg)
-  let root_id = opts.target_pkg + "@1.0.0"
+  let (graph, root_id) = match build_graph_from_local_mod() {
+    Some(pair) => pair
+    None => {
+      let g = build_mock_graph(opts.target_pkg)
+      let rid = opts.target_pkg + "@1.0.0"
+      (g, rid)
+    }
+  }
   let metas : Map[String, @analyze.NodeMeta] = {}
   let report = @analyze.run_analysis(graph, metas)
 
@@ -261,6 +279,54 @@ fn run_report(opts : CliOptions) -> Int {
     None => println(output_text)
   }
   0
+}
+
+// ========== 本地 moon.mod.json 读取 ==========
+
+fn build_graph_from_local_mod() -> (@graph.DependencyGraph, String)? {
+  let fs = @cache.FileSystem::node_js()
+
+  // 1. 尝试 ./moon.mod (TOML)
+  match (fs.read_file)("./moon.mod") {
+    Some(content) => {
+      match @parse.parse_mod_toml(content) {
+        Ok(mod_) => {
+          let graph = @graph.DependencyGraph::new()
+          graph.add_node(mod_.name, mod_.version, 0)
+          for dep_name, dep_constraint in mod_.deps {
+            graph.add_node(dep_name, dep_constraint, 1)
+            graph.add_edge(mod_.name, mod_.version, dep_name, dep_constraint)
+          }
+          let root_id = mod_.name + "@" + mod_.version
+          return Some((graph, root_id))
+        }
+        Err(_) => ()
+      }
+    }
+    None => ()
+  }
+
+  // 2. 回退 ./moon.mod.json (JSON)
+  match (fs.read_file)("./moon.mod.json") {
+    Some(content) => {
+      match @parse.parse_mod_json(content) {
+        Ok(mod_) => {
+          let graph = @graph.DependencyGraph::new()
+          graph.add_node(mod_.name, mod_.version, 0)
+          for dep_name, dep_constraint in mod_.deps {
+            graph.add_node(dep_name, dep_constraint, 1)
+            graph.add_edge(mod_.name, mod_.version, dep_name, dep_constraint)
+          }
+          let root_id = mod_.name + "@" + mod_.version
+          return Some((graph, root_id))
+        }
+        Err(_) => ()
+      }
+    }
+    None => ()
+  }
+
+  None
 }
 
 // ========== Mock 数据构建器 ==========
