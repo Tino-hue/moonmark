@@ -27,6 +27,9 @@ moon test --target js
 
 # Format check
 moon fmt --check
+
+# Lint check (JS target only; wasm-gc does not support JS FFI)
+moon check --target js
 ```
 
 ## Project Structure

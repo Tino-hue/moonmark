@@ -56,7 +56,7 @@
 - ☑️ 引入缓存：已拉取过的 `(name, version)` 不再重复请求
 - ☑️ 处理版本冲突：同一包的不同版本在图中作为独立节点存在
 - ☑️ 限制递归深度（默认 10 层），防止无限循环
-- ⬜ 在真实 mooncakes 包上测试（选 3-5 个热门包，如 `@moonbitlang/core`）
+- ⬜ 在真实 mooncakes 包上测试（需实现 fetch 层真实 HTTP FFI，当前基于 mock 验证核心逻辑）
 
 **验收标准**：输入 `@moonbitlang/core` 的包名，能在 5 秒内构建出完整的传递依赖图（含 20+ 节点）。
 
@@ -72,11 +72,12 @@
 
 ### Day 7 — Week 1 验收 + 文档
 
-- ☑️ 整理 `src/parse/` 和 `src/graph/` 的公开接口，更新 `README.md`
+- ☑️ 整理 `parse/` 和 `graph/` 的公开接口，更新 `README.md`
 - ☑️ 实现 `depsight tree` 最小演示（CLI mock 数据 + `render_tree` 输出）
-- ⬜ 录制一个 10 秒终端演示视频
+- ⬜ 录制一个 10 秒终端演示视频（延至 Week 5 Day 31）
 - ☑️ 提交代码
-- ⬜ 清理旧 LSP 产物（`moonbit.dll`、`_build/` 等），确保仓库干净
+- ☑️ 配置 `.gitignore` 排除旧 LSP 产物（`moonbit.dll`、`_build/`、`core/` 等），确保仓库干净
+- ⬜ 删除本地残留的 `trace.json`（延至总审查）
 
 **Week 1 里程碑**：能解析本地 `moon.mod.json`，递归构建传递依赖图，检测循环依赖。
 
@@ -91,7 +92,7 @@
 - ☑️ 实现 SemVer 解析器：`Version { major, minor, patch, prerelease }`
 - ☑️ 实现版本比较：`compare(v1, v2)`、`isOutdated(current, latest)`
 - ☑️ 实现版本约束匹配：`satisfies(version, constraint)`（支持 `^`、`~`、`~>`、`>=`、`>`、`<=`、`<`、`=`、裸版本）
-- ⬜ 从 mooncakes.io 获取包的最新版本号，计算"新鲜度分数"（延至 Day 9 集成）
+- ⬜ 从 mooncakes.io 获取包的最新版本号（需实现 fetch 层真实 HTTP FFI，当前基于 mock 验证核心逻辑）
 - ☑️ 写单元测试：`semver_test.mbt` 覆盖解析、比较、预发布、全部约束类型
 
 **验收标准**：`satisfies("0.2.1", "~> 0.2.0") == true`，`isOutdated("0.1.0", "0.3.0") == true`。 ✅（代码已完成，因 Windows 工具链标准库加载问题，测试待环境修复后验证）
@@ -102,7 +103,7 @@
 - ☑️ 实现 `calculate_transitive_sizes(graph, self_sizes)`：基于 DFS + Memo 递归计算所有节点的传递大小
 - ☑️ 实现体积归因：`SizeInfo { node_id, self_size, transitive_size }` + `find_size_offenders(graph, self_sizes, top_n)` 按传递大小降序排列
 - ☑️ 实现 `format_size(bytes)` 与 `render_size_report`：人类可读的 B/KB/MB 格式化 + 文本报告渲染
-- ⬜ 在 3 个真实项目上测试（延至编译环境修复后）
+- ⬜ 在 3 个真实项目上测试（需实现 fetch 层真实 HTTP FFI，当前基于 mock 验证核心逻辑）
 
 **验收标准**：能输出类似 `Package A: 自身 12KB / 传递 340KB` 的归因数据。 ✅（核心归因算法已完成，网络估算层延至 Week 3 缓存模块统一实现）
 
@@ -122,7 +123,7 @@
 - ☑️ 确定废弃 API 的扫描策略：基于 doc comment 文本正则匹配
 - ☑️ 定义 `DeprecatedApi { name, since, message }` 数据结构
 - ☑️ 实现 `scan_deprecated_apis(source: String) -> Array[DeprecatedApi]`
-- ⬜ 从 mooncakes.io 下载包的源码或接口文件，提取废弃 API 列表（待真实网络集成）
+- ⬜ 从 mooncakes.io 下载包的源码或接口文件，提取废弃 API 列表（需实现 fetch 层真实 HTTP FFI，当前基于 mock 验证核心逻辑）
 
 **验收标准**：传入包含 `@deprecated` 标记的 MoonBit 源码，正确提取所有被废弃的函数名。 ✅
 
@@ -224,8 +225,8 @@
 
 ### Day 21 — Week 3 验收 + 文档
 
-- ⬜ 在 5 个真实 MoonBit 项目上运行 `depsight audit`，收集报告样本（延至 Week 4，待网络请求层完成）
-- ⬜ 对比不同项目的健康分，验证评分合理性（延至 Week 4，待网络请求层完成）
+- ⬜ 在 5 个真实 MoonBit 项目上运行 `depsight audit`（需实现 fetch 层真实 HTTP FFI，当前基于 mock 验证核心逻辑）
+- ⬜ 对比不同项目的健康分，验证评分合理性（需实现 fetch 层真实 HTTP FFI，当前基于 mock 验证核心逻辑）
 - ☑️ 写 `docs/week3.md`：CLI 设计思路、报告渲染技术选型、缓存系统技术决策
 - ☑️ 提交代码：`git commit -m "week3: cli + reporter + cache"`
 
@@ -330,7 +331,7 @@
 
 ### Day 29 — mooncakes.io 发布准备
 
-- ☑️ 完善 `moon.mod`：补充 `description`、扩展 `keywords`（添加 "moonbit"）
+- ☑️ 完善 `moon.mod`：补充 `description`、扩展 `keywords`（添加 "moonbit"），版本号统一为 `0.3.0`
 - ☑️ 验证 `README.md` 已包含：项目介绍、源码构建指南、CLI 用法、CI Actions 示例
 - ⬜ 运行 `moon publish`（或对应发布命令），解决发布过程中的报错
 - ⬜ 验证发布成功：在 mooncakes.io 搜索 `LittleFish/depsight` 能找到
@@ -347,7 +348,20 @@
 
 **验收标准**：一个从未用过 Depsight 的开发者，按照文档能在 5 分钟内跑通第一个审计。
 
-### Day 31 — 演示视频录制
+### Day 31 — 申报书与材料对齐（优先）
+
+- ⬜ 对照 `PROPOSAL.md`，检查实际完成的功能与承诺是否一致
+- ⬜ 诚实标注以下差距（在 PROPOSAL.md 或 README 中补充说明）：
+  - "语义化体积归因"实际为 DFS 累加，非符号引用分析
+  - "LICENSE 文件自动识别"实际为读取 `moon.mod.json` 的 `license` 字段
+  - "源码 AST 定位 @deprecated"实际为 doc comment 文本正则匹配
+  - "维护活跃度"当前硬编码 100 分，待接入真实 API
+- ⬜ 确认 `PROPOSAL.md`、`README.md`、`CHANGELOG.md` 三者描述一致
+- ⬜ 准备答辩口头介绍稿（3 分钟版）
+
+**验收标准**：申报书、README、实际代码三者描述一致，无夸大。
+
+### Day 32 — 演示视频录制
 
 - ⬜ 准备演示脚本：介绍痛点 → 安装工具 → 运行 audit → 展示 HTML 报告 → 修复建议
 - ⬜ 录制 1-2 分钟演示视频（屏幕录制 + 配音/字幕）
@@ -357,19 +371,12 @@
 
 **验收标准**：视频时长 < 2 分钟，观众能快速理解工具的价值。
 
-### Day 32 — 申报书与材料对齐
-
-- ⬜ 对照 `PROPOSAL.md`，检查实际完成的功能与承诺是否一致
-- ⬜ 如有差距，在申报书中诚实说明哪些是未来工作
-- ⬜ 补充技术博客/文章（可选）：写一篇 "如何用 MoonBit 构建依赖分析工具"
-- ⬜ 准备答辩 PPT 或口头介绍稿（如果有路演环节）
-
-**验收标准**：申报书、README、实际代码三者描述一致，无夸大。
+> **排期调整说明**：Day 31 和 Day 32 对调。先做材料诚实对齐，确保视频和文档中的描述准确，再录制演示视频。
 
 ### Day 33 — 最终代码审查
 
-- ⬜ 通读 `src/` 全部代码，检查是否有明显逻辑错误或未完成的 TODO
-- ⬜ 检查 `moon.mod.json` 版本号、作者信息、license 字段
+- ⬜ 通读 `analyze/`、`graph/`、`parse/`、`report/`、`cli/`、`cache/` 核心代码，检查是否有明显逻辑错误或未完成的 TODO
+- ⬜ 检查 `moon.mod` 版本号、作者信息、license 字段
 - ⬜ 确认 `.gitignore` 正确（不提交 `target/`、缓存目录）
 - ⬜ 最终 `git push` 到 GitHub 和 GitLink，确保两边同步
 
@@ -393,7 +400,7 @@
 - ⬜ 如有答辩，最后演练 3 分钟口头介绍
 - ⬜ **提交**
 
-**最终里程碑**：MoonBit Depsight v0.1.0 发布至 mooncakes.io，文档完备，可独立运行与演示。
+**最终里程碑**：MoonBit Depsight v0.3.0 发布至 mooncakes.io，文档完备，可独立运行与演示。
 
 ---
 
@@ -401,8 +408,8 @@
 
 | 风险 | 影响 | 应对 |
 |------|------|------|
-| mooncakes.io API 无公开文档 | **高**，无法获取包元数据 | Day 3 全力抓包/逆向，若无法获取则转向本地 `moon.mod.json` 离线分析（分析当前项目依赖而非全生态） |
-| MoonBit JS FFI / HTTP 不稳定 | **高**，无法网络请求 | Day 3 先写 mock 数据，核心逻辑全部基于本地抽象接口；网络层作为可插拔实现 |
+| mooncakes.io API 无公开文档 | **高**，无法获取包元数据 | Day 3 确认无公开 REST API；核心逻辑全部基于 mock 和 fixture 数据验证，网络层作为可插拔设计，不阻塞主体功能 |
+| MoonBit JS FFI / HTTP 未实现真实请求 | **高**，CLI 当前使用硬编码 demo 数据 | 架构上已预留 `fetch/` 抽象层和 `Registry` 接口，实现真实 `https` FFI 后即可接入，不影响现有评分/报告逻辑 |
 | TOML/JSON 解析 edge case 多 | **中**，解析失败导致崩溃 | Day 2 用 `try-catch` 保护解析过程，遇异常时记录原始文本并跳过该包，不中断整个分析流程 |
 | 大规模依赖图性能差 | **中**，用户体验下降 | Day 24 性能优化，引入并发和缓存；若仍不达标，限制默认最大分析深度为 5 层 |
 | HTML 报告渲染复杂 | **低**，不影响核心功能 | Day 17 使用最简手写模板，不引入前端构建链；若时间不够，优先保终端输出 |

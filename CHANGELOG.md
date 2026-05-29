@@ -12,7 +12,7 @@ All notable changes to this project will be documented in this file.
 - **CLI Argument Tests** (`cli/cli_test.mbt`): 12 `parse_args` tests for flag combinations, order independence, missing values, unknown flags.
 - **Cross-Platform Tests** (`test/cross_platform_test.mbt`): 10 tests for path separators (Windows/Unix), LF/CRLF line endings, Unicode encoding, real FS cache operations.
 - **Cross-Platform Path Handling** (`cache/cache.mbt`): Node.js `path.join` FFI replacing hardcoded `/`, with `platform_path_sep()`, `platform_home_dir()`, `join_path()` APIs.
-- **CI Fixes** (`.github/workflows/depsight.yml`): `upload-artifact@v5` → `@v6`, `main.mbt` JS FFI `get_cli_args()` reading `process.argv.slice(2)` to fix CLI args passthrough.
+- **CI Fixes** (`.github/workflows/depsight.yml`): `upload-artifact` upgraded to `@v4`, `actions/checkout` pinned to `@v4`; `main.mbt` JS FFI `get_cli_args()` reading `process.argv.slice(2)` to fix CLI args passthrough.
 - **Documentation**: `docs/week4.md` (acceptance report), `docs/USAGE.md` (user guide), `docs/CI_INTEGRATION.md` (CI examples), updated `README.md`.
 
 ### Fixed

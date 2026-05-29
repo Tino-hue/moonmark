@@ -88,7 +88,7 @@ node _build/js/debug/build/depsight.js audit --offline --cache-dir ./cache
 ```yaml
 - name: Dependency Health Audit
   run: node depsight.js audit --html -o depsight-report.html
-- uses: actions/upload-artifact@v6
+- uses: actions/upload-artifact@v4
   with:
     name: depsight-report
     path: depsight-report.html
@@ -106,8 +106,8 @@ moon test --target js
 # 运行所有测试（含 8 个性能测试，约 30-60 秒）
 moon test --target js --no-skip
 
-# 运行 linter
-moon check
+# 运行 linter（JS target only；wasm-gc 不支持 JS FFI）
+moon check --target js
 ```
 
 ## Project Structure

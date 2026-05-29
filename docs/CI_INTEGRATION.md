@@ -16,7 +16,9 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Setup MoonBit
-        uses: moonbitlang/setup-moonbit@v1
+        run: |
+          curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
+          echo "$HOME/.moon/bin" >> $GITHUB_PATH
 
       - name: Build Depsight
         run: moon build --target js
@@ -25,7 +27,7 @@ jobs:
         run: node _build/js/debug/build/depsight.js audit --json -o audit.json
 
       - name: Upload Audit Report
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v4
         with:
           name: depsight-audit
           path: audit.json
@@ -47,7 +49,7 @@ jobs:
         run: node _build/js/debug/build/depsight.js report --html -o depsight-report.html
 
       - name: Upload HTML Report
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v4
         with:
           name: depsight-report
           path: depsight-report.html

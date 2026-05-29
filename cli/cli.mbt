@@ -23,7 +23,7 @@ pub fn run_cli_with_args(args : Array[String]) -> Int {
   match parse_args(args) {
     Ok(opts) => {
       if opts.version {
-        println("MoonBit Depsight v0.1.0")
+        println("MoonBit Depsight v0.3.0")
         return 0
       }
       if opts.help {
@@ -287,7 +287,7 @@ fn print_help() -> Unit {
 
 pub fn help_text() -> String {
   let lines : Array[String] = []
-  lines.push(@analyze.bold("MoonBit Depsight v0.1.0"))
+  lines.push(@analyze.bold("MoonBit Depsight v0.3.0"))
   lines.push("Dependency health diagnostic tool for MoonBit ecosystem")
   lines.push("")
   lines.push(@analyze.bold("Usage:"))

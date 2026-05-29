@@ -19,6 +19,9 @@ _build/
 core/
 trace.json
 
+# Test generated directories
+test_crossplatform_cache/
+
 # Legacy / archived code (old LSP, tree-sitter, etc.)
 archive/
 lib/
