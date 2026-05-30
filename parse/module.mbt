@@ -116,7 +116,7 @@ pub fn parse_mod_toml(content : String) -> Result[Module, String] {
   let keywords : Array[String] = []
   let deps : Map[String, String] = {}
 
-  let lines = toml_split_lines(content)
+  let lines = toml_split_entries(content)
   for line in lines {
     let trimmed = line.trim().to_string()
     if trimmed.is_empty() || trimmed.has_prefix("#") { continue }
@@ -148,18 +148,93 @@ pub fn parse_mod_toml(content : String) -> Result[Module, String] {
   Ok({ name, version, readme, repository, license, keywords, description, source, deps })
 }
 
-fn toml_split_lines(content : String) -> Array[String] {
+fn is_toml_key_char(ch : UInt16) -> Bool {
+  let c = ch.to_int().unsafe_to_char()
+  (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '_' || c == '-' || c == '.'
+}
+
+fn toml_split_entries(content : String) -> Array[String] {
   let result = []
-  let mut start = 0
   let n = content.length()
-  for i = 0; i < n; i = i + 1 {
-    if content[i] == '\n' {
-      result.push(content.substring(start=start, end=i))
-      start = i + 1
+  let mut i = 0
+  while i < n {
+    // 跳过空白字符
+    while i < n {
+      let ch = content[i]
+      if ch == ' ' || ch == '\t' || ch == '\n' || ch == '\r' {
+        i = i + 1
+      } else {
+        break
+      }
     }
-  }
-  if start < n {
-    result.push(content.substring(start=start, end=n))
+    if i >= n { break }
+
+    // 跳过注释
+    if content[i] == '#' {
+      while i < n && content[i] != '\n' {
+        i = i + 1
+      }
+      continue
+    }
+
+    // 读取 key
+    let key_start = i
+    while i < n && is_toml_key_char(content[i]) {
+      i = i + 1
+    }
+    if key_start == i {
+      i = i + 1
+      continue
+    }
+    let key = content.substring(start=key_start, end=i).trim().to_string()
+
+    // 跳过空白
+    while i < n && (content[i] == ' ' || content[i] == '\t') {
+      i = i + 1
+    }
+    if i >= n || content[i] != '=' {
+      continue
+    }
+    i = i + 1 // skip '='
+
+    // 跳过空白
+    while i < n && (content[i] == ' ' || content[i] == '\t') {
+      i = i + 1
+    }
+    if i >= n { continue }
+
+    // 读取 value
+    let mut val_start = i
+    let mut val_end = i
+    if content[i] == '"' {
+      val_start = i
+      i = i + 1
+      while i < n && content[i] != '"' {
+        i = i + 1
+      }
+      if i < n && content[i] == '"' {
+        i = i + 1
+      }
+      val_end = i
+    } else if content[i] == '[' {
+      val_start = i
+      i = i + 1
+      while i < n && content[i] != ']' {
+        i = i + 1
+      }
+      if i < n && content[i] == ']' {
+        i = i + 1
+      }
+      val_end = i
+    } else {
+      while i < n && content[i] != ' ' && content[i] != '\t' && content[i] != '\n' && content[i] != '\r' {
+        i = i + 1
+      }
+      val_end = i
+    }
+
+    let val = content.substring(start=val_start, end=val_end).trim().to_string()
+    result.push(key + " = " + val)
   }
   result
 }
