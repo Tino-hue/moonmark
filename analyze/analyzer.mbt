@@ -34,6 +34,22 @@ pub fn AnalysisReport::new(
   { diagnostics, health_scores, overall_score, node_count }
 }
 
+pub fn AnalysisReport::get_diagnostics(self : AnalysisReport) -> Array[@report.Diagnostic] {
+  self.diagnostics
+}
+
+pub fn AnalysisReport::get_health_scores(self : AnalysisReport) -> Array[HealthScore] {
+  self.health_scores
+}
+
+pub fn AnalysisReport::get_overall_score(self : AnalysisReport) -> Int {
+  self.overall_score
+}
+
+pub fn AnalysisReport::get_node_count(self : AnalysisReport) -> Int {
+  self.node_count
+}
+
 /// 对依赖图运行完整分析
 ///
 /// `node_metas` 的 key 为节点 ID（`name@version`），value 为该节点的附加元数据。

@@ -56,22 +56,82 @@ pub struct CliOptions {
   format : String
   fail_on_score : Int?
   fail_on_critical : Bool
+  severity : String?
   cache_dir : String?
   offline : Bool
   help : Bool
   version : Bool
 }
 
+pub fn CliOptions::new(
+  command~ : String = "",
+  target_pkg~ : String = "root",
+  depth~ : Int = 10,
+  output~ : String? = None,
+  format~ : String = "terminal",
+  fail_on_score~ : Int? = None,
+  fail_on_critical~ : Bool = false,
+  severity~ : String? = None,
+  cache_dir~ : String? = None,
+  offline~ : Bool = false,
+  help~ : Bool = false,
+  version~ : Bool = false,
+) -> CliOptions {
+  { command, target_pkg, depth, output, format, fail_on_score, fail_on_critical, severity, cache_dir, offline, help, version }
+}
+
 // ========== 参数解析 ==========
 
+priv struct CliConfig {
+  severity : String?
+  fail_on_score : Int?
+  fail_on_critical : Bool
+  format : String
+  output : String?
+}
+
+fn load_config() -> CliConfig {
+  let fs = @cache.FileSystem::node_js()
+  let defaults = {
+    severity: None,
+    fail_on_score: None,
+    fail_on_critical: false,
+    format: "terminal",
+    output: None,
+  }
+  match (fs.read_file)(".depsight.toml") {
+    Some(content) => {
+      let map = @parse.parse_config_toml(content)
+      let severity = map.get("severity")
+      let fail_on_score = match map.get("fail_on_score") {
+        Some(s) => parse_int(s)
+        None => None
+      }
+      let fail_on_critical = match map.get("fail_on_critical") {
+        Some("true") => true
+        _ => false
+      }
+      let format = match map.get("format") {
+        Some(f) => f
+        None => "terminal"
+      }
+      let output = map.get("output")
+      { severity, fail_on_score, fail_on_critical, format, output }
+    }
+    None => defaults
+  }
+}
+
 pub fn parse_args(args : Array[String]) -> Result[CliOptions, String] {
+  let config = load_config()
   let mut command = ""
   let mut target_pkg = "root"
   let mut depth = 10
-  let mut output : String? = None
-  let mut format = "terminal"
-  let mut fail_on_score : Int? = None
-  let mut fail_on_critical = false
+  let mut output = config.output
+  let mut format = config.format
+  let mut fail_on_score = config.fail_on_score
+  let mut fail_on_critical = config.fail_on_critical
+  let mut severity = config.severity
   let mut cache_dir : String? = None
   let mut offline = false
   let mut help = false
@@ -108,6 +168,10 @@ pub fn parse_args(args : Array[String]) -> Result[CliOptions, String] {
       }
     } else if arg == "--fail-on-critical" {
       fail_on_critical = true
+    } else if arg == "--severity" {
+      i = i + 1
+      if i >= args.length() { return Err("--severity requires a value") }
+      severity = Some(args[i])
     } else if arg == "--cache-dir" {
       i = i + 1
       if i >= args.length() { return Err("--cache-dir requires a value") }
@@ -138,6 +202,7 @@ pub fn parse_args(args : Array[String]) -> Result[CliOptions, String] {
     format,
     fail_on_score,
     fail_on_critical,
+    severity,
     cache_dir,
     offline,
     help,
@@ -158,6 +223,25 @@ fn parse_int(s : String) -> Int? {
 }
 
 // ========== 命令执行 ==========
+
+fn filter_by_severity(
+  diagnostics : Array[@report.Diagnostic],
+  severity : String?
+) -> Array[@report.Diagnostic] {
+  match severity {
+    None => diagnostics
+    Some(level) => {
+      let min_rank = @report.severity_rank(level)
+      let result = []
+      for d in diagnostics {
+        if @report.severity_rank(d.level) >= min_rank {
+          result.push(d)
+        }
+      }
+      result
+    }
+  }
+}
 
 fn execute_command(opts : CliOptions) -> Int {
   match opts.command {
@@ -213,12 +297,21 @@ fn run_audit(opts : CliOptions) -> Int {
   let metas : Map[String, @analyze.NodeMeta] = {}
   let report = @analyze.run_analysis(graph, metas)
 
+  // severity 过滤只影响输出，不影响退出码判断
+  let display_diags = filter_by_severity(report.get_diagnostics(), opts.severity)
+  let display_report = @analyze.AnalysisReport::new(
+    diagnostics=display_diags,
+    health_scores=report.get_health_scores(),
+    overall_score=report.get_overall_score(),
+    node_count=report.get_node_count(),
+  )
+
   let output_text = if opts.format == "json" {
-    @analyze.render_audit_json(report)
+    @analyze.render_audit_json(display_report)
   } else if opts.format == "html" {
-    @analyze.render_html_report(report, graph, root_id)
+    @analyze.render_html_report(display_report, graph, root_id)
   } else {
-    @analyze.render_audit_report(report)
+    @analyze.render_audit_report(display_report)
   }
 
   match opts.output {
@@ -229,10 +322,10 @@ fn run_audit(opts : CliOptions) -> Int {
     None => println(output_text)
   }
 
-  // CI 集成：fail-on-score 和 fail-on-critical
+  // CI 集成：fail-on-score 和 fail-on-critical（基于原始完整报告）
   let mut exit_code = 0
   if opts.fail_on_critical {
-    let has_critical = report.diagnostics.iter().any(fn(d) { d.is_critical() })
+    let has_critical = report.get_diagnostics().iter().any(fn(d) { d.is_critical() })
     if has_critical {
       println(@analyze.red("Critical issues found!"))
       exit_code = 1
@@ -240,8 +333,8 @@ fn run_audit(opts : CliOptions) -> Int {
   }
   match opts.fail_on_score {
     Some(threshold) => {
-      if report.overall_score < threshold {
-        println(@analyze.red("Health score " + report.overall_score.to_string() + " is below threshold " + threshold.to_string()))
+      if report.get_overall_score() < threshold {
+        println(@analyze.red("Health score " + report.get_overall_score().to_string() + " is below threshold " + threshold.to_string()))
         exit_code = 1
       }
     }
@@ -263,12 +356,21 @@ fn run_report(opts : CliOptions) -> Int {
   let metas : Map[String, @analyze.NodeMeta] = {}
   let report = @analyze.run_analysis(graph, metas)
 
+  // severity 过滤只影响输出
+  let display_diags = filter_by_severity(report.get_diagnostics(), opts.severity)
+  let display_report = @analyze.AnalysisReport::new(
+    diagnostics=display_diags,
+    health_scores=report.get_health_scores(),
+    overall_score=report.get_overall_score(),
+    node_count=report.get_node_count(),
+  )
+
   let output_text = if opts.format == "html" {
-    @analyze.render_html_report(report, graph, root_id)
+    @analyze.render_html_report(display_report, graph, root_id)
   } else if opts.format == "json" {
-    @analyze.render_audit_json(report)
+    @analyze.render_audit_json(display_report)
   } else {
-    @analyze.render_terminal_report(report, graph, root_id)
+    @analyze.render_terminal_report(display_report, graph, root_id)
   }
 
   match opts.output {
@@ -278,7 +380,26 @@ fn run_report(opts : CliOptions) -> Int {
     }
     None => println(output_text)
   }
-  0
+
+  // CI 集成：fail-on-score 和 fail-on-critical（基于原始完整报告）
+  let mut exit_code = 0
+  if opts.fail_on_critical {
+    let has_critical = report.get_diagnostics().iter().any(fn(d) { d.is_critical() })
+    if has_critical {
+      println(@analyze.red("Critical issues found!"))
+      exit_code = 1
+    }
+  }
+  match opts.fail_on_score {
+    Some(threshold) => {
+      if report.get_overall_score() < threshold {
+        println(@analyze.red("Health score " + report.get_overall_score().to_string() + " is below threshold " + threshold.to_string()))
+        exit_code = 1
+      }
+    }
+    None => ()
+  }
+  exit_code
 }
 
 // ========== 本地 moon.mod.json 读取 ==========
@@ -403,6 +524,7 @@ pub fn audit_help_text() -> String {
   lines.push("")
   lines.push(@analyze.bold("Options:"))
   lines.push("  --json            Output JSON format")
+  lines.push("  --severity <level>   Filter diagnostics: critical, warning, info")
   lines.push("  --fail-on-score <n>  Exit with error if overall score < n")
   lines.push("  --fail-on-critical   Exit with error if critical issues found")
   lines.push("  -o, --output <file>  Write output to file")
@@ -423,6 +545,9 @@ pub fn report_help_text() -> String {
   lines.push(@analyze.bold("Options:"))
   lines.push("  --html            Output HTML format")
   lines.push("  --json            Output JSON format")
+  lines.push("  --severity <level>   Filter diagnostics: critical, warning, info")
+  lines.push("  --fail-on-score <n>  Exit with error if overall score < n")
+  lines.push("  --fail-on-critical   Exit with error if critical issues found")
   lines.push("  -o, --output <file>  Write output to file")
   join_cli_lines(lines)
 }

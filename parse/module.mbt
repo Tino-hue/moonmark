@@ -148,6 +148,20 @@ pub fn parse_mod_toml(content : String) -> Result[Module, String] {
   Ok({ name, version, readme, repository, license, keywords, description, source, deps })
 }
 
+/// 解析简单配置 TOML，返回 key->value 字典（仅支持 key = "value" 格式）
+pub fn parse_config_toml(content : String) -> Map[String, String] {
+  let result : Map[String, String] = {}
+  let entries = toml_split_entries(content)
+  for entry in entries {
+    let eq_idx = toml_find_eq(entry)
+    if eq_idx < 0 { continue }
+    let key = entry.substring(start=0, end=eq_idx).trim().to_string()
+    let raw_val = entry.substring(start=eq_idx + 1, end=entry.length()).trim().to_string()
+    result[key] = toml_strip_quotes(raw_val)
+  }
+  result
+}
+
 fn is_toml_key_char(ch : UInt16) -> Bool {
   let c = ch.to_int().unsafe_to_char()
   (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '_' || c == '-' || c == '.'

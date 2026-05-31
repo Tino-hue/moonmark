@@ -3,4 +3,6 @@ import {
   "LittleFish/depsight/graph",
   "LittleFish/depsight/analyze",
   "LittleFish/depsight/cache",
+  "LittleFish/depsight/cli",
+  "LittleFish/depsight/report",
 }

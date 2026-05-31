@@ -75,6 +75,13 @@ pub fn Diagnostic::is_info(self : Diagnostic) -> Bool {
   self.level == level_info()
 }
 
+/// 获取严重级别的排序值（Critical=3, Warning=2, Info=1）
+pub fn severity_rank(level : String) -> Int {
+  if level == level_critical() { 3 }
+  else if level == level_warning() { 2 }
+  else { 1 }
+}
+
 /// 将诊断转为可阅读的字符串（单行格式，适合终端表格）
 pub fn Diagnostic::to_string(self : Diagnostic) -> String {
   let parts = [self.level, " [", self.code, "] ", self.message]
