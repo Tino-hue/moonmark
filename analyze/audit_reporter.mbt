@@ -178,3 +178,76 @@ fn join_audit_parts(parts : Array[String]) -> String {
   }
   result
 }
+
+/// 从 JSON 字符串解析 Audit 报告（用于 --baseline diff）
+pub fn parse_audit_json(content : String) -> Result[AnalysisReport, String] {
+  let json = try {
+    @json.parse(content)
+  } catch {
+    _ => return Err("Invalid JSON format")
+  }
+  guard json is Object(obj) else {
+    return Err("Expected JSON object at root")
+  }
+
+  let overall_score = match obj.get("overall_score") {
+    Some(Number(n)) => n.to_int()
+    _ => 0
+  }
+  let node_count = match obj.get("node_count") {
+    Some(Number(n)) => n.to_int()
+    _ => 0
+  }
+
+  let diagnostics = match obj.get("diagnostics") {
+    Some(Array(arr)) => {
+      let result = []
+      for item in arr {
+        guard item is Object(dobj) else { continue }
+        let level = match dobj.get("level") {
+          Some(String(s)) => s
+          _ => continue
+        }
+        let code = match dobj.get("code") {
+          Some(String(s)) => s
+          _ => continue
+        }
+        let message = match dobj.get("message") {
+          Some(String(s)) => s
+          _ => continue
+        }
+        let path = match dobj.get("path") {
+          Some(Array(parr)) => {
+            let pr = []
+            for p in parr {
+              guard p is String(ps) else { continue }
+              pr.push(ps)
+            }
+            pr
+          }
+          _ => []
+        }
+        let suggestions = match dobj.get("suggestions") {
+          Some(Array(sarr)) => {
+            let sr = []
+            for s in sarr {
+              guard s is String(ss) else { continue }
+              sr.push(ss)
+            }
+            sr
+          }
+          _ => []
+        }
+        result.push(@report.Diagnostic::new(level, code, message, path, suggestions))
+      }
+      result
+    }
+    _ => []
+  }
+
+  Ok(AnalysisReport::new(
+    diagnostics=diagnostics,
+    overall_score=overall_score,
+    node_count=node_count,
+  ))
+}

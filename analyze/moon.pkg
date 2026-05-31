@@ -1,4 +1,5 @@
 import {
   "LittleFish/depsight/graph",
   "LittleFish/depsight/report",
+  "moonbitlang/core/json",
 }

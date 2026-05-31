@@ -93,22 +93,27 @@ pub fn run_analysis(
           "LICENSE-001",
           "High-risk license: " + license_name(spdx),
           [id],
-        ))
+        ).with_suggestion("Replace with MIT, Apache-2.0, or BSD-3-Clause"))
       }
       None => diagnostics.push(@report.Diagnostic::info(
         "LICENSE-002",
         "No license info: " + id,
         [id],
-      ))
+      ).with_suggestion("Add a license field to moon.mod (e.g., \"Apache-2.0\")"))
     }
 
     // 废弃 API 诊断
     if meta.deprecated_apis.length() > 0 {
-      diagnostics.push(@report.Diagnostic::warning(
+      let mut diag = @report.Diagnostic::warning(
         "DEPRECATED-001",
         id + " has " + meta.deprecated_apis.length().to_string() + " deprecated API(s)",
         [id],
-      ))
+      )
+      match meta.latest_version {
+        Some(v) => diag = diag.with_suggestion("Upgrade to " + v)
+        None => diag = diag.with_suggestion("Check the package changelog for migration guide")
+      }
+      diagnostics.push(diag)
     }
   }
 

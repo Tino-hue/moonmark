@@ -57,6 +57,7 @@ pub struct CliOptions {
   fail_on_score : Int?
   fail_on_critical : Bool
   severity : String?
+  baseline : String?
   cache_dir : String?
   offline : Bool
   help : Bool
@@ -72,12 +73,13 @@ pub fn CliOptions::new(
   fail_on_score~ : Int? = None,
   fail_on_critical~ : Bool = false,
   severity~ : String? = None,
+  baseline~ : String? = None,
   cache_dir~ : String? = None,
   offline~ : Bool = false,
   help~ : Bool = false,
   version~ : Bool = false,
 ) -> CliOptions {
-  { command, target_pkg, depth, output, format, fail_on_score, fail_on_critical, severity, cache_dir, offline, help, version }
+  { command, target_pkg, depth, output, format, fail_on_score, fail_on_critical, severity, baseline, cache_dir, offline, help, version }
 }
 
 // ========== 参数解析 ==========
@@ -137,6 +139,7 @@ pub fn parse_args(args : Array[String]) -> Result[CliOptions, String] {
   let mut help = false
   let mut version = false
 
+  let mut baseline : String? = None
   let mut i = 0
   while i < args.length() {
     let arg = args[i]
@@ -172,6 +175,10 @@ pub fn parse_args(args : Array[String]) -> Result[CliOptions, String] {
       i = i + 1
       if i >= args.length() { return Err("--severity requires a value") }
       severity = Some(args[i])
+    } else if arg == "--baseline" {
+      i = i + 1
+      if i >= args.length() { return Err("--baseline requires a value") }
+      baseline = Some(args[i])
     } else if arg == "--cache-dir" {
       i = i + 1
       if i >= args.length() { return Err("--cache-dir requires a value") }
@@ -203,6 +210,7 @@ pub fn parse_args(args : Array[String]) -> Result[CliOptions, String] {
     fail_on_score,
     fail_on_critical,
     severity,
+    baseline,
     cache_dir,
     offline,
     help,
@@ -296,6 +304,50 @@ fn run_audit(opts : CliOptions) -> Int {
   }
   let metas : Map[String, @analyze.NodeMeta] = {}
   let report = @analyze.run_analysis(graph, metas)
+
+  // baseline diff 模式
+  match opts.baseline {
+    Some(baseline_path) => {
+      let fs = @cache.FileSystem::node_js()
+      let baseline_text = match (fs.read_file)(baseline_path) {
+        Some(t) => t
+        None => {
+          println(@analyze.red("Error: cannot read baseline file: " + baseline_path))
+          return 1
+        }
+      }
+      let baseline_report = match @analyze.parse_audit_json(baseline_text) {
+        Ok(r) => r
+        Err(msg) => {
+          println(@analyze.red("Error: invalid baseline JSON: " + msg))
+          return 1
+        }
+      }
+      let diff = @analyze.diff_reports(report, baseline_report)
+      let diff_text = @analyze.render_diff_terminal(diff)
+      match opts.output {
+        Some(path) => {
+          let fs2 = @cache.FileSystem::node_js()
+          (fs2.write_file)(path, diff_text)
+        }
+        None => println(diff_text)
+      }
+      // diff 模式下也支持退出码
+      let mut exit_code = 0
+      if opts.fail_on_critical && diff.added.iter().any(fn(d) { d.is_critical() }) {
+        println(@analyze.red("New critical issues found since baseline!"))
+        exit_code = 1
+      }
+      if opts.fail_on_score is Some(threshold) {
+        if report.get_overall_score() < threshold {
+          println(@analyze.red("Health score " + report.get_overall_score().to_string() + " is below threshold " + threshold.to_string()))
+          exit_code = 1
+        }
+      }
+      return exit_code
+    }
+    None => ()
+  }
 
   // severity 过滤只影响输出，不影响退出码判断
   let display_diags = filter_by_severity(report.get_diagnostics(), opts.severity)
@@ -525,6 +577,7 @@ pub fn audit_help_text() -> String {
   lines.push(@analyze.bold("Options:"))
   lines.push("  --json            Output JSON format")
   lines.push("  --severity <level>   Filter diagnostics: critical, warning, info")
+  lines.push("  --baseline <file>    Compare against a previous JSON report")
   lines.push("  --fail-on-score <n>  Exit with error if overall score < n")
   lines.push("  --fail-on-critical   Exit with error if critical issues found")
   lines.push("  -o, --output <file>  Write output to file")
