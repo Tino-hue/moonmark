@@ -147,3 +147,45 @@ test "parse_args help without command" {
     Err(msg) => fail("Should parse help: " + msg)
   }
 }
+
+test "parse_args dry-run flag" {
+  let args = ["audit", "--dry-run", "--json"]
+  match @cli.parse_args(args) {
+    Ok(opts) => {
+      assert_true(opts.command == "audit")
+      assert_true(opts.dry_run == true)
+      assert_true(opts.format == "json")
+    }
+    Err(msg) => fail("Should parse dry-run: " + msg)
+  }
+}
+
+test "parse_args all flags including dry-run" {
+  let args = [
+    "report", "--html", "--dry-run", "--offline", "--workspace",
+    "--fail-on-score", "75", "--fail-on-critical", "-o", "out.html",
+  ]
+  match @cli.parse_args(args) {
+    Ok(opts) => {
+      assert_true(opts.command == "report")
+      assert_true(opts.format == "html")
+      assert_true(opts.dry_run == true)
+      assert_true(opts.offline == true)
+      assert_true(opts.workspace == true)
+      assert_true(opts.fail_on_score == Some(75))
+      assert_true(opts.fail_on_critical == true)
+      assert_true(opts.output == Some("out.html"))
+    }
+    Err(msg) => fail("Should parse all flags with dry-run: " + msg)
+  }
+}
+
+test "dry-run audit returns 0" {
+  let code = @cli.run_cli_with_args(["audit", "--dry-run"])
+  assert_true(code == 0)
+}
+
+test "dry-run tree returns 0" {
+  let code = @cli.run_cli_with_args(["tree", "--dry-run"])
+  assert_true(code == 0)
+}

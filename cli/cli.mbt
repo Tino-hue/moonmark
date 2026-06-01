@@ -61,6 +61,7 @@ pub struct CliOptions {
   workspace : Bool
   cache_dir : String?
   offline : Bool
+  dry_run : Bool
   help : Bool
   version : Bool
 }
@@ -78,10 +79,11 @@ pub fn CliOptions::new(
   workspace~ : Bool = false,
   cache_dir~ : String? = None,
   offline~ : Bool = false,
+  dry_run~ : Bool = false,
   help~ : Bool = false,
   version~ : Bool = false,
 ) -> CliOptions {
-  { command, target_pkg, depth, output, format, fail_on_score, fail_on_critical, severity, baseline, workspace, cache_dir, offline, help, version }
+  { command, target_pkg, depth, output, format, fail_on_score, fail_on_critical, severity, baseline, workspace, cache_dir, offline, dry_run, help, version }
 }
 
 // ========== 参数解析 ==========
@@ -138,6 +140,7 @@ pub fn parse_args(args : Array[String]) -> Result[CliOptions, String] {
   let mut severity = config.severity
   let mut cache_dir : String? = None
   let mut offline = false
+  let mut dry_run = false
   let mut help = false
   let mut version = false
 
@@ -190,6 +193,8 @@ pub fn parse_args(args : Array[String]) -> Result[CliOptions, String] {
       cache_dir = Some(args[i])
     } else if arg == "--offline" {
       offline = true
+    } else if arg == "--dry-run" {
+      dry_run = true
     } else if arg.length() > 0 && arg[0].to_int() == '-'.to_int() {
       return Err("Unknown option: " + arg)
     } else if command == "" {
@@ -219,6 +224,7 @@ pub fn parse_args(args : Array[String]) -> Result[CliOptions, String] {
     workspace,
     cache_dir,
     offline,
+    dry_run,
     help,
     version,
   })
@@ -272,6 +278,9 @@ fn execute_command(opts : CliOptions) -> Int {
 }
 
 fn resolve_cache_manager(opts : CliOptions) -> @cache.CacheManager? {
+  if opts.dry_run {
+    return None
+  }
   if opts.offline == false && opts.cache_dir is None {
     return None
   }
@@ -283,31 +292,115 @@ fn resolve_cache_manager(opts : CliOptions) -> @cache.CacheManager? {
   Some(@cache.CacheManager::new(dir, fs))
 }
 
-fn run_tree(opts : CliOptions) -> Int {
-  let _cache = resolve_cache_manager(opts)
-  let (graph, root_id) = match build_graph_from_local_mod() {
-    Some(pair) => pair
+// ---------- 图构建（本地 + 远程递归） ----------
+
+fn read_local_root_module() -> @parse.Module? {
+  let fs = @cache.FileSystem::node_js()
+  match (fs.read_file)("./moon.mod") {
+    Some(content) => {
+      match @parse.parse_mod_toml(content) {
+        Ok(m) => return Some(m)
+        Err(_) => ()
+      }
+    }
+    None => ()
+  }
+  match (fs.read_file)("./moon.mod.json") {
+    Some(content) => {
+      match @parse.parse_mod_json(content) {
+        Ok(m) => return Some(m)
+        Err(_) => ()
+      }
+    }
+    None => ()
+  }
+  None
+}
+
+fn build_full_graph(opts : CliOptions) -> (@graph.DependencyGraph, String) {
+  let root_mod = match read_local_root_module() {
+    Some(m) => m
     None => {
       let g = build_mock_graph(opts.target_pkg)
       let rid = opts.target_pkg + "@1.0.0"
-      (g, rid)
+      return (g, rid)
     }
   }
+
+  let cache = resolve_cache_manager(opts)
+  let registry = @fetch.Registry::new()
+  let _ = registry.with_defaults()
+  match cache {
+    Some(cm) => { let _ = registry.with_cache(cm) }
+    None => ()
+  }
+
+  let builder = @graph.GraphBuilder::new_with_max_depth(opts.depth)
+
+  fn fetch_cb(name : String, version : String) -> Result[@parse.Module, String] {
+    if name == root_mod.name {
+      return Ok(root_mod)
+    }
+    match registry.fetch(@fetch.http_get, name, version, opts.offline) {
+      Ok(content) => {
+        match @parse.parse_mod_json(content) {
+          Ok(m) => Ok(m)
+          Err(_) => match @parse.parse_mod_toml(content) {
+            Ok(m) => Ok(m)
+            Err(e) => Err("Failed to parse " + name + "@" + version + ": " + e)
+          }
+        }
+      }
+      Err(e) => {
+        if e.contains("Unknown package") {
+          Ok(@parse.Module::new(name, version, {}))
+        } else {
+          Err(e)
+        }
+      }
+    }
+  }
+
+  match builder.build(root_mod.name, root_mod.version, fetch_cb) {
+    Ok(graph) => (graph, root_mod.name + "@" + root_mod.version)
+    Err(e) => {
+      println(@analyze.yellow("Warning: full graph build failed: " + e))
+      println(@analyze.yellow("Falling back to local-only dependency graph."))
+      let g = @graph.DependencyGraph::new()
+      g.add_node(root_mod.name, root_mod.version, 0)
+      for dep_name, dep_constraint in root_mod.deps {
+        g.add_node(dep_name, dep_constraint, 1)
+        g.add_edge(root_mod.name, root_mod.version, dep_name, dep_constraint)
+      }
+      (g, root_mod.name + "@" + root_mod.version)
+    }
+  }
+}
+
+fn write_output_or_print(opts : CliOptions, text : String) -> Unit {
+  match opts.output {
+    Some(path) => {
+      if opts.dry_run {
+        println(@analyze.yellow("[dry-run] Would write output to: " + path))
+      } else {
+        let fs = @cache.FileSystem::node_js()
+        (fs.write_file)(path, text)
+        println(@analyze.green("Output written to: " + path))
+      }
+    }
+    None => println(text)
+  }
+}
+
+fn run_tree(opts : CliOptions) -> Int {
+  let (graph, root_id) = build_full_graph(opts)
   let tree = graph.render_tree(root_id, opts.depth)
-  println(tree)
+  write_output_or_print(opts, tree)
   0
 }
 
 fn run_audit(opts : CliOptions) -> Int {
-  let _cache = resolve_cache_manager(opts)
-  let (graph, root_id) = match build_graph_from_local_mod() {
-    Some(pair) => pair
-    None => {
-      let g = build_mock_graph(opts.target_pkg)
-      let rid = opts.target_pkg + "@1.0.0"
-      (g, rid)
-    }
-  }
+  let (graph, root_id) = build_full_graph(opts)
   let metas : Map[String, @analyze.NodeMeta] = {}
   let report = @analyze.run_analysis(graph, metas)
 
@@ -331,13 +424,7 @@ fn run_audit(opts : CliOptions) -> Int {
       }
       let diff = @analyze.diff_reports(report, baseline_report)
       let diff_text = @analyze.render_diff_terminal(diff)
-      match opts.output {
-        Some(path) => {
-          let fs2 = @cache.FileSystem::node_js()
-          (fs2.write_file)(path, diff_text)
-        }
-        None => println(diff_text)
-      }
+      write_output_or_print(opts, diff_text)
       // diff 模式下也支持退出码
       let mut exit_code = 0
       if opts.fail_on_critical && diff.added.iter().any(fn(d) { d.is_critical() }) {
@@ -372,13 +459,7 @@ fn run_audit(opts : CliOptions) -> Int {
     @analyze.render_audit_report(display_report)
   }
 
-  match opts.output {
-    Some(path) => {
-      let fs = @cache.FileSystem::node_js()
-      (fs.write_file)(path, output_text)
-    }
-    None => println(output_text)
-  }
+  write_output_or_print(opts, output_text)
 
   // CI 集成：fail-on-score 和 fail-on-critical（基于原始完整报告）
   let mut exit_code = 0
@@ -402,15 +483,7 @@ fn run_audit(opts : CliOptions) -> Int {
 }
 
 fn run_report(opts : CliOptions) -> Int {
-  let _cache = resolve_cache_manager(opts)
-  let (graph, root_id) = match build_graph_from_local_mod() {
-    Some(pair) => pair
-    None => {
-      let g = build_mock_graph(opts.target_pkg)
-      let rid = opts.target_pkg + "@1.0.0"
-      (g, rid)
-    }
-  }
+  let (graph, root_id) = build_full_graph(opts)
   let metas : Map[String, @analyze.NodeMeta] = {}
   let report = @analyze.run_analysis(graph, metas)
 
@@ -431,13 +504,7 @@ fn run_report(opts : CliOptions) -> Int {
     @analyze.render_terminal_report(display_report, graph, root_id)
   }
 
-  match opts.output {
-    Some(path) => {
-      let fs = @cache.FileSystem::node_js()
-      (fs.write_file)(path, output_text)
-    }
-    None => println(output_text)
-  }
+  write_output_or_print(opts, output_text)
 
   // CI 集成：fail-on-score 和 fail-on-critical（基于原始完整报告）
   let mut exit_code = 0
@@ -603,13 +670,7 @@ fn run_workspace_audit(opts : CliOptions) -> Int {
     render_workspace_terminal(display_report, dirs.length())
   }
 
-  match opts.output {
-    Some(path) => {
-      let fs2 = @cache.FileSystem::node_js()
-      (fs2.write_file)(path, output_text)
-    }
-    None => println(output_text)
-  }
+  write_output_or_print(opts, output_text)
 
   // CI 退出码
   let mut exit_code = 0
@@ -683,13 +744,7 @@ fn run_workspace_report(opts : CliOptions) -> Int {
     @analyze.render_terminal_report(display_report, g, rid)
   }
 
-  match opts.output {
-    Some(path) => {
-      let fs2 = @cache.FileSystem::node_js()
-      (fs2.write_file)(path, output_text)
-    }
-    None => println(output_text)
-  }
+  write_output_or_print(opts, output_text)
 
   // CI 退出码
   let mut exit_code = 0
@@ -786,54 +841,6 @@ fn render_workspace_terminal(report : @analyze.AnalysisReport, workspace_count :
   result
 }
 
-// ========== 本地 moon.mod.json 读取 ==========
-
-fn build_graph_from_local_mod() -> (@graph.DependencyGraph, String)? {
-  let fs = @cache.FileSystem::node_js()
-
-  // 1. 尝试 ./moon.mod (TOML)
-  match (fs.read_file)("./moon.mod") {
-    Some(content) => {
-      match @parse.parse_mod_toml(content) {
-        Ok(mod_) => {
-          let graph = @graph.DependencyGraph::new()
-          graph.add_node(mod_.name, mod_.version, 0)
-          for dep_name, dep_constraint in mod_.deps {
-            graph.add_node(dep_name, dep_constraint, 1)
-            graph.add_edge(mod_.name, mod_.version, dep_name, dep_constraint)
-          }
-          let root_id = mod_.name + "@" + mod_.version
-          return Some((graph, root_id))
-        }
-        Err(_) => ()
-      }
-    }
-    None => ()
-  }
-
-  // 2. 回退 ./moon.mod.json (JSON)
-  match (fs.read_file)("./moon.mod.json") {
-    Some(content) => {
-      match @parse.parse_mod_json(content) {
-        Ok(mod_) => {
-          let graph = @graph.DependencyGraph::new()
-          graph.add_node(mod_.name, mod_.version, 0)
-          for dep_name, dep_constraint in mod_.deps {
-            graph.add_node(dep_name, dep_constraint, 1)
-            graph.add_edge(mod_.name, mod_.version, dep_name, dep_constraint)
-          }
-          let root_id = mod_.name + "@" + mod_.version
-          return Some((graph, root_id))
-        }
-        Err(_) => ()
-      }
-    }
-    None => ()
-  }
-
-  None
-}
-
 // ========== Mock 数据构建器 ==========
 
 fn build_mock_graph(pkg : String) -> @graph.DependencyGraph {
@@ -874,6 +881,7 @@ pub fn help_text() -> String {
   lines.push("  -v, --version     Show version")
   lines.push("  --offline         Use local cache only")
   lines.push("  --cache-dir <dir> Set cache directory")
+  lines.push("  --dry-run         Simulate without writing files or cache")
   lines.push("")
   lines.push("Use 'depsight <command> --help' for command-specific options.")
   join_cli_lines(lines)
@@ -892,6 +900,7 @@ pub fn tree_help_text() -> String {
   lines.push("")
   lines.push(@analyze.bold("Options:"))
   lines.push("  --depth <n>       Max tree depth (default: 10)")
+  lines.push("  --dry-run         Simulate without writing files or cache")
   join_cli_lines(lines)
 }
 
@@ -913,6 +922,7 @@ pub fn audit_help_text() -> String {
   lines.push("  --workspace          Scan all packages in workspace")
   lines.push("  --fail-on-score <n>  Exit with error if overall score < n")
   lines.push("  --fail-on-critical   Exit with error if critical issues found")
+  lines.push("  --dry-run            Simulate without writing files or cache")
   lines.push("  -o, --output <file>  Write output to file")
   join_cli_lines(lines)
 }
@@ -935,6 +945,7 @@ pub fn report_help_text() -> String {
   lines.push("  --workspace          Scan all packages in workspace")
   lines.push("  --fail-on-score <n>  Exit with error if overall score < n")
   lines.push("  --fail-on-critical   Exit with error if critical issues found")
+  lines.push("  --dry-run            Simulate without writing files or cache")
   lines.push("  -o, --output <file>  Write output to file")
   join_cli_lines(lines)
 }

@@ -125,3 +125,54 @@ fn strip_prefix_loop(s : String, start : Int, idx : Int, acc : String) -> String
   let ch = s[pos].to_int().unsafe_to_char()
   strip_prefix_loop(s, start, idx + 1, acc + ch.to_string())
 }
+
+// ---------- HTTP FFI ----------
+
+/// 通过 Node.js https 模块发起同步 GET 请求。
+/// 内部使用 child_process.execSync 调用内联 node 脚本，完全跨平台。
+extern "js" fn http_get_raw(url : String) -> String =
+  #| (url) => {
+  #|   const { execSync } = require('child_process');
+  #|   const safeUrl = url.replace(/'/g, "\\'");
+  #|   const script = "const https=require('https');https.get('" + safeUrl + "',(r)=>{let d='';r.on('data',(c)=>d+=c);r.on('end',()=>process.stdout.write(d));}).on('error',(e)=>process.stdout.write('__HTTP_ERROR__'+e.message));";
+  #|   try {
+  #|     return execSync('node -e "' + script.replace(/"/g, '\\"') + '"', { encoding: 'utf8', timeout: 12000, maxBuffer: 1024 * 1024 });
+  #|   } catch (e) {
+  #|     return '__HTTP_ERROR__' + (e.message || 'exec failed');
+  #|   }
+  #| }
+
+/// 发起 HTTP GET 请求，返回响应体或错误。
+pub fn http_get(url : String) -> Result[String, String] {
+  let raw = http_get_raw(url)
+  if raw.is_empty() {
+    return Err("Empty response from " + url)
+  }
+  if raw.has_prefix("__HTTP_ERROR__") {
+    let msg = raw[14:].to_string()
+    return Err("HTTP error: " + msg)
+  }
+  Ok(raw)
+}
+
+// ---------- 默认包映射 ----------
+
+fn default_package_repos() -> Map[String, String] {
+  let map : Map[String, String] = {}
+  map["moonbitlang/core"] = "https://github.com/moonbitlang/core"
+  map["moonbitlang/x"] = "https://github.com/moonbitlang/x"
+  map["moonbitlang/json5"] = "https://github.com/moonbitlang/json5"
+  map["moonbitlang/websocket"] = "https://github.com/moonbitlang/websocket"
+  map["moonbitlang/parser-combinator"] = "https://github.com/moonbitlang/parser-combinator"
+  map["moonbitlang/regexp"] = "https://github.com/moonbitlang/regexp"
+  map["moonbitlang/json"] = "https://github.com/moonbitlang/json"
+  map
+}
+
+/// 将预置的常见包仓库映射填入注册表。
+pub fn Registry::with_defaults(self : Registry) -> Registry {
+  for name, repo in default_package_repos() {
+    self.packages[name] = repo
+  }
+  self
+}

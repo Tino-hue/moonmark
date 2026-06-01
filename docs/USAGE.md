@@ -37,6 +37,7 @@ node _build/js/debug/build/depsight.js report --html -o report.html
 depsight tree [package]           # 默认深度 10
 depsight tree root --depth 3      # 限制深度
 depsight tree mypkg --depth 5
+depsight tree --dry-run           # 模拟运行，不输出文件
 ```
 
 输出示例：
@@ -55,6 +56,7 @@ depsight audit --json                    # JSON 格式
 depsight audit --fail-on-score 80        # 健康分低于 80 时 exit 1
 depsight audit --fail-on-critical        # 发现 critical 时 exit 1
 depsight audit --json -o audit.json      # 写入文件
+depsight audit --dry-run                 # 模拟运行，不写文件/不写缓存
 ```
 
 终端输出包含：
@@ -68,6 +70,7 @@ depsight audit --json -o audit.json      # 写入文件
 depsight report                          # 终端完整报告
 depsight report --html -o report.html    # 单文件 HTML
 depsight report --json -o report.json    # JSON 报告
+depsight report --html --dry-run         # 模拟运行，预览但不生成文件
 ```
 
 HTML 报告特性：
@@ -84,6 +87,20 @@ HTML 报告特性：
 | `-v, --version` | 显示版本 |
 | `--offline` | 仅使用本地缓存 |
 | `--cache-dir <dir>` | 自定义缓存目录 |
+| `--dry-run` | 模拟运行，不写文件、不写缓存 |
+
+## 远程依赖解析
+
+当 `depsight` 检测到当前目录存在 `moon.mod`（或 `moon.mod.json`）时，会：
+
+1. **读取本地模块**作为根节点。
+2. **递归拉取**每个传递依赖的 `moon.mod.json`（通过 GitHub raw 直链）。
+3. **构建完整依赖图**，支持 `--depth` 控制最大递归深度（默认 10）。
+4. 未知包或网络失败时**优雅降级**为本地单层图。
+
+预置支持的包（持续扩展）：`moonbitlang/core`、`moonbitlang/x`、`moonbitlang/json5`、`moonbitlang/websocket`、`moonbitlang/parser-combinator`、`moonbitlang/regexp`、`moonbitlang/json`。
+
+配合 `--offline` 可完全断网运行（依赖已有缓存）；配合 `--dry-run` 可预览远程拉取效果而不写任何缓存或报告文件。
 
 ## 健康评分说明
 

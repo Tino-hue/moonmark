@@ -4,12 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [0.3.0] - 2026-06-04
 
-### Added (Week 4: Testing & Integration)
+### Added (Week 5: Real-World Integration)
+- **Remote Dependency Resolution** (`fetch/fetch.mbt`): Node.js `https` sync FFI via `child_process.execSync` for cross-platform HTTP GET. Predefined package registry mapping for common mooncakes packages (`moonbitlang/core`, `x`, `json5`, `websocket`, `parser-combinator`, `regexp`, `json`). CLI `build_full_graph()` now recursively fetches transitive dependencies from GitHub raw URLs, with graceful fallback to local-only graph on network or unknown-package failures.
+- **`--dry-run` Flag** (`cli/cli.mbt`): Simulates full analysis without writing any output files or cache entries. Prints `[dry-run] Would write output to: <path>` when `-o` is used. Supported in `tree`, `audit`, `report`, and `--workspace` modes.
 - **Ecosystem Sampling** (`test/ecosystem_test.mbt`): 10-package fixture simulating real MoonBit ecosystem (`moonbitlang/core`, `x`, `xlsx`, etc.) with `RegistryFetcher` mock.
 - **Performance Benchmarks** (`test/benchmark_test.mbt`): 8 benchmark tests (3 scales × 4 stages), default `#skip`, measuring Graph Build / Analysis / Report Render / End-to-End in microseconds.
 - **Edge Case Coverage** (`test/edge_case_test.mbt`): 17 tests for empty deps, self-dependency, invalid versions (empty/non-numeric/single/double/quadruple/negative/leading-zero/overflow).
 - **End-to-End Tests** (`test/e2e_test.mbt`): 13 E2E tests covering full pipeline: `moon.mod.json` → GraphBuilder → Analysis → HTML/JSON/Terminal report.
-- **CLI Argument Tests** (`cli/cli_test.mbt`): 12 `parse_args` tests for flag combinations, order independence, missing values, unknown flags.
+- **CLI Argument Tests** (`cli/cli_test.mbt`): 12 `parse_args` tests for flag combinations, order independence, missing values, unknown flags; 4 new tests for `--dry-run` parsing and end-to-end behavior.
 - **Cross-Platform Tests** (`test/cross_platform_test.mbt`): 10 tests for path separators (Windows/Unix), LF/CRLF line endings, Unicode encoding, real FS cache operations.
 - **Cross-Platform Path Handling** (`cache/cache.mbt`): Node.js `path.join` FFI replacing hardcoded `/`, with `platform_path_sep()`, `platform_home_dir()`, `join_path()` APIs.
 - **CI Fixes** (`.github/workflows/depsight.yml`): `upload-artifact` upgraded to `@v4`, `actions/checkout` pinned to `@v4`; `main.mbt` JS FFI `get_cli_args()` reading `process.argv.slice(2)` to fix CLI args passthrough.
