@@ -174,9 +174,18 @@ fn load_config() -> CliConfig {
       }
       let baseline = map.get("baseline")
       // 解析评分权重
-      let sw_freshness = parse_int_with_default(map.get("scoring.freshness"), 25)
-      let sw_compliance = parse_int_with_default(map.get("scoring.compliance"), 20)
-      let sw_deprecated = parse_int_with_default(map.get("scoring.deprecated_density"), 25)
+      let sw_freshness = parse_int_with_default(
+        map.get("scoring.freshness"),
+        25,
+      )
+      let sw_compliance = parse_int_with_default(
+        map.get("scoring.compliance"),
+        20,
+      )
+      let sw_deprecated = parse_int_with_default(
+        map.get("scoring.deprecated_density"),
+        25,
+      )
       let sw_size = parse_int_with_default(map.get("scoring.size"), 20)
       let sw_activity = parse_int_with_default(map.get("scoring.activity"), 10)
       let scoring_weights = @analyze.ScoreWeights::new(

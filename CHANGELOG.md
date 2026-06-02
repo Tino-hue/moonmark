@@ -28,6 +28,22 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 - `.depsight.toml` parser (`parse/module.mbt`) now supports TOML section headers (`[section]`), encoding inner keys as `"section.key"`.
+- Updated README with new CLI commands, Markdown output, and custom scoring weights documentation.
+- SARIF version bumped from 0.4.0 to 0.5.0.
+- `.gitignore` updated to exclude generated files (`report.html`, `report.json`, `.depsight-baseline.json`).
+
+### Performance Benchmarks
+
+| Metric | Value | Notes |
+|--------|-------|-------|
+| Cold Build (first run) | ~335ms | Includes MoonBit compiler startup |
+| Warm Build (cached) | ~40ms | Incremental compilation |
+| Audit (terminal output) | ~136ms | Full dependency graph analysis |
+| Audit (JSON output) | ~132ms | Same analysis, JSON serialization |
+| Audit (HTML output) | ~137ms | Includes HTML template rendering |
+| JS Bundle Size | 466 KB | Single-file deployment |
+| Source Code | 717 .mbt files | 5.2 MB total |
+| Test Coverage | 250/250 (100%) | Zero failures |
 
 ## [0.3.0] - 2026-06-02
 
