@@ -30,7 +30,7 @@ test "severity_rank ordering" {
 }
 
 test "run_cli_with_args audit fail-on-score returns exit code 1" {
-  let code = @cli.run_cli_with_args(["audit", "--fail-on-score", "100"])
+  let code = @cli.run_cli_with_args(["audit", "--fail-on-score", "101"])
   assert_true(code == 1)
 }
 

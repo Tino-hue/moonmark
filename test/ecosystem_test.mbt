@@ -1,3 +1,4 @@
+///|
 /// Day 23 — 真实生态采样测试
 /// 基于 10 个代表性 MoonBit 包的 fixture 数据，形成复杂 DAG，
 /// 批量构建依赖图、运行完整分析、输出生态统计报告。
@@ -9,88 +10,79 @@ fn make_ecosystem_registry() -> Map[String, @parse.Module] {
 
   // 1. moonbitlang/core — 生态基石，被几乎所有包依赖
   r["moonbitlang/core@0.1.0"] = @parse.Module::new(
-    "moonbitlang/core", "0.1.0",
-    {}
+    "moonbitlang/core",
+    "0.1.0",
+    {},
   )
 
   // 2. moonbitlang/x — 实验性扩展包
-  r["moonbitlang/x@0.4.44"] = @parse.Module::new(
-    "moonbitlang/x", "0.4.44",
-    { "moonbitlang/core": "0.1.0" }
-  )
+  r["moonbitlang/x@0.4.44"] = @parse.Module::new("moonbitlang/x", "0.4.44", {
+    "moonbitlang/core": "0.1.0",
+  })
 
   // 3. Lampese/moonbit-chalk — 终端颜色
   r["Lampese/moonbit-chalk@0.4.0"] = @parse.Module::new(
-    "Lampese/moonbit-chalk", "0.4.0",
-    { "moonbitlang/core": "0.1.0" }
+    "Lampese/moonbit-chalk",
+    "0.4.0",
+    { "moonbitlang/core": "0.1.0" },
   )
 
   // 4. peter-jerry-ye/parser-combinator — 解析器组合子
   r["peter-jerry-ye/parser-combinator@0.9.1"] = @parse.Module::new(
-    "peter-jerry-ye/parser-combinator", "0.9.1",
-    { "moonbitlang/core": "0.1.0" }
+    "peter-jerry-ye/parser-combinator",
+    "0.9.1",
+    { "moonbitlang/core": "0.1.0" },
   )
 
   // 5. xinyu-lv/json5 — JSON5 解析
-  r["xinyu-lv/json5@0.1.3"] = @parse.Module::new(
-    "xinyu-lv/json5", "0.1.3",
-    {
-      "moonbitlang/core": "0.1.0",
-      "peter-jerry-ye/parser-combinator": "0.9.1",
-    }
-  )
+  r["xinyu-lv/json5@0.1.3"] = @parse.Module::new("xinyu-lv/json5", "0.1.3", {
+    "moonbitlang/core": "0.1.0",
+    "peter-jerry-ye/parser-combinator": "0.9.1",
+  })
 
   // 6. LittleFish/depsight — 本项目（自引用为根）
   r["LittleFish/depsight@0.1.0"] = @parse.Module::new(
-    "LittleFish/depsight", "0.1.0",
-    {
-      "moonbitlang/core": "0.1.0",
-      "moonbitlang/x": "0.4.44",
-    }
+    "LittleFish/depsight",
+    "0.1.0",
+    { "moonbitlang/core": "0.1.0", "moonbitlang/x": "0.4.44" },
   )
 
   // 7. yj-qin/regexp — 正则表达式
-  r["yj-qin/regexp@0.3.0"] = @parse.Module::new(
-    "yj-qin/regexp", "0.3.0",
-    { "moonbitlang/core": "0.1.0" }
-  )
+  r["yj-qin/regexp@0.3.0"] = @parse.Module::new("yj-qin/regexp", "0.3.0", {
+    "moonbitlang/core": "0.1.0",
+  })
 
   // 8. fantix/json — JSON 处理
-  r["fantix/json@0.2.1"] = @parse.Module::new(
-    "fantix/json", "0.2.1",
-    {
-      "moonbitlang/core": "0.1.0",
-      "yj-qin/regexp": "0.3.0",
-    }
-  )
+  r["fantix/json@0.2.1"] = @parse.Module::new("fantix/json", "0.2.1", {
+    "moonbitlang/core": "0.1.0",
+    "yj-qin/regexp": "0.3.0",
+  })
 
   // 9. chenxuuu/websocket — WebSocket 客户端
   r["chenxuuu/websocket@0.1.0"] = @parse.Module::new(
-    "chenxuuu/websocket", "0.1.0",
-    {
-      "moonbitlang/core": "0.1.0",
-      "moonbitlang/x": "0.4.44",
-    }
+    "chenxuuu/websocket",
+    "0.1.0",
+    { "moonbitlang/core": "0.1.0", "moonbitlang/x": "0.4.44" },
   )
 
   // 10. demo/app — 一个假设的顶层应用，依赖多个包
-  r["demo/app@1.0.0"] = @parse.Module::new(
-    "demo/app", "1.0.0",
-    {
-      "moonbitlang/core": "0.1.0",
-      "moonbitlang/x": "0.4.44",
-      "Lampese/moonbit-chalk": "0.4.0",
-      "xinyu-lv/json5": "0.1.3",
-      "fantix/json": "0.2.1",
-      "chenxuuu/websocket": "0.1.0",
-      "LittleFish/depsight": "0.1.0",
-    }
-  )
+  r["demo/app@1.0.0"] = @parse.Module::new("demo/app", "1.0.0", {
+    "moonbitlang/core": "0.1.0",
+    "moonbitlang/x": "0.4.44",
+    "Lampese/moonbit-chalk": "0.4.0",
+    "xinyu-lv/json5": "0.1.3",
+    "fantix/json": "0.2.1",
+    "chenxuuu/websocket": "0.1.0",
+    "LittleFish/depsight": "0.1.0",
+  })
 
   r
 }
 
-fn make_mock_fetch(registry : Map[String, @parse.Module]) -> (String, String) -> Result[@parse.Module, String] {
+///|
+fn make_mock_fetch(
+  registry : Map[String, @parse.Module],
+) -> (String, String) -> Result[@parse.Module, String] {
   fn fetch(name : String, version : String) -> Result[@parse.Module, String] {
     let id = name + "@" + version
     match registry.get(id) {
@@ -103,6 +95,7 @@ fn make_mock_fetch(registry : Map[String, @parse.Module]) -> (String, String) ->
 
 // ---------- 生态统计 ----------
 
+///|
 /// 生态采样报告
 struct EcosystemReport {
   total_packages : Int
@@ -116,12 +109,16 @@ struct EcosystemReport {
   overall_health_score : Int
 }
 
+///|
 /// 运行生态采样分析
 fn run_ecosystem_sampling(
   root_name : String,
   root_version : String,
-  registry : Map[String, @parse.Module]
-) -> Result[(@graph.DependencyGraph, @analyze.AnalysisReport, EcosystemReport), String] {
+  registry : Map[String, @parse.Module],
+) -> Result[
+  (@graph.DependencyGraph, @analyze.AnalysisReport, EcosystemReport),
+  String,
+] {
   let fetch = make_mock_fetch(registry)
   let builder = @graph.GraphBuilder::new()
 
@@ -158,10 +155,11 @@ fn run_ecosystem_sampling(
   Ok((graph, report, eco))
 }
 
+///|
 fn calculate_ecosystem_stats(
   graph : @graph.DependencyGraph,
   report : @analyze.AnalysisReport,
-  license_map : Map[String, String]
+  license_map : Map[String, String],
 ) -> EcosystemReport {
   let ids = graph.get_all_node_ids()
   let total_nodes = ids.length()
@@ -172,7 +170,9 @@ fn calculate_ecosystem_stats(
   for id in ids {
     match graph.get_node_by_id(id) {
       Some(node) => {
-        if node.depth > max_depth { max_depth = node.depth }
+        if node.depth > max_depth {
+          max_depth = node.depth
+        }
         total_depth = total_depth + node.depth
       }
       None => ()
@@ -180,18 +180,20 @@ fn calculate_ecosystem_stats(
   }
   let avg_depth = if total_nodes > 0 {
     total_depth.to_double() / total_nodes.to_double()
-  } else { 0.0 }
+  } else {
+    0.0
+  }
 
   // 计算被依赖次数
   let dep_count : Map[String, Int] = {}
   for id in ids {
     match graph.get_node_by_id(id) {
-      Some(node) => {
+      Some(node) =>
         dep_count[node.name] = (match dep_count.get(node.name) {
-          Some(c) => c
-          None => 0
-        }) + node.parents.length()
-      }
+            Some(c) => c
+            None => 0
+          }) +
+          node.parents.length()
       None => ()
     }
   }
@@ -210,13 +212,15 @@ fn calculate_ecosystem_stats(
   let license_dist : Map[String, Int] = {}
   for pair in license_map {
     let (_, spdx) = pair
-    license_dist[spdx] = (match license_dist.get(spdx) {
+    license_dist[spdx] = match license_dist.get(spdx) {
       Some(c) => c + 1
       None => 1
-    })
+    }
   }
 
-  let cycle_detected = report.diagnostics.iter().any(fn(d) { d.code == "CYCLE-001" })
+  let cycle_detected = report.diagnostics
+    .iter()
+    .any(fn(d) { d.code == "CYCLE-001" })
 
   EcosystemReport::{
     total_packages: license_map.length(),
@@ -233,6 +237,7 @@ fn calculate_ecosystem_stats(
 
 // ---------- 测试 ----------
 
+///|
 test "ecosystem sampling builds complete graph" {
   let registry = make_ecosystem_registry()
   let result = run_ecosystem_sampling("demo/app", "1.0.0", registry)
@@ -243,13 +248,14 @@ test "ecosystem sampling builds complete graph" {
       inspect(report.node_count, content="10")
       inspect(eco.total_nodes, content="10")
       inspect(eco.total_packages, content="10")
-      inspect(eco.overall_health_score, content="100")
+      inspect(eco.overall_health_score, content="98")
       inspect(eco.cycle_detected, content="false")
     }
     Err(msg) => fail("Ecosystem sampling failed: " + msg)
   }
 }
 
+///|
 test "ecosystem stats identify core as most depended" {
   let registry = make_ecosystem_registry()
   let result = run_ecosystem_sampling("demo/app", "1.0.0", registry)
@@ -263,6 +269,7 @@ test "ecosystem stats identify core as most depended" {
   }
 }
 
+///|
 test "ecosystem depth stats are reasonable" {
   let registry = make_ecosystem_registry()
   let result = run_ecosystem_sampling("demo/app", "1.0.0", registry)
@@ -276,6 +283,7 @@ test "ecosystem depth stats are reasonable" {
   }
 }
 
+///|
 test "ecosystem license distribution includes MIT and Apache" {
   let registry = make_ecosystem_registry()
   let result = run_ecosystem_sampling("demo/app", "1.0.0", registry)
@@ -297,6 +305,7 @@ test "ecosystem license distribution includes MIT and Apache" {
   }
 }
 
+///|
 test "ecosystem sampling on smaller root" {
   let registry = make_ecosystem_registry()
   let result = run_ecosystem_sampling("xinyu-lv/json5", "0.1.3", registry)
@@ -310,22 +319,19 @@ test "ecosystem sampling on smaller root" {
   }
 }
 
+///|
 test "ecosystem sampling detects artificial cycle" {
   let registry = make_ecosystem_registry()
   // 人为制造循环: json5 -> parser -> json5
   registry["xinyu-lv/json5@0.1.3"] = @parse.Module::new(
-    "xinyu-lv/json5", "0.1.3",
-    {
-      "moonbitlang/core": "0.1.0",
-      "peter-jerry-ye/parser-combinator": "0.9.1",
-    }
+    "xinyu-lv/json5",
+    "0.1.3",
+    { "moonbitlang/core": "0.1.0", "peter-jerry-ye/parser-combinator": "0.9.1" },
   )
   registry["peter-jerry-ye/parser-combinator@0.9.1"] = @parse.Module::new(
-    "peter-jerry-ye/parser-combinator", "0.9.1",
-    {
-      "moonbitlang/core": "0.1.0",
-      "xinyu-lv/json5": "0.1.3",
-    }
+    "peter-jerry-ye/parser-combinator",
+    "0.9.1",
+    { "moonbitlang/core": "0.1.0", "xinyu-lv/json5": "0.1.3" },
   )
 
   let result = run_ecosystem_sampling("xinyu-lv/json5", "0.1.3", registry)

@@ -157,18 +157,30 @@ pub fn DependencyGraph::size(self : DependencyGraph) -> Int {
 /// `root_id` 是完整的节点标识（如 `"root@1.0.0"`）。
 /// `max_depth` 控制展开深度，0 表示只显示根节点。
 pub fn DependencyGraph::render_tree(self : DependencyGraph, root_id : String, max_depth : Int) -> String {
+  self.render_tree_with_markers(root_id, max_depth, {})
+}
+
+/// 带标记的依赖树渲染。
+/// `markers` 的 key 为节点 ID，value 为附加在该行末尾的标记文本。
+pub fn DependencyGraph::render_tree_with_markers(
+  self : DependencyGraph,
+  root_id : String,
+  max_depth : Int,
+  markers : Map[String, String]
+) -> String {
   let lines = []
-  render_tree_node(self, root_id, 0, max_depth, "", true, lines)
+  render_tree_node_with_markers(self, root_id, 0, max_depth, "", true, markers, lines)
   join_lines(lines)
 }
 
-fn render_tree_node(
+fn render_tree_node_with_markers(
   graph : DependencyGraph,
   id : String,
   depth : Int,
   max_depth : Int,
   prefix : String,
   is_last : Bool,
+  markers : Map[String, String],
   lines : Array[String]
 ) -> Unit {
   if depth > max_depth {
@@ -186,7 +198,11 @@ fn render_tree_node(
   } else {
     "├── "
   }
-  lines.push(prefix + connector + id)
+  let marker = match markers.get(id) {
+    Some(m) => " " + m
+    None => ""
+  }
+  lines.push(prefix + connector + id + marker)
 
   let child_count = node.children.length()
   let child_prefix = if depth == 0 {
@@ -201,7 +217,7 @@ fn render_tree_node(
   let mut i = 0
   while i < child_count {
     let is_last_child = i == child_count - 1
-    render_tree_node(graph, node.children[i], depth + 1, max_depth, new_prefix, is_last_child, lines)
+    render_tree_node_with_markers(graph, node.children[i], depth + 1, max_depth, new_prefix, is_last_child, markers, lines)
     i = i + 1
   }
 }

@@ -4,6 +4,7 @@ pub struct NodeMeta {
   deprecated_apis : Array[DeprecatedApi]
   latest_version : String?
   self_size : Int
+  last_commit_days_ago : Int?
 }
 
 /// 构造 NodeMeta
@@ -11,9 +12,10 @@ pub fn NodeMeta::new(
   license~ : String? = None,
   deprecated_apis~ : Array[DeprecatedApi] = [],
   latest_version~ : String? = None,
-  self_size~ : Int = 0
+  self_size~ : Int = 0,
+  last_commit_days_ago~ : Int? = None
 ) -> NodeMeta {
-  { license, deprecated_apis, latest_version, self_size }
+  { license, deprecated_apis, latest_version, self_size, last_commit_days_ago }
 }
 
 /// 完整分析报告
@@ -82,6 +84,7 @@ pub fn run_analysis(
       deprecated_count=meta.deprecated_apis.length(),
       total_api_count=10,
       transitive_size=Some(meta.self_size),
+      last_commit_days_ago=meta.last_commit_days_ago,
     )
     let score = calculate_health_score(input)
     scores.push(score)

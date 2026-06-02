@@ -12,6 +12,7 @@ MoonBit Depsight analyzes your `moon.mod.json` and recursively inspects the enti
 - **Dependency Tree**: Recursive resolution of transitive dependencies with ASCII tree rendering (`depsight tree`)
 - **Cycle Detection**: DFS-based circular dependency detection with structured diagnostics (`CYCLE-001`)
 - **Topological Sort**: Kahn's algorithm for dependency ordering
+- **Smart Package Inference**: Multi-source fallback for unknown packages (GitHub owner/repo, moonbitlang/, moonbit-community/ namespaces)
 
 ### Diagnostic Engine
 - **SemVer Analysis**: Full semantic version parsing, comparison, and constraint matching (`^`, `~`, `~>`, `>=`, `>`, `<=`, `<`, `=`, bare version)
@@ -25,13 +26,20 @@ MoonBit Depsight analyzes your `moon.mod.json` and recursively inspects the enti
 - **Terminal Report** (`depsight audit`): Color-coded audit output grouped by Critical/Warning/Info, similar to `npm audit`
 - **HTML Report** (`depsight report --html`): Interactive single-file report with collapsible dependency tree, dashboard, and diagnostics
 - **JSON Output** (`depsight audit --json`): Structured data for CI/CD integration
-- **Dependency Tree** (`depsight tree`): ASCII tree with `--depth` control
+- **SARIF Output** (`depsight audit --sarif`): Standard v2.1.0 format for GitHub Code Scanning
+- **Dependency Tree** (`depsight tree`): ASCII tree with `--depth` control and inline diagnostic badges
 
 ### CI/CD Integration
 - `--fail-on-score <n>`: Exit with error when health score is below threshold
 - `--fail-on-critical`: Exit with error when critical issues found
+- `--baseline auto`: Diff against previous run (auto-saved to `.depsight-baseline.json`)
 - `--offline`: Use local cache only
 - `--cache-dir <path>`: Specify cache directory
+
+### Configuration (`.depsight.toml`)
+- `ignore`: Comma-separated list of diagnostic codes to suppress
+- `[severity]`: Override default diagnostic levels per code (e.g. `LICENSE-001 = "warning"`)
+- `baseline = "auto"`: Enable automatic baseline comparison by default
 
 ## Installation
 
@@ -94,6 +102,18 @@ node _build/js/debug/build/depsight.js audit --offline --cache-dir ./cache
     path: depsight-report.html
 ```
 
+## Performance
+
+| Scale | Nodes | Graph Build | Analysis | Report Render | End-to-End |
+|-------|-------|-------------|----------|---------------|------------|
+| Small | 5 | < 50 ms | < 20 ms | < 100 ms | < 200 ms |
+| Medium | 50 | < 200 ms | < 100 ms | < 500 ms | < 1 s |
+| Large | 200 | < 1 s | < 500 ms | < 2 s | < 5 s |
+
+*Tested on Windows 11, Node.js v22.x, MoonBit JS debug mode*
+
+For detailed benchmark methodology and bottleneck analysis, see [docs/benchmark.md](docs/benchmark.md).
+
 ## Development
 
 ```bash
@@ -121,6 +141,8 @@ moon check --target js
 ├── cli/           # CLI argument parsing & command dispatch
 └── main.mbt       # Entry point
 ```
+
+For detailed architecture design, see [docs/architecture.md](docs/architecture.md).
 
 ## License
 

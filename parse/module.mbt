@@ -148,16 +148,51 @@ pub fn parse_mod_toml(content : String) -> Result[Module, String] {
   Ok({ name, version, readme, repository, license, keywords, description, source, deps })
 }
 
-/// 解析简单配置 TOML，返回 key->value 字典（仅支持 key = "value" 格式）
+/// 解析简单配置 TOML，返回 key->value 字典（支持 key = "value" 和 [section] 格式）
+/// section 内的 key 会被编码为 "section.key"
 pub fn parse_config_toml(content : String) -> Map[String, String] {
   let result : Map[String, String] = {}
-  let entries = toml_split_entries(content)
-  for entry in entries {
-    let eq_idx = toml_find_eq(entry)
+  let lines = toml_split_lines(content)
+  let mut current_section = ""
+  for line in lines {
+    let trimmed = line.trim().to_string()
+    if trimmed.is_empty() || trimmed.has_prefix("#") { continue }
+    // section header: [section]
+    if trimmed[0] == '[' {
+      let end = str_find_char(trimmed, ']'.to_int().to_uint16())
+      if end > 0 {
+        current_section = trimmed[1:end].trim().to_string()
+      }
+      continue
+    }
+    let eq_idx = toml_find_eq(trimmed)
     if eq_idx < 0 { continue }
-    let key = entry.substring(start=0, end=eq_idx).trim().to_string()
-    let raw_val = entry.substring(start=eq_idx + 1, end=entry.length()).trim().to_string()
-    result[key] = toml_strip_quotes(raw_val)
+    let key = trimmed.substring(start=0, end=eq_idx).trim().to_string()
+    let raw_val = trimmed.substring(start=eq_idx + 1, end=trimmed.length()).trim().to_string()
+    let full_key = if current_section.is_empty() { key } else { current_section + "." + key }
+    result[full_key] = toml_strip_quotes(raw_val)
+  }
+  result
+}
+
+fn str_find_char(s : String, ch : UInt16) -> Int {
+  for i = 0; i < s.length(); i = i + 1 {
+    if s[i] == ch { return i }
+  }
+  -1
+}
+
+fn toml_split_lines(content : String) -> Array[String] {
+  let result = []
+  let mut start = 0
+  for i = 0; i < content.length(); i = i + 1 {
+    if content[i] == '\n' {
+      result.push(content[start:i].to_string())
+      start = i + 1
+    }
+  }
+  if start < content.length() {
+    result.push(content[start:content.length()].to_string())
   }
   result
 }

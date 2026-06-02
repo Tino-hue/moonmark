@@ -1,3 +1,4 @@
+///|
 /// End-to-End Integration Tests
 ///
 /// 验证完整工作流：moon.mod.json → 依赖图 → 审计报告 → 多种格式输出
@@ -19,30 +20,33 @@ test "e2e minimal moon.mod.json pipeline" {
 
   // Build graph with mock fetch (no deps, so fetch never called for children)
   let builder = @graph.GraphBuilder::new_with_max_depth(3)
-  let graph = match builder.build(mod_.name, mod_.version, fn(_name, _ver) {
-    // In a real scenario this would fetch from network or cache.
-    // For root-only project, we just return the root module itself.
-    Ok(mod_)
-  }) {
+  let graph = match
+    builder.build(mod_.name, mod_.version, fn(_name, _ver) {
+      // In a real scenario this would fetch from network or cache.
+      // For root-only project, we just return the root module itself.
+      Ok(mod_)
+    }) {
     Ok(g) => g
     Err(msg) => fail("Graph build failed: " + msg)
   }
   assert_true(graph.size() == 1)
 
-  // Run analysis (no license => compliance=80, self_size=0 => size=100 => total=96)
+  // Run analysis (no license => compliance=80, self_size=0 => size=100 => total=94)
   let metas : Map[String, @analyze.NodeMeta] = {}
   let report = @analyze.run_analysis(graph, metas)
   assert_true(report.node_count == 1)
-  assert_true(report.overall_score == 96)
+  assert_true(report.overall_score == 94)
 
   // Verify terminal report
-  let terminal = @analyze.render_terminal_report(report, graph, "my/project@1.0.0")
+  let terminal = @analyze.render_terminal_report(
+    report, graph, "my/project@1.0.0",
+  )
   assert_true(terminal.contains("MoonBit Depsight"))
   assert_true(terminal.contains("Nodes: 1"))
 
   // Verify JSON report
   let json = @analyze.render_audit_json(report)
-  assert_true(json.contains("\"overall_score\":96"))
+  assert_true(json.contains("\"overall_score\":94"))
   assert_true(json.contains("\"node_count\":1"))
 
   // Verify HTML report
@@ -51,6 +55,7 @@ test "e2e minimal moon.mod.json pipeline" {
   assert_true(html.contains("MoonBit Depsight"))
 }
 
+///|
 test "e2e multi-dep moon.mod.json pipeline" {
   let root =
     #|{
@@ -75,17 +80,19 @@ test "e2e multi-dep moon.mod.json pipeline" {
   })
 
   let builder = @graph.GraphBuilder::new_with_max_depth(3)
-  let graph = match builder.build(root_mod.name, root_mod.version, fn(name, ver) {
-    let key = name + "@" + ver
-    match registry.get(key) {
-      Some(m) => Ok(m)
-      None => if name == root_mod.name && ver == root_mod.version {
-        Ok(root_mod)
-      } else {
-        Err("Not found: " + key)
+  let graph = match
+    builder.build(root_mod.name, root_mod.version, fn(name, ver) {
+      let key = name + "@" + ver
+      match registry.get(key) {
+        Some(m) => Ok(m)
+        None =>
+          if name == root_mod.name && ver == root_mod.version {
+            Ok(root_mod)
+          } else {
+            Err("Not found: " + key)
+          }
       }
-    }
-  }) {
+    }) {
     Ok(g) => g
     Err(msg) => fail("Graph build failed: " + msg)
   }
@@ -103,6 +110,7 @@ test "e2e multi-dep moon.mod.json pipeline" {
   assert_true(html.contains("lib/util@0.3.0"))
 }
 
+///|
 test "e2e moon.mod.json with all optional fields" {
   let content =
     #|{
@@ -130,6 +138,7 @@ test "e2e moon.mod.json with all optional fields" {
 
 // ========== 兼容性测试 ==========
 
+///|
 test "e2e legacy moon.mod.json without deps field" {
   let content =
     #|{
@@ -143,17 +152,19 @@ test "e2e legacy moon.mod.json without deps field" {
   assert_true(mod_.deps.is_empty())
 
   let builder = @graph.GraphBuilder::new_with_max_depth(3)
-  let graph = match builder.build(mod_.name, mod_.version, fn(_n, _v) { Ok(mod_) }) {
+  let graph = match
+    builder.build(mod_.name, mod_.version, fn(_n, _v) { Ok(mod_) }) {
     Ok(g) => g
     Err(msg) => fail("Build failed: " + msg)
   }
   let metas : Map[String, @analyze.NodeMeta] = {}
   let report = @analyze.run_analysis(graph, metas)
   let json = @analyze.render_audit_json(report)
-  // No license => compliance=80, self_size=0 => size=100 => overall_score = 96
-  assert_true(json.contains("\"overall_score\":96"))
+  // No license => compliance=80, self_size=0 => size=100 => overall_score = 94
+  assert_true(json.contains("\"overall_score\":94"))
 }
 
+///|
 test "e2e empty string version in deps" {
   let content =
     #|{
@@ -172,6 +183,7 @@ test "e2e empty string version in deps" {
 
 // ========== 离线场景测试 ==========
 
+///|
 test "e2e offline mode with local cache fallback" {
   // Simulate offline: all deps resolved from local registry
   let registry : Map[String, @parse.Module] = {}
@@ -181,12 +193,13 @@ test "e2e offline mode with local cache fallback" {
   registry["offline/a@1.0.0"] = @parse.Module::new("offline/a", "1.0.0", {})
 
   let builder = @graph.GraphBuilder::new_with_max_depth(3)
-  let graph = match builder.build("offline/root", "1.0.0", fn(name, ver) {
-    match registry.get(name + "@" + ver) {
-      Some(m) => Ok(m)
-      None => Err("Offline: not cached")
-    }
-  }) {
+  let graph = match
+    builder.build("offline/root", "1.0.0", fn(name, ver) {
+      match registry.get(name + "@" + ver) {
+        Some(m) => Ok(m)
+        None => Err("Offline: not cached")
+      }
+    }) {
     Ok(g) => g
     Err(msg) => fail("Offline build failed: " + msg)
   }
@@ -201,6 +214,7 @@ test "e2e offline mode with local cache fallback" {
 
 // ========== 报告格式完整性测试 ==========
 
+///|
 test "e2e html report structure completeness" {
   let content =
     #|{
@@ -212,7 +226,8 @@ test "e2e html report structure completeness" {
     Err(msg) => fail("Parse failed: " + msg)
   }
   let builder = @graph.GraphBuilder::new_with_max_depth(3)
-  let graph = match builder.build(mod_.name, mod_.version, fn(_n, _v) { Ok(mod_) }) {
+  let graph = match
+    builder.build(mod_.name, mod_.version, fn(_n, _v) { Ok(mod_) }) {
     Ok(g) => g
     Err(msg) => fail("Build failed: " + msg)
   }
@@ -230,6 +245,7 @@ test "e2e html report structure completeness" {
   assert_true(html.contains("score-good"))
 }
 
+///|
 test "e2e json report schema validation" {
   let content =
     #|{
@@ -241,7 +257,8 @@ test "e2e json report schema validation" {
     Err(msg) => fail("Parse failed: " + msg)
   }
   let builder = @graph.GraphBuilder::new_with_max_depth(3)
-  let graph = match builder.build(mod_.name, mod_.version, fn(_n, _v) { Ok(mod_) }) {
+  let graph = match
+    builder.build(mod_.name, mod_.version, fn(_n, _v) { Ok(mod_) }) {
     Ok(g) => g
     Err(msg) => fail("Build failed: " + msg)
   }
@@ -258,6 +275,7 @@ test "e2e json report schema validation" {
 
 // ========== 异常路径测试 ==========
 
+///|
 test "e2e malformed moon.mod.json fails gracefully" {
   let content = "{ invalid json }"
   match @parse.parse_mod_json(content) {
@@ -266,26 +284,34 @@ test "e2e malformed moon.mod.json fails gracefully" {
   }
 }
 
+///|
 test "e2e fetch failure propagates error" {
   let builder = @graph.GraphBuilder::new_with_max_depth(3)
-  match builder.build("missing", "1.0.0", fn(_n, _v) { Err("Network unreachable") }) {
+  match
+    builder.build("missing", "1.0.0", fn(_n, _v) { Err("Network unreachable") }) {
     Ok(_) => fail("Should fail when fetch errors")
     Err(msg) => assert_true(msg.contains("Network unreachable"))
   }
 }
 
+///|
 test "e2e cycle detection in pipeline" {
   let registry : Map[String, @parse.Module] = {}
-  registry["cycle/a@1.0.0"] = @parse.Module::new("cycle/a", "1.0.0", { "cycle/b": "1.0.0" })
-  registry["cycle/b@1.0.0"] = @parse.Module::new("cycle/b", "1.0.0", { "cycle/a": "1.0.0" })
+  registry["cycle/a@1.0.0"] = @parse.Module::new("cycle/a", "1.0.0", {
+    "cycle/b": "1.0.0",
+  })
+  registry["cycle/b@1.0.0"] = @parse.Module::new("cycle/b", "1.0.0", {
+    "cycle/a": "1.0.0",
+  })
 
   let builder = @graph.GraphBuilder::new_with_max_depth(5)
-  let graph = match builder.build("cycle/a", "1.0.0", fn(name, ver) {
-    match registry.get(name + "@" + ver) {
-      Some(m) => Ok(m)
-      None => Err("Not found")
-    }
-  }) {
+  let graph = match
+    builder.build("cycle/a", "1.0.0", fn(name, ver) {
+      match registry.get(name + "@" + ver) {
+        Some(m) => Ok(m)
+        None => Err("Not found")
+      }
+    }) {
     Ok(g) => g
     Err(msg) => fail("Build failed: " + msg)
   }
@@ -296,6 +322,8 @@ test "e2e cycle detection in pipeline" {
   let metas : Map[String, @analyze.NodeMeta] = {}
   let report = @analyze.run_analysis(graph, metas)
   // Cycle should be detected by analysis (edge exists even though recursive build stopped)
-  let has_cycle_diag = report.diagnostics.iter().any(fn(d) { d.code == "CYCLE-001" })
+  let has_cycle_diag = report.diagnostics
+    .iter()
+    .any(fn(d) { d.code == "CYCLE-001" })
   assert_true(has_cycle_diag)
 }

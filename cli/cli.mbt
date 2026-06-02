@@ -5,13 +5,16 @@
 
 // ========== 公共入口 ==========
 
+///|
 /// 运行 CLI（无参数入口，供 main 调用）
 /// 返回进程退出码（0 成功，1 失败）
 pub fn run_cli() -> Int {
-  // MoonBit main 不支持 args，此处使用演示数据
-  run_cli_with_args(["tree", "root"])
+  // 无参数时显示帮助信息
+  print_help()
+  0
 }
 
+///|
 /// 运行 CLI，接收命令行参数数组
 /// 返回进程退出码（0 成功，1 失败）
 pub fn run_cli_with_args(args : Array[String]) -> Int {
@@ -23,7 +26,7 @@ pub fn run_cli_with_args(args : Array[String]) -> Int {
   match parse_args(args) {
     Ok(opts) => {
       if opts.version {
-        println("MoonBit Depsight v0.3.0")
+        println("MoonBit Depsight v0.4.0")
         return 0
       }
       if opts.help {
@@ -48,6 +51,7 @@ pub fn run_cli_with_args(args : Array[String]) -> Int {
 
 // ========== 数据结构 ==========
 
+///|
 pub struct CliOptions {
   command : String
   target_pkg : String
@@ -62,40 +66,71 @@ pub struct CliOptions {
   cache_dir : String?
   offline : Bool
   dry_run : Bool
+  verbose : Bool
+  ignore : Array[String]
+  severity_map : Map[String, String]
   help : Bool
   version : Bool
 }
 
+///|
 pub fn CliOptions::new(
-  command~ : String = "",
-  target_pkg~ : String = "root",
-  depth~ : Int = 10,
-  output~ : String? = None,
-  format~ : String = "terminal",
-  fail_on_score~ : Int? = None,
-  fail_on_critical~ : Bool = false,
-  severity~ : String? = None,
-  baseline~ : String? = None,
-  workspace~ : Bool = false,
-  cache_dir~ : String? = None,
-  offline~ : Bool = false,
-  dry_run~ : Bool = false,
-  help~ : Bool = false,
-  version~ : Bool = false,
+  command? : String = "",
+  target_pkg? : String = "root",
+  depth? : Int = 10,
+  output? : String? = None,
+  format? : String = "terminal",
+  fail_on_score? : Int? = None,
+  fail_on_critical? : Bool = false,
+  severity? : String? = None,
+  baseline? : String? = None,
+  workspace? : Bool = false,
+  cache_dir? : String? = None,
+  offline? : Bool = false,
+  dry_run? : Bool = false,
+  verbose? : Bool = false,
+  ignore? : Array[String] = [],
+  severity_map? : Map[String, String] = {},
+  help? : Bool = false,
+  version? : Bool = false,
 ) -> CliOptions {
-  { command, target_pkg, depth, output, format, fail_on_score, fail_on_critical, severity, baseline, workspace, cache_dir, offline, dry_run, help, version }
+  {
+    command,
+    target_pkg,
+    depth,
+    output,
+    format,
+    fail_on_score,
+    fail_on_critical,
+    severity,
+    baseline,
+    workspace,
+    cache_dir,
+    offline,
+    dry_run,
+    verbose,
+    ignore,
+    severity_map,
+    help,
+    version,
+  }
 }
 
 // ========== 参数解析 ==========
 
+///|
 priv struct CliConfig {
   severity : String?
   fail_on_score : Int?
   fail_on_critical : Bool
   format : String
   output : String?
+  ignore : Array[String]
+  severity_map : Map[String, String]
+  baseline : String?
 }
 
+///|
 fn load_config() -> CliConfig {
   let fs = @cache.FileSystem::node_js()
   let defaults = {
@@ -104,6 +139,9 @@ fn load_config() -> CliConfig {
     fail_on_critical: false,
     format: "terminal",
     output: None,
+    ignore: [],
+    severity_map: {},
+    baseline: None,
   }
   match (fs.read_file)(".depsight.toml") {
     Some(content) => {
@@ -122,12 +160,58 @@ fn load_config() -> CliConfig {
         None => "terminal"
       }
       let output = map.get("output")
-      { severity, fail_on_score, fail_on_critical, format, output }
+      let ignore = match map.get("ignore") {
+        Some(s) => split_comma_list(s)
+        None => []
+      }
+      let baseline = map.get("baseline")
+      // 解析 severity 映射：severity.LICENSE-001 = "warning"
+      let severity_map : Map[String, String] = {}
+      for pair in map {
+        let (key, value) = pair
+        if key.has_prefix("severity.") && key.length() > 9 {
+          let code = key[9:key.length()].to_string()
+          severity_map[code] = value
+        }
+      }
+      {
+        severity,
+        fail_on_score,
+        fail_on_critical,
+        format,
+        output,
+        ignore,
+        severity_map,
+        baseline,
+      }
     }
     None => defaults
   }
 }
 
+///|
+fn split_comma_list(s : String) -> Array[String] {
+  let result = []
+  let mut start = 0
+  for i = 0; i < s.length(); i = i + 1 {
+    if s[i] == ',' {
+      let item = s[start:i].trim().to_string()
+      if !item.is_empty() {
+        result.push(item)
+      }
+      start = i + 1
+    }
+  }
+  if start < s.length() {
+    let item = s[start:s.length()].trim().to_string()
+    if !item.is_empty() {
+      result.push(item)
+    }
+  }
+  result
+}
+
+///|
 pub fn parse_args(args : Array[String]) -> Result[CliOptions, String] {
   let config = load_config()
   let mut command = ""
@@ -141,11 +225,14 @@ pub fn parse_args(args : Array[String]) -> Result[CliOptions, String] {
   let mut cache_dir : String? = None
   let mut offline = false
   let mut dry_run = false
+  let mut verbose = false
   let mut help = false
   let mut version = false
 
-  let mut baseline : String? = None
+  let mut baseline = config.baseline
   let mut workspace = false
+  let ignore = config.ignore
+  let severity_map = config.severity_map
   let mut i = 0
   while i < args.length() {
     let arg = args[i]
@@ -155,22 +242,30 @@ pub fn parse_args(args : Array[String]) -> Result[CliOptions, String] {
       version = true
     } else if arg == "--depth" {
       i = i + 1
-      if i >= args.length() { return Err("--depth requires a value") }
+      if i >= args.length() {
+        return Err("--depth requires a value")
+      }
       match parse_int(args[i]) {
         Some(d) => depth = d
         None => return Err("Invalid depth: " + args[i])
       }
     } else if arg == "-o" || arg == "--output" {
       i = i + 1
-      if i >= args.length() { return Err("--output requires a value") }
+      if i >= args.length() {
+        return Err("--output requires a value")
+      }
       output = Some(args[i])
     } else if arg == "--json" {
       format = "json"
     } else if arg == "--html" {
       format = "html"
+    } else if arg == "--sarif" {
+      format = "sarif"
     } else if arg == "--fail-on-score" {
       i = i + 1
-      if i >= args.length() { return Err("--fail-on-score requires a value") }
+      if i >= args.length() {
+        return Err("--fail-on-score requires a value")
+      }
       match parse_int(args[i]) {
         Some(s) => fail_on_score = Some(s)
         None => return Err("Invalid score: " + args[i])
@@ -179,22 +274,30 @@ pub fn parse_args(args : Array[String]) -> Result[CliOptions, String] {
       fail_on_critical = true
     } else if arg == "--severity" {
       i = i + 1
-      if i >= args.length() { return Err("--severity requires a value") }
+      if i >= args.length() {
+        return Err("--severity requires a value")
+      }
       severity = Some(args[i])
     } else if arg == "--baseline" {
       i = i + 1
-      if i >= args.length() { return Err("--baseline requires a value") }
+      if i >= args.length() {
+        return Err("--baseline requires a value")
+      }
       baseline = Some(args[i])
     } else if arg == "--workspace" {
       workspace = true
     } else if arg == "--cache-dir" {
       i = i + 1
-      if i >= args.length() { return Err("--cache-dir requires a value") }
+      if i >= args.length() {
+        return Err("--cache-dir requires a value")
+      }
       cache_dir = Some(args[i])
     } else if arg == "--offline" {
       offline = true
     } else if arg == "--dry-run" {
       dry_run = true
+    } else if arg == "--verbose" {
+      verbose = true
     } else if arg.length() > 0 && arg[0].to_int() == '-'.to_int() {
       return Err("Unknown option: " + arg)
     } else if command == "" {
@@ -208,7 +311,9 @@ pub fn parse_args(args : Array[String]) -> Result[CliOptions, String] {
   }
 
   if command == "" && help == false && version == false {
-    return Err("No command specified. Use --help for usage.")
+    return Err(
+      "No command specified. Use 'depsight --help' to see available commands.",
+    )
   }
 
   Ok({
@@ -225,17 +330,23 @@ pub fn parse_args(args : Array[String]) -> Result[CliOptions, String] {
     cache_dir,
     offline,
     dry_run,
+    verbose,
+    ignore,
+    severity_map,
     help,
     version,
   })
 }
 
+///|
 fn parse_int(s : String) -> Int? {
   let mut result = 0
   let mut i = 0
   while i < s.length() {
     let code = s[i].to_int()
-    if code < '0'.to_int() || code > '9'.to_int() { return None }
+    if code < '0'.to_int() || code > '9'.to_int() {
+      return None
+    }
     result = result * 10 + (code - '0'.to_int())
     i = i + 1
   }
@@ -244,9 +355,10 @@ fn parse_int(s : String) -> Int? {
 
 // ========== 命令执行 ==========
 
+///|
 fn filter_by_severity(
   diagnostics : Array[@report.Diagnostic],
-  severity : String?
+  severity : String?,
 ) -> Array[@report.Diagnostic] {
   match severity {
     None => diagnostics
@@ -263,20 +375,104 @@ fn filter_by_severity(
   }
 }
 
+///|
+fn filter_ignored(
+  diagnostics : Array[@report.Diagnostic],
+  ignore : Array[String],
+) -> Array[@report.Diagnostic] {
+  if ignore.is_empty() {
+    return diagnostics
+  }
+  let result = []
+  for d in diagnostics {
+    let mut skipped = false
+    for pattern in ignore {
+      if pattern == d.code {
+        skipped = true
+        break
+      }
+      if d.path.length() > 0 {
+        let full = d.code + "@" + d.path[0]
+        if pattern == full {
+          skipped = true
+          break
+        }
+      }
+    }
+    if skipped == false {
+      result.push(d)
+    }
+  }
+  result
+}
+
+///|
+/// 根据用户自定义 severity 映射调整诊断级别
+fn apply_severity_map(
+  diagnostics : Array[@report.Diagnostic],
+  severity_map : Map[String, String],
+) -> Array[@report.Diagnostic] {
+  if severity_map.is_empty() {
+    return diagnostics
+  }
+  let result = []
+  for d in diagnostics {
+    match severity_map.get(d.code) {
+      Some(new_level) =>
+        result.push(
+          @report.Diagnostic::new(
+            new_level,
+            d.code,
+            d.message,
+            d.path,
+            d.suggestions,
+          ),
+        )
+      None => result.push(d)
+    }
+  }
+  result
+}
+
+///|
+/// 自动保存审计基线到 .depsight-baseline.json
+fn auto_save_baseline(report : @analyze.AnalysisReport, dry_run : Bool) -> Unit {
+  if dry_run {
+    return
+  }
+  let path = ".depsight-baseline.json"
+  let json = @analyze.render_audit_json(report)
+  let fs = @cache.FileSystem::node_js()
+  (fs.write_file)(path, json)
+}
+
+///|
 fn execute_command(opts : CliOptions) -> Int {
   match opts.command {
     "tree" => run_tree(opts)
-    "audit" => if opts.workspace { run_workspace_audit(opts) } else { run_audit(opts) }
-    "report" => if opts.workspace { run_workspace_report(opts) } else { run_report(opts) }
+    "audit" =>
+      if opts.workspace {
+        run_workspace_audit(opts)
+      } else {
+        run_audit(opts)
+      }
+    "report" =>
+      if opts.workspace {
+        run_workspace_report(opts)
+      } else {
+        run_report(opts)
+      }
     _ => {
-      println(@analyze.red("Unknown command: " + opts.command))
+      println(@analyze.red("Error: Unknown command '" + opts.command + "'"))
       println("")
-      print_help()
+      println(@analyze.yellow("Available commands: tree, audit, report"))
+      println("Use 'depsight --help' for more information.")
       1
     }
   }
 }
 
+///|
 fn resolve_cache_manager(opts : CliOptions) -> @cache.CacheManager? {
   if opts.dry_run {
     return None
@@ -294,36 +490,40 @@ fn resolve_cache_manager(opts : CliOptions) -> @cache.CacheManager? {
 
 // ---------- 图构建（本地 + 远程递归） ----------
 
-fn read_local_root_module() -> @parse.Module? {
+///|
+fn read_module_in_directory(dir : String) -> @parse.Module? {
   let fs = @cache.FileSystem::node_js()
-  match (fs.read_file)("./moon.mod") {
-    Some(content) => {
+  let sep = @cache.platform_path_sep()
+  match (fs.read_file)(dir + sep + "moon.mod") {
+    Some(content) =>
       match @parse.parse_mod_toml(content) {
         Ok(m) => return Some(m)
         Err(_) => ()
       }
-    }
     None => ()
   }
-  match (fs.read_file)("./moon.mod.json") {
-    Some(content) => {
+  match (fs.read_file)(dir + sep + "moon.mod.json") {
+    Some(content) =>
       match @parse.parse_mod_json(content) {
         Ok(m) => return Some(m)
         Err(_) => ()
       }
-    }
     None => ()
   }
   None
 }
 
-fn build_full_graph(opts : CliOptions) -> (@graph.DependencyGraph, String) {
-  let root_mod = match read_local_root_module() {
+///|
+fn build_full_graph_for_dir(
+  dir : String,
+  opts : CliOptions,
+) -> (@graph.DependencyGraph, String, Map[String, @analyze.NodeMeta]) {
+  let root_mod = match read_module_in_directory(dir) {
     Some(m) => m
     None => {
       let g = build_mock_graph(opts.target_pkg)
       let rid = opts.target_pkg + "@1.0.0"
-      return (g, rid)
+      return (g, rid, {})
     }
   }
 
@@ -331,29 +531,66 @@ fn build_full_graph(opts : CliOptions) -> (@graph.DependencyGraph, String) {
   let registry = @fetch.Registry::new()
   let _ = registry.with_defaults()
   match cache {
-    Some(cm) => { let _ = registry.with_cache(cm) }
+    Some(cm) => {
+      let _ = registry.with_cache(cm)
+    }
     None => ()
   }
 
   let builder = @graph.GraphBuilder::new_with_max_depth(opts.depth)
+  let modules : Map[String, @parse.Module] = {}
 
-  fn fetch_cb(name : String, version : String) -> Result[@parse.Module, String] {
+  fn fetch_cb(
+    name : String,
+    version : String,
+  ) -> Result[@parse.Module, String] {
     if name == root_mod.name {
+      let id = name + "@" + root_mod.version
+      modules[id] = root_mod
+      if opts.verbose {
+        println(@analyze.dim("[local] " + id))
+      }
       return Ok(root_mod)
+    }
+    if opts.verbose {
+      println("[fetch] " + name + "@" + version + " ...")
     }
     match registry.fetch(@fetch.http_get, name, version, opts.offline) {
       Ok(content) => {
+        if opts.verbose {
+          println(@analyze.green("  -> ok"))
+        }
         match @parse.parse_mod_json(content) {
-          Ok(m) => Ok(m)
-          Err(_) => match @parse.parse_mod_toml(content) {
-            Ok(m) => Ok(m)
-            Err(e) => Err("Failed to parse " + name + "@" + version + ": " + e)
+          Ok(m) => {
+            let id = name + "@" + m.version
+            modules[id] = m
+            Ok(m)
           }
+          Err(_) =>
+            match @parse.parse_mod_toml(content) {
+              Ok(m) => {
+                let id = name + "@" + m.version
+                modules[id] = m
+                Ok(m)
+              }
+              Err(e) => {
+                if opts.verbose {
+                  println(@analyze.red("  -> parse error: " + e))
+                }
+                Err("Failed to parse " + name + "@" + version + ": " + e)
+              }
+            }
         }
       }
       Err(e) => {
+        if opts.verbose {
+          println(@analyze.yellow("  -> " + e))
+        }
         if e.contains("Unknown package") {
-          Ok(@parse.Module::new(name, version, {}))
+          let m = @parse.Module::new(name, version, {})
+          let id = name + "@" + version
+          modules[id] = m
+          Ok(m)
         } else {
           Err(e)
         }
@@ -362,7 +599,34 @@ fn build_full_graph(opts : CliOptions) -> (@graph.DependencyGraph, String) {
   }
 
   match builder.build(root_mod.name, root_mod.version, fetch_cb) {
-    Ok(graph) => (graph, root_mod.name + "@" + root_mod.version)
+    Ok(graph) => {
+      // 获取每个远程 module 的 GitHub 最后提交时间（用于真实活跃度评分）
+      let commit_days : Map[String, Int] = {}
+      for pair in modules {
+        let (id, mod) = pair
+        match mod.repository {
+          Some(repo) => {
+            if opts.verbose {
+              println("[activity] " + id + " ...")
+            }
+            match @fetch.fetch_last_commit_days(@fetch.http_get, repo) {
+              Ok(days) => {
+                if opts.verbose {
+                  println(
+                    @analyze.green("  -> " + days.to_string() + " days ago"),
+                  )
+                }
+                commit_days[id] = days
+              }
+              Err(e) => if opts.verbose { println(@analyze.dim("  -> " + e)) }
+            }
+          }
+          None => ()
+        }
+      }
+      let metas = build_node_metas(modules, commit_days)
+      (graph, root_mod.name + "@" + root_mod.version, metas)
+    }
     Err(e) => {
       println(@analyze.yellow("Warning: full graph build failed: " + e))
       println(@analyze.yellow("Falling back to local-only dependency graph."))
@@ -372,14 +636,61 @@ fn build_full_graph(opts : CliOptions) -> (@graph.DependencyGraph, String) {
         g.add_node(dep_name, dep_constraint, 1)
         g.add_edge(root_mod.name, root_mod.version, dep_name, dep_constraint)
       }
-      (g, root_mod.name + "@" + root_mod.version)
+      let metas = build_node_metas_from_single(root_mod)
+      (g, root_mod.name + "@" + root_mod.version, metas)
     }
   }
 }
 
+///|
+fn build_full_graph(
+  opts : CliOptions,
+) -> (@graph.DependencyGraph, String, Map[String, @analyze.NodeMeta]) {
+  build_full_graph_for_dir(".", opts)
+}
+
+///|
+fn build_node_metas(
+  modules : Map[String, @parse.Module],
+  commit_days : Map[String, Int],
+) -> Map[String, @analyze.NodeMeta] {
+  let metas : Map[String, @analyze.NodeMeta] = {}
+  for pair in modules {
+    let (id, mod) = pair
+    let days = match commit_days.get(id) {
+      Some(d) => Some(d)
+      None => None
+    }
+    metas[id] = @analyze.NodeMeta::new(
+      license=mod.license,
+      deprecated_apis=[],
+      latest_version=None,
+      self_size=0,
+      last_commit_days_ago=days,
+    )
+  }
+  metas
+}
+
+///|
+fn build_node_metas_from_single(
+  root_mod : @parse.Module,
+) -> Map[String, @analyze.NodeMeta] {
+  let metas : Map[String, @analyze.NodeMeta] = {}
+  let root_id = root_mod.name + "@" + root_mod.version
+  metas[root_id] = @analyze.NodeMeta::new(
+    license=root_mod.license,
+    deprecated_apis=[],
+    latest_version=None,
+    self_size=0,
+  )
+  metas
+}
+
+///|
 fn write_output_or_print(opts : CliOptions, text : String) -> Unit {
   match opts.output {
-    Some(path) => {
+    Some(path) =>
       if opts.dry_run {
         println(@analyze.yellow("[dry-run] Would write output to: " + path))
       } else {
@@ -387,31 +698,132 @@ fn write_output_or_print(opts : CliOptions, text : String) -> Unit {
         (fs.write_file)(path, text)
         println(@analyze.green("Output written to: " + path))
       }
-    }
-    None => println(text)
+    None =>
+      // 对于 HTML/SARIF/JSON 格式，提示用户指定 -o 选项
+      if opts.format == "html" {
+        println(text)
+        println("")
+        println(
+          @analyze.yellow(
+            "Tip: Use -o report.html to save the HTML report to a file.",
+          ),
+        )
+      } else if opts.format == "sarif" {
+        println(text)
+        println("")
+        println(
+          @analyze.yellow(
+            "Tip: Use -o results.sarif to save the SARIF report to a file.",
+          ),
+        )
+      } else if opts.format == "json" {
+        println(text)
+        println("")
+        println(
+          @analyze.yellow(
+            "Tip: Use -o report.json to save the JSON report to a file.",
+          ),
+        )
+      } else {
+        println(text)
+      }
   }
 }
 
+///|
 fn run_tree(opts : CliOptions) -> Int {
-  let (graph, root_id) = build_full_graph(opts)
-  let tree = graph.render_tree(root_id, opts.depth)
+  let (graph, root_id, metas) = build_full_graph(opts)
+  let report = @analyze.run_analysis(graph, metas)
+
+  // 为 tree 节点构建诊断标记
+  let markers : Map[String, String] = {}
+  for d in report.get_diagnostics() {
+    if d.path.length() > 0 {
+      let node_id = d.path[0]
+      let tag = if d.is_critical() {
+        "[! " + d.code + "]"
+      } else if d.is_warning() {
+        "[⚠ " + d.code + "]"
+      } else {
+        "[ℹ " + d.code + "]"
+      }
+      markers[node_id] = tag
+    }
+  }
+
+  let tree = graph.render_tree_with_markers(root_id, opts.depth, markers)
   write_output_or_print(opts, tree)
   0
 }
 
+///|
 fn run_audit(opts : CliOptions) -> Int {
-  let (graph, root_id) = build_full_graph(opts)
-  let metas : Map[String, @analyze.NodeMeta] = {}
+  let (graph, root_id, metas) = build_full_graph(opts)
   let report = @analyze.run_analysis(graph, metas)
+
+  // 自动保存基线（完整报告，不受过滤影响）
+  auto_save_baseline(report, opts.dry_run)
 
   // baseline diff 模式
   match opts.baseline {
+    Some("auto") => {
+      let fs = @cache.FileSystem::node_js()
+      let baseline_text = match (fs.read_file)(".depsight-baseline.json") {
+        Some(t) => t
+        None => {
+          println(
+            @analyze.yellow(
+              "No previous baseline found at .depsight-baseline.json. Running full audit.",
+            ),
+          )
+          ""
+        }
+      }
+      match baseline_text {
+        "" => ()
+        _ => {
+          let baseline_report = match @analyze.parse_audit_json(baseline_text) {
+            Ok(r) => r
+            Err(msg) => {
+              println(@analyze.red("Error: invalid baseline JSON: " + msg))
+              return 1
+            }
+          }
+          let diff = @analyze.diff_reports(report, baseline_report)
+          let diff_text = @analyze.render_diff_terminal(diff)
+          write_output_or_print(opts, diff_text)
+          // diff 模式下也支持退出码
+          let mut exit_code = 0
+          if opts.fail_on_critical &&
+            diff.added.iter().any(fn(d) { d.is_critical() }) {
+            println(@analyze.red("New critical issues found since baseline!"))
+            exit_code = 1
+          }
+          if opts.fail_on_score is Some(threshold) {
+            if report.get_overall_score() < threshold {
+              println(
+                @analyze.red(
+                  "Health score " +
+                  report.get_overall_score().to_string() +
+                  " is below threshold " +
+                  threshold.to_string(),
+                ),
+              )
+              exit_code = 1
+            }
+          }
+          return exit_code
+        }
+      }
+    }
     Some(baseline_path) => {
       let fs = @cache.FileSystem::node_js()
       let baseline_text = match (fs.read_file)(baseline_path) {
         Some(t) => t
         None => {
-          println(@analyze.red("Error: cannot read baseline file: " + baseline_path))
+          println(
+            @analyze.red("Error: cannot read baseline file: " + baseline_path),
+          )
           return 1
         }
       }
@@ -425,15 +837,22 @@ fn run_audit(opts : CliOptions) -> Int {
       let diff = @analyze.diff_reports(report, baseline_report)
       let diff_text = @analyze.render_diff_terminal(diff)
       write_output_or_print(opts, diff_text)
-      // diff 模式下也支持退出码
       let mut exit_code = 0
-      if opts.fail_on_critical && diff.added.iter().any(fn(d) { d.is_critical() }) {
+      if opts.fail_on_critical &&
+        diff.added.iter().any(fn(d) { d.is_critical() }) {
         println(@analyze.red("New critical issues found since baseline!"))
         exit_code = 1
       }
       if opts.fail_on_score is Some(threshold) {
         if report.get_overall_score() < threshold {
-          println(@analyze.red("Health score " + report.get_overall_score().to_string() + " is below threshold " + threshold.to_string()))
+          println(
+            @analyze.red(
+              "Health score " +
+              report.get_overall_score().to_string() +
+              " is below threshold " +
+              threshold.to_string(),
+            ),
+          )
           exit_code = 1
         }
       }
@@ -442,8 +861,16 @@ fn run_audit(opts : CliOptions) -> Int {
     None => ()
   }
 
-  // severity 过滤只影响输出，不影响退出码判断
-  let display_diags = filter_by_severity(report.get_diagnostics(), opts.severity)
+  // 先应用用户自定义 severity 映射，再过滤
+  let mapped_diags = apply_severity_map(
+    report.get_diagnostics(),
+    opts.severity_map,
+  )
+  // severity 和 ignore 过滤只影响输出，不影响退出码判断
+  let display_diags = filter_ignored(
+    filter_by_severity(mapped_diags, opts.severity),
+    opts.ignore,
+  )
   let display_report = @analyze.AnalysisReport::new(
     diagnostics=display_diags,
     health_scores=report.get_health_scores(),
@@ -455,40 +882,56 @@ fn run_audit(opts : CliOptions) -> Int {
     @analyze.render_audit_json(display_report)
   } else if opts.format == "html" {
     @analyze.render_html_report(display_report, graph, root_id)
+  } else if opts.format == "sarif" {
+    @analyze.render_sarif_report(display_report, graph, root_id)
   } else {
     @analyze.render_audit_report(display_report)
   }
 
   write_output_or_print(opts, output_text)
 
-  // CI 集成：fail-on-score 和 fail-on-critical（基于原始完整报告）
+  // CI 集成：fail-on-score 和 fail-on-critical（基于原始完整报告，不受 ignore 影响）
   let mut exit_code = 0
   if opts.fail_on_critical {
-    let has_critical = report.get_diagnostics().iter().any(fn(d) { d.is_critical() })
+    let has_critical = mapped_diags.iter().any(fn(d) { d.is_critical() })
     if has_critical {
       println(@analyze.red("Critical issues found!"))
       exit_code = 1
     }
   }
   match opts.fail_on_score {
-    Some(threshold) => {
+    Some(threshold) =>
       if report.get_overall_score() < threshold {
-        println(@analyze.red("Health score " + report.get_overall_score().to_string() + " is below threshold " + threshold.to_string()))
+        println(
+          @analyze.red(
+            "Health score " +
+            report.get_overall_score().to_string() +
+            " is below threshold " +
+            threshold.to_string(),
+          ),
+        )
         exit_code = 1
       }
-    }
     None => ()
   }
   exit_code
 }
 
+///|
 fn run_report(opts : CliOptions) -> Int {
-  let (graph, root_id) = build_full_graph(opts)
-  let metas : Map[String, @analyze.NodeMeta] = {}
+  let (graph, root_id, metas) = build_full_graph(opts)
   let report = @analyze.run_analysis(graph, metas)
 
-  // severity 过滤只影响输出
-  let display_diags = filter_by_severity(report.get_diagnostics(), opts.severity)
+  // 先应用用户自定义 severity 映射，再过滤
+  let mapped_diags = apply_severity_map(
+    report.get_diagnostics(),
+    opts.severity_map,
+  )
+  // severity 和 ignore 过滤只影响输出
+  let display_diags = filter_ignored(
+    filter_by_severity(mapped_diags, opts.severity),
+    opts.ignore,
+  )
   let display_report = @analyze.AnalysisReport::new(
     diagnostics=display_diags,
     health_scores=report.get_health_scores(),
@@ -500,28 +943,36 @@ fn run_report(opts : CliOptions) -> Int {
     @analyze.render_html_report(display_report, graph, root_id)
   } else if opts.format == "json" {
     @analyze.render_audit_json(display_report)
+  } else if opts.format == "sarif" {
+    @analyze.render_sarif_report(display_report, graph, root_id)
   } else {
     @analyze.render_terminal_report(display_report, graph, root_id)
   }
 
   write_output_or_print(opts, output_text)
 
-  // CI 集成：fail-on-score 和 fail-on-critical（基于原始完整报告）
+  // CI 集成：fail-on-score 和 fail-on-critical（基于原始完整报告，不受 ignore 影响）
   let mut exit_code = 0
   if opts.fail_on_critical {
-    let has_critical = report.get_diagnostics().iter().any(fn(d) { d.is_critical() })
+    let has_critical = mapped_diags.iter().any(fn(d) { d.is_critical() })
     if has_critical {
       println(@analyze.red("Critical issues found!"))
       exit_code = 1
     }
   }
   match opts.fail_on_score {
-    Some(threshold) => {
+    Some(threshold) =>
       if report.get_overall_score() < threshold {
-        println(@analyze.red("Health score " + report.get_overall_score().to_string() + " is below threshold " + threshold.to_string()))
+        println(
+          @analyze.red(
+            "Health score " +
+            report.get_overall_score().to_string() +
+            " is below threshold " +
+            threshold.to_string(),
+          ),
+        )
         exit_code = 1
       }
-    }
     None => ()
   }
   exit_code
@@ -529,20 +980,23 @@ fn run_report(opts : CliOptions) -> Int {
 
 // ========== Workspace 扫描 ==========
 
+///|
 fn str_array_contains(arr : Array[String], s : String) -> Bool {
   for item in arr {
-    if item == s { return true }
+    if item == s {
+      return true
+    }
   }
   false
 }
 
-fn scan_workspace(
-  fs : @cache.FileSystem,
-  root_dir : String
-) -> Array[String] {
+///|
+fn scan_workspace(fs : @cache.FileSystem, root_dir : String) -> Array[String] {
   let results = []
   let dirs_to_visit = [root_dir]
-  let skip_dirs = [".git", ".github", "node_modules", "_build", "target", ".codebuddy"]
+  let skip_dirs = [
+    ".git", ".github", "node_modules", "_build", "target", ".codebuddy",
+  ]
   while dirs_to_visit.length() > 0 {
     let dir = dirs_to_visit.remove(dirs_to_visit.length() - 1)
     // 检查当前目录是否有 moon.mod
@@ -552,74 +1006,28 @@ fn scan_workspace(
     }
     // 递归子目录
     match (fs.readdir)(dir) {
-      Some(entries) => {
+      Some(entries) =>
         for entry in entries {
           let full = dir + @cache.platform_path_sep() + entry
           // 简单判断：跳过已知目录名和点文件
-          let should_skip = entry.has_prefix(".") || str_array_contains(skip_dirs, entry)
-          if should_skip { continue }
+          let should_skip = entry.has_prefix(".") ||
+            str_array_contains(skip_dirs, entry)
+          if should_skip {
+            continue
+          }
           // 尝试读子目录的 readdir，成功就是目录
           match (fs.readdir)(full) {
             Some(_) => dirs_to_visit.push(full)
             None => ()
           }
         }
-      }
       None => ()
     }
   }
   results
 }
 
-fn build_graph_from_directory(
-  fs : @cache.FileSystem,
-  dir : String
-) -> (@graph.DependencyGraph, String)? {
-  let moon_mod_path = dir + @cache.platform_path_sep() + "moon.mod"
-  // 1. 尝试 moon.mod (TOML)
-  match (fs.read_file)(moon_mod_path) {
-    Some(content) => {
-      match @parse.parse_mod_toml(content) {
-        Ok(mod_) => {
-          let graph = @graph.DependencyGraph::new()
-          graph.add_node(mod_.name, mod_.version, 0)
-          for dep_name, dep_constraint in mod_.deps {
-            graph.add_node(dep_name, dep_constraint, 1)
-            graph.add_edge(mod_.name, mod_.version, dep_name, dep_constraint)
-          }
-          let root_id = mod_.name + "@" + mod_.version
-          return Some((graph, root_id))
-        }
-        Err(_) => ()
-      }
-    }
-    None => ()
-  }
-
-  // 2. 回退 moon.mod.json (JSON)
-  let moon_mod_json_path = dir + @cache.platform_path_sep() + "moon.mod.json"
-  match (fs.read_file)(moon_mod_json_path) {
-    Some(content) => {
-      match @parse.parse_mod_json(content) {
-        Ok(mod_) => {
-          let graph = @graph.DependencyGraph::new()
-          graph.add_node(mod_.name, mod_.version, 0)
-          for dep_name, dep_constraint in mod_.deps {
-            graph.add_node(dep_name, dep_constraint, 1)
-            graph.add_edge(mod_.name, mod_.version, dep_name, dep_constraint)
-          }
-          let root_id = mod_.name + "@" + mod_.version
-          return Some((graph, root_id))
-        }
-        Err(_) => ()
-      }
-    }
-    None => ()
-  }
-
-  None
-}
-
+///|
 fn run_workspace_audit(opts : CliOptions) -> Int {
   let fs = @cache.FileSystem::node_js()
   let dirs = scan_workspace(fs, ".")
@@ -633,9 +1041,9 @@ fn run_workspace_audit(opts : CliOptions) -> Int {
   let all_graphs : Array[(@graph.DependencyGraph, String)] = []
 
   for dir in dirs {
-    match build_graph_from_directory(fs, dir) {
-      Some((graph, root_id)) => {
-        let metas : Map[String, @analyze.NodeMeta] = {}
+    match read_module_in_directory(dir) {
+      Some(_) => {
+        let (graph, root_id, metas) = build_full_graph_for_dir(dir, opts)
         let report = @analyze.run_analysis(graph, metas)
         all_reports.push(report)
         all_graphs.push((graph, root_id))
@@ -651,8 +1059,16 @@ fn run_workspace_audit(opts : CliOptions) -> Int {
 
   let aggregated = aggregate_reports(all_reports)
 
-  // severity 过滤只影响输出
-  let display_diags = filter_by_severity(aggregated.get_diagnostics(), opts.severity)
+  // 先应用用户自定义 severity 映射，再过滤
+  let mapped_diags = apply_severity_map(
+    aggregated.get_diagnostics(),
+    opts.severity_map,
+  )
+  // severity 和 ignore 过滤只影响输出
+  let display_diags = filter_ignored(
+    filter_by_severity(mapped_diags, opts.severity),
+    opts.ignore,
+  )
   let display_report = @analyze.AnalysisReport::new(
     diagnostics=display_diags,
     health_scores=aggregated.get_health_scores(),
@@ -666,33 +1082,43 @@ fn run_workspace_audit(opts : CliOptions) -> Int {
     // workspace HTML 只渲染第一个图作为代表
     let (g, rid) = all_graphs[0]
     @analyze.render_html_report(display_report, g, rid)
+  } else if opts.format == "sarif" {
+    let (g, rid) = all_graphs[0]
+    @analyze.render_sarif_report(display_report, g, rid)
   } else {
     render_workspace_terminal(display_report, dirs.length())
   }
 
   write_output_or_print(opts, output_text)
 
-  // CI 退出码
+  // CI 退出码（基于原始完整报告，不受 ignore 影响）
   let mut exit_code = 0
   if opts.fail_on_critical {
-    let has_critical = aggregated.get_diagnostics().iter().any(fn(d) { d.is_critical() })
+    let has_critical = mapped_diags.iter().any(fn(d) { d.is_critical() })
     if has_critical {
       println(@analyze.red("Critical issues found!"))
       exit_code = 1
     }
   }
   match opts.fail_on_score {
-    Some(threshold) => {
+    Some(threshold) =>
       if aggregated.get_overall_score() < threshold {
-        println(@analyze.red("Health score " + aggregated.get_overall_score().to_string() + " is below threshold " + threshold.to_string()))
+        println(
+          @analyze.red(
+            "Health score " +
+            aggregated.get_overall_score().to_string() +
+            " is below threshold " +
+            threshold.to_string(),
+          ),
+        )
         exit_code = 1
       }
-    }
     None => ()
   }
   exit_code
 }
 
+///|
 fn run_workspace_report(opts : CliOptions) -> Int {
   let fs = @cache.FileSystem::node_js()
   let dirs = scan_workspace(fs, ".")
@@ -706,9 +1132,9 @@ fn run_workspace_report(opts : CliOptions) -> Int {
   let all_graphs : Array[(@graph.DependencyGraph, String)] = []
 
   for dir in dirs {
-    match build_graph_from_directory(fs, dir) {
-      Some((graph, root_id)) => {
-        let metas : Map[String, @analyze.NodeMeta] = {}
+    match read_module_in_directory(dir) {
+      Some(_) => {
+        let (graph, root_id, metas) = build_full_graph_for_dir(dir, opts)
         let report = @analyze.run_analysis(graph, metas)
         all_reports.push(report)
         all_graphs.push((graph, root_id))
@@ -724,8 +1150,16 @@ fn run_workspace_report(opts : CliOptions) -> Int {
 
   let aggregated = aggregate_reports(all_reports)
 
-  // severity 过滤只影响输出
-  let display_diags = filter_by_severity(aggregated.get_diagnostics(), opts.severity)
+  // 先应用用户自定义 severity 映射，再过滤
+  let mapped_diags = apply_severity_map(
+    aggregated.get_diagnostics(),
+    opts.severity_map,
+  )
+  // severity 和 ignore 过滤只影响输出
+  let display_diags = filter_ignored(
+    filter_by_severity(mapped_diags, opts.severity),
+    opts.ignore,
+  )
   let display_report = @analyze.AnalysisReport::new(
     diagnostics=display_diags,
     health_scores=aggregated.get_health_scores(),
@@ -738,6 +1172,9 @@ fn run_workspace_report(opts : CliOptions) -> Int {
     @analyze.render_html_report(display_report, g, rid)
   } else if opts.format == "json" {
     @analyze.render_audit_json(display_report)
+  } else if opts.format == "sarif" {
+    let (g, rid) = all_graphs[0]
+    @analyze.render_sarif_report(display_report, g, rid)
   } else {
     // workspace report 用 terminal report 渲染（含 health score 表格）
     let (g, rid) = all_graphs[0]
@@ -746,39 +1183,56 @@ fn run_workspace_report(opts : CliOptions) -> Int {
 
   write_output_or_print(opts, output_text)
 
-  // CI 退出码
+  // CI 退出码（基于原始完整报告，不受 ignore 影响）
   let mut exit_code = 0
   if opts.fail_on_critical {
-    let has_critical = aggregated.get_diagnostics().iter().any(fn(d) { d.is_critical() })
+    let has_critical = mapped_diags.iter().any(fn(d) { d.is_critical() })
     if has_critical {
       println(@analyze.red("Critical issues found!"))
       exit_code = 1
     }
   }
   match opts.fail_on_score {
-    Some(threshold) => {
+    Some(threshold) =>
       if aggregated.get_overall_score() < threshold {
-        println(@analyze.red("Health score " + aggregated.get_overall_score().to_string() + " is below threshold " + threshold.to_string()))
+        println(
+          @analyze.red(
+            "Health score " +
+            aggregated.get_overall_score().to_string() +
+            " is below threshold " +
+            threshold.to_string(),
+          ),
+        )
         exit_code = 1
       }
-    }
     None => ()
   }
   exit_code
 }
 
-fn aggregate_reports(reports : Array[@analyze.AnalysisReport]) -> @analyze.AnalysisReport {
+///|
+fn aggregate_reports(
+  reports : Array[@analyze.AnalysisReport],
+) -> @analyze.AnalysisReport {
   let all_diags : Array[@report.Diagnostic] = []
   let all_scores : Array[@analyze.HealthScore] = []
   let mut total_score = 0
   let mut total_nodes = 0
   for r in reports {
-    for d in r.get_diagnostics() { all_diags.push(d) }
-    for s in r.get_health_scores() { all_scores.push(s) }
+    for d in r.get_diagnostics() {
+      all_diags.push(d)
+    }
+    for s in r.get_health_scores() {
+      all_scores.push(s)
+    }
     total_score = total_score + r.get_overall_score()
     total_nodes = total_nodes + r.get_node_count()
   }
-  let avg_score = if reports.length() > 0 { total_score / reports.length() } else { 100 }
+  let avg_score = if reports.length() > 0 {
+    total_score / reports.length()
+  } else {
+    100
+  }
   @analyze.AnalysisReport::new(
     diagnostics=all_diags,
     health_scores=all_scores,
@@ -787,41 +1241,95 @@ fn aggregate_reports(reports : Array[@analyze.AnalysisReport]) -> @analyze.Analy
   )
 }
 
-fn render_workspace_terminal(report : @analyze.AnalysisReport, workspace_count : Int) -> String {
+///|
+fn render_workspace_terminal(
+  report : @analyze.AnalysisReport,
+  workspace_count : Int,
+) -> String {
   let lines : Array[String] = []
-  lines.push(@analyze.bold("╔══ MoonBit Depsight Workspace Audit ══╗"))
+  lines.push(
+    @analyze.bold("╔══ MoonBit Depsight Workspace Audit ══╗"),
+  )
   lines.push("")
   lines.push("  Scanned " + workspace_count.to_string() + " package(s)")
-  lines.push("  Nodes: " + report.get_node_count().to_string() + "   |   Overall: " + @analyze.color_score(report.get_overall_score()))
+  lines.push(
+    "  Nodes: " +
+    report.get_node_count().to_string() +
+    "   |   Overall: " +
+    @analyze.color_score(report.get_overall_score()),
+  )
   lines.push("")
 
   let criticals = []
   let warnings = []
   let infos = []
   for d in report.get_diagnostics() {
-    if d.is_critical() { criticals.push(d) }
-    else if d.is_warning() { warnings.push(d) }
-    else { infos.push(d) }
+    if d.is_critical() {
+      criticals.push(d)
+    } else if d.is_warning() {
+      warnings.push(d)
+    } else {
+      infos.push(d)
+    }
   }
 
   if criticals.length() > 0 {
-    lines.push(@analyze.red(@analyze.bold("  ── Critical (" + criticals.length().to_string() + ") ──")))
+    lines.push(
+      @analyze.red(
+        @analyze.bold(
+          "  ── Critical (" + criticals.length().to_string() + ") ──",
+        ),
+      ),
+    )
     for d in criticals {
-      lines.push("  " + @analyze.color_level(d.level) + " " + @analyze.bold(d.code) + " — " + d.message)
+      lines.push(
+        "  " +
+        @analyze.color_level(d.level) +
+        " " +
+        @analyze.bold(d.code) +
+        " — " +
+        d.message,
+      )
     }
     lines.push("")
   }
   if warnings.length() > 0 {
-    lines.push(@analyze.yellow(@analyze.bold("  ── Warning (" + warnings.length().to_string() + ") ──")))
+    lines.push(
+      @analyze.yellow(
+        @analyze.bold(
+          "  ── Warning (" + warnings.length().to_string() + ") ──",
+        ),
+      ),
+    )
     for d in warnings {
-      lines.push("  " + @analyze.color_level(d.level) + " " + @analyze.bold(d.code) + " — " + d.message)
+      lines.push(
+        "  " +
+        @analyze.color_level(d.level) +
+        " " +
+        @analyze.bold(d.code) +
+        " — " +
+        d.message,
+      )
     }
     lines.push("")
   }
   if infos.length() > 0 {
-    lines.push(@analyze.green(@analyze.bold("  ── Info (" + infos.length().to_string() + ") ──")))
+    lines.push(
+      @analyze.green(
+        @analyze.bold(
+          "  ── Info (" + infos.length().to_string() + ") ──",
+        ),
+      ),
+    )
     for d in infos {
-      lines.push("  " + @analyze.color_level(d.level) + " " + @analyze.bold(d.code) + " — " + d.message)
+      lines.push(
+        "  " +
+        @analyze.color_level(d.level) +
+        " " +
+        @analyze.bold(d.code) +
+        " — " +
+        d.message,
+      )
     }
     lines.push("")
   }
@@ -834,7 +1342,9 @@ fn render_workspace_terminal(report : @analyze.AnalysisReport, workspace_count :
   let mut result = ""
   let mut i = 0
   while i < lines.length() {
-    if i > 0 { result = result + "\n" }
+    if i > 0 {
+      result = result + "\n"
+    }
     result = result + lines[i]
     i = i + 1
   }
@@ -843,6 +1353,7 @@ fn render_workspace_terminal(report : @analyze.AnalysisReport, workspace_count :
 
 // ========== Mock 数据构建器 ==========
 
+///|
 fn build_mock_graph(pkg : String) -> @graph.DependencyGraph {
   let graph = @graph.DependencyGraph::new()
   graph.add_node(pkg, "1.0.0", 0)
@@ -859,13 +1370,15 @@ fn build_mock_graph(pkg : String) -> @graph.DependencyGraph {
 
 // ========== Help 文案 ==========
 
+///|
 fn print_help() -> Unit {
   println(help_text())
 }
 
+///|
 pub fn help_text() -> String {
   let lines : Array[String] = []
-  lines.push(@analyze.bold("MoonBit Depsight v0.3.0"))
+  lines.push(@analyze.bold("MoonBit Depsight v0.4.0"))
   lines.push("Dependency health diagnostic tool for MoonBit ecosystem")
   lines.push("")
   lines.push(@analyze.bold("Usage:"))
@@ -882,15 +1395,29 @@ pub fn help_text() -> String {
   lines.push("  --offline         Use local cache only")
   lines.push("  --cache-dir <dir> Set cache directory")
   lines.push("  --dry-run         Simulate without writing files or cache")
+  lines.push("  --verbose         Show detailed fetch progress")
+  lines.push("")
+  lines.push(@analyze.bold("Examples:"))
+  lines.push(
+    "  depsight tree              # Show dependency tree for root package",
+  )
+  lines.push("  depsight audit             # Run full dependency audit")
+  lines.push("  depsight audit --json      # Output audit results as JSON")
+  lines.push("  depsight report --html     # Generate HTML report")
+  lines.push(
+    "  depsight audit --sarif     # Output SARIF for GitHub Code Scanning",
+  )
   lines.push("")
   lines.push("Use 'depsight <command> --help' for command-specific options.")
   join_cli_lines(lines)
 }
 
+///|
 fn print_tree_help() -> Unit {
   println(tree_help_text())
 }
 
+///|
 pub fn tree_help_text() -> String {
   let lines : Array[String] = []
   lines.push(@analyze.bold("depsight tree — Show dependency tree"))
@@ -901,13 +1428,16 @@ pub fn tree_help_text() -> String {
   lines.push(@analyze.bold("Options:"))
   lines.push("  --depth <n>       Max tree depth (default: 10)")
   lines.push("  --dry-run         Simulate without writing files or cache")
+  lines.push("  --verbose         Show detailed fetch progress")
   join_cli_lines(lines)
 }
 
+///|
 fn print_audit_help() -> Unit {
   println(audit_help_text())
 }
 
+///|
 pub fn audit_help_text() -> String {
   let lines : Array[String] = []
   lines.push(@analyze.bold("depsight audit — Run dependency audit"))
@@ -917,20 +1447,29 @@ pub fn audit_help_text() -> String {
   lines.push("")
   lines.push(@analyze.bold("Options:"))
   lines.push("  --json            Output JSON format")
-  lines.push("  --severity <level>   Filter diagnostics: critical, warning, info")
+  lines.push(
+    "  --sarif           Output SARIF v2.1.0 format (GitHub Code Scanning)",
+  )
+  lines.push(
+    "  --severity <level>   Filter diagnostics: critical, warning, info",
+  )
   lines.push("  --baseline <file>    Compare against a previous JSON report")
+  lines.push("  --baseline auto      Compare against .depsight-baseline.json")
   lines.push("  --workspace          Scan all packages in workspace")
   lines.push("  --fail-on-score <n>  Exit with error if overall score < n")
   lines.push("  --fail-on-critical   Exit with error if critical issues found")
   lines.push("  --dry-run            Simulate without writing files or cache")
+  lines.push("  --verbose            Show detailed fetch progress")
   lines.push("  -o, --output <file>  Write output to file")
   join_cli_lines(lines)
 }
 
+///|
 fn print_report_help() -> Unit {
   println(report_help_text())
 }
 
+///|
 pub fn report_help_text() -> String {
   let lines : Array[String] = []
   lines.push(@analyze.bold("depsight report — Generate full report"))
@@ -941,20 +1480,29 @@ pub fn report_help_text() -> String {
   lines.push(@analyze.bold("Options:"))
   lines.push("  --html            Output HTML format")
   lines.push("  --json            Output JSON format")
-  lines.push("  --severity <level>   Filter diagnostics: critical, warning, info")
+  lines.push(
+    "  --sarif           Output SARIF v2.1.0 format (GitHub Code Scanning)",
+  )
+  lines.push(
+    "  --severity <level>   Filter diagnostics: critical, warning, info",
+  )
   lines.push("  --workspace          Scan all packages in workspace")
   lines.push("  --fail-on-score <n>  Exit with error if overall score < n")
   lines.push("  --fail-on-critical   Exit with error if critical issues found")
   lines.push("  --dry-run            Simulate without writing files or cache")
+  lines.push("  --verbose            Show detailed fetch progress")
   lines.push("  -o, --output <file>  Write output to file")
   join_cli_lines(lines)
 }
 
+///|
 fn join_cli_lines(lines : Array[String]) -> String {
   let mut result = ""
   let mut i = 0
   while i < lines.length() {
-    if i > 0 { result = result + "\n" }
+    if i > 0 {
+      result = result + "\n"
+    }
     result = result + lines[i]
     i = i + 1
   }

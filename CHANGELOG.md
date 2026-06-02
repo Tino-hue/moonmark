@@ -2,11 +2,31 @@
 
 All notable changes to this project will be documented in this file.
 
-## [0.3.0] - 2026-06-04
+## [0.4.0] - 2026-06-05
+
+### Added (P2: Professional Features)
+- **SARIF v2.1.0 Output** (`analyze/sarif_reporter.mbt`): `--sarif` flag generates standard Static Analysis Results Interchange Format JSON, compatible with GitHub Code Scanning upload. Supports rules, results, locations, and fix suggestions.
+- **Real Maintenance Activity Scoring** (`fetch/fetch.mbt` + `analyze/health_score.mbt`): Queries GitHub API for each package's last commit date, replacing the hard-coded activity score of 100. Scoring: ≤30 days=100, ≤90 days=80, ≤180 days=60, ≤365 days=40, >365 days=20.
+- **Auto Baseline Save & Diff** (`cli/cli.mbt`): Every `audit` run auto-saves the full report to `.depsight-baseline.json`. `--baseline auto` diffs against this file, showing Added/Fixed/Unchanged diagnostics and score delta. `--baseline <file>` still supports manual comparison.
+- **Custom Severity Mapping** (`cli/cli.mbt` + `parse/module.mbt`): `.depsight.toml` supports `[severity]` section (e.g. `LICENSE-001 = "warning"`, `DEPRECATED-001 = "info"`) to override default diagnostic levels. Applied before `--severity` filtering and CI exit-code checks.
+- **Smart Package Inference** (`fetch/fetch.mbt`): Multi-source fallback strategy for unknown packages:
+  1. Predefined registry mapping (7 official packages)
+  2. GitHub `owner/repo` format inference
+  3. `moonbitlang/` namespace fallback
+  4. `moonbit-community/` namespace fallback
+  Unknown packages now gracefully fall back to local-only graph instead of failing.
+
+### Changed
+- `.depsight.toml` parser (`parse/module.mbt`) now supports TOML section headers (`[section]`), encoding inner keys as `"section.key"`.
+
+## [0.3.0] - 2026-06-02
 
 ### Added (Week 5: Real-World Integration)
 - **Remote Dependency Resolution** (`fetch/fetch.mbt`): Node.js `https` sync FFI via `child_process.execSync` for cross-platform HTTP GET. Predefined package registry mapping for common mooncakes packages (`moonbitlang/core`, `x`, `json5`, `websocket`, `parser-combinator`, `regexp`, `json`). CLI `build_full_graph()` now recursively fetches transitive dependencies from GitHub raw URLs, with graceful fallback to local-only graph on network or unknown-package failures.
 - **`--dry-run` Flag** (`cli/cli.mbt`): Simulates full analysis without writing any output files or cache entries. Prints `[dry-run] Would write output to: <path>` when `-o` is used. Supported in `tree`, `audit`, `report`, and `--workspace` modes.
+- **`--verbose` Flag** (`cli/cli.mbt`): Prints per-package fetch progress (`[fetch] name@version ... -> ok / fallback / error`) so users know whether the tool is stuck or making progress.
+- **`.depsight.toml` `ignore` Support** (`cli/cli.mbt`): Comma-separated list of diagnostic suppressions. Supports `CODE` (global ignore) and `CODE@node-id` (per-node ignore). Display-only filtering; CI exit codes (`--fail-on-score`, `--fail-on-critical`) remain unaffected.
+- **Annotated Dependency Tree** (`graph/graph.mbt` + `cli/cli.mbt`): `depsight tree` now runs analysis inline and renders diagnostic badges next to affected nodes (`[! CYCLE-001]`, `[⚠ LICENSE-001]`, `[ℹ DEPRECATED-001]`).
 - **Ecosystem Sampling** (`test/ecosystem_test.mbt`): 10-package fixture simulating real MoonBit ecosystem (`moonbitlang/core`, `x`, `xlsx`, etc.) with `RegistryFetcher` mock.
 - **Performance Benchmarks** (`test/benchmark_test.mbt`): 8 benchmark tests (3 scales × 4 stages), default `#skip`, measuring Graph Build / Analysis / Report Render / End-to-End in microseconds.
 - **Edge Case Coverage** (`test/edge_case_test.mbt`): 17 tests for empty deps, self-dependency, invalid versions (empty/non-numeric/single/double/quadruple/negative/leading-zero/overflow).
@@ -18,6 +38,10 @@ All notable changes to this project will be documented in this file.
 - **Documentation**: `docs/week4.md` (acceptance report), `docs/USAGE.md` (user guide), `docs/CI_INTEGRATION.md` (CI examples), updated `README.md`.
 
 ### Fixed
+- **Analysis Engine No Longer "Idle"** (`cli/cli.mbt` + `graph/builder.mbt` + `analyze/analyzer.mbt`):
+  - `node_metas` is now populated from fetched remote modules, so **license compliance** scores and `LICENSE-001` / `LICENSE-002` diagnostics are real instead of always-default.
+  - `GraphBuilder` uses `pkg.version` (actual version) instead of the constraint string (e.g. `^1.0.0`) for graph nodes, fixing SemVer parse failures that previously forced a flat 50 freshness score.
+  - `--workspace` now runs full recursive remote resolution per sub-package instead of local-only single-layer graphs.
 - Batch fix `deprecated_syntax` across 11 test files (`inspect!` → `inspect`, `fail!` → `fail`, ~181 changes).
 - Fix `semver.mbt` negative version validation (major/minor/patch).
 - Fix `ecosystem_test.mbt` unused_field warnings.

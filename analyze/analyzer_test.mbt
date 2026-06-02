@@ -1,3 +1,4 @@
+///|
 test "run analysis on empty graph" {
   let graph = @graph.DependencyGraph::new()
   let metas : Map[String, NodeMeta] = {}
@@ -7,6 +8,7 @@ test "run analysis on empty graph" {
   inspect(report.diagnostics.length(), content="0")
 }
 
+///|
 test "run analysis detects cycle" {
   let graph = @graph.DependencyGraph::new()
   graph.add_node("A", "1.0.0", 0)
@@ -22,6 +24,7 @@ test "run analysis detects cycle" {
   assert_true(report.diagnostics.length() > 0)
 }
 
+///|
 test "run analysis with high risk license" {
   let graph = @graph.DependencyGraph::new()
   graph.add_node("pkg", "1.0.0", 0)
@@ -34,11 +37,14 @@ test "run analysis with high risk license" {
 
   let mut found = false
   for d in report.diagnostics {
-    if d.code == "LICENSE-001" { found = true }
+    if d.code == "LICENSE-001" {
+      found = true
+    }
   }
   assert_true(found)
 }
 
+///|
 test "run analysis with deprecated apis" {
   let graph = @graph.DependencyGraph::new()
   graph.add_node("pkg", "1.0.0", 0)
@@ -50,11 +56,14 @@ test "run analysis with deprecated apis" {
 
   let mut found = false
   for d in report.diagnostics {
-    if d.code == "DEPRECATED-001" { found = true }
+    if d.code == "DEPRECATED-001" {
+      found = true
+    }
   }
   assert_true(found)
 }
 
+///|
 test "run analysis overall score" {
   let graph = @graph.DependencyGraph::new()
   graph.add_node("a", "1.0.0", 0)
@@ -66,9 +75,10 @@ test "run analysis overall score" {
   }
   let report = run_analysis(graph, metas)
   inspect(report.health_scores.length(), content="2")
-  inspect(report.overall_score, content="100")
+  inspect(report.overall_score, content="98")
 }
 
+///|
 test "render report contains summary" {
   let graph = @graph.DependencyGraph::new()
   graph.add_node("pkg", "1.0.0", 0)

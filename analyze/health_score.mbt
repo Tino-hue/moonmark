@@ -7,6 +7,7 @@ pub struct NodeScoreInput {
   deprecated_count : Int
   total_api_count : Int
   transitive_size : Int?
+  last_commit_days_ago : Int?
 }
 
 /// 构造 NodeScoreInput
@@ -17,9 +18,10 @@ pub fn NodeScoreInput::new(
   license_spdx~ : String? = None,
   deprecated_count~ : Int = 0,
   total_api_count~ : Int = 0,
-  transitive_size~ : Int? = None
+  transitive_size~ : Int? = None,
+  last_commit_days_ago~ : Int? = None
 ) -> NodeScoreInput {
-  { node_id, current_version, latest_version, license_spdx, deprecated_count, total_api_count, transitive_size }
+  { node_id, current_version, latest_version, license_spdx, deprecated_count, total_api_count, transitive_size, last_commit_days_ago }
 }
 
 /// 健康评分结果
@@ -53,7 +55,7 @@ pub fn calculate_health_score(input : NodeScoreInput) -> HealthScore {
   let compliance = score_compliance(input.license_spdx)
   let deprecated_density = score_deprecated_density(input.deprecated_count, input.total_api_count)
   let size_reasonableness = score_size_reasonableness(input.transitive_size)
-  let activity = score_activity()
+  let activity = score_activity(input.last_commit_days_ago)
 
   let total = freshness * 25 / 100 +
     compliance * 20 / 100 +
@@ -138,7 +140,15 @@ fn score_size_reasonableness(size : Int?) -> Int {
   }
 }
 
-fn score_activity() -> Int {
-  // 维护活跃度占位符，待接入 GitHub API
-  100
+fn score_activity(days_ago : Int?) -> Int {
+  match days_ago {
+    None => 80 // 未知仓库，给中等分数
+    Some(d) => {
+      if d <= 30 { 100 }
+      else if d <= 90 { 80 }
+      else if d <= 180 { 60 }
+      else if d <= 365 { 40 }
+      else { 20 }
+    }
+  }
 }

@@ -188,3 +188,31 @@ test "parse no optional fields" {
     Err(msg) => fail("Should parse minimal mod: " + msg)
   }
 }
+
+// ---------- parse_config_toml with sections (P2) ----------
+
+test "parse_config_toml simple keys" {
+  let content =
+    #|fail_on_score = 80
+    #|format = "json"
+  let map = @parse.parse_config_toml(content)
+  assert_true(map.get("fail_on_score") == Some("80"))
+  assert_true(map.get("format") == Some("json"))
+}
+
+test "parse_config_toml with section" {
+  let content =
+    #|format = "terminal"
+    #|[severity]
+    #|LICENSE-001 = "warning"
+    #|DEPRECATED-001 = "info"
+  let map = @parse.parse_config_toml(content)
+  assert_true(map.get("format") == Some("terminal"))
+  assert_true(map.get("severity.LICENSE-001") == Some("warning"))
+  assert_true(map.get("severity.DEPRECATED-001") == Some("info"))
+}
+
+test "parse_config_toml empty" {
+  let map = @parse.parse_config_toml("")
+  assert_true(map.is_empty())
+}

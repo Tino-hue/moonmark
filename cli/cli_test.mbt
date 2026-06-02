@@ -3,8 +3,8 @@ test "audit without flags returns 0" {
   assert_true(code == 0)
 }
 
-test "audit fail-on-score 100 returns 1" {
-  let code = @cli.run_cli_with_args(["audit", "--fail-on-score", "100"])
+test "audit fail-on-score 101 returns 1" {
+  let code = @cli.run_cli_with_args(["audit", "--fail-on-score", "101"])
   assert_true(code == 1)
 }
 
@@ -188,4 +188,45 @@ test "dry-run audit returns 0" {
 test "dry-run tree returns 0" {
   let code = @cli.run_cli_with_args(["tree", "--dry-run"])
   assert_true(code == 0)
+}
+
+test "parse_args verbose flag" {
+  let args = ["audit", "--verbose"]
+  match @cli.parse_args(args) {
+    Ok(opts) => assert_true(opts.verbose == true)
+    Err(msg) => fail("Should parse verbose: " + msg)
+  }
+}
+
+test "verbose audit returns 0" {
+  let code = @cli.run_cli_with_args(["audit", "--verbose"])
+  assert_true(code == 0)
+}
+
+// ---------- P2: SARIF, baseline, severity_map ----------
+
+test "parse_args sarif flag" {
+  let args = ["audit", "--sarif"]
+  match @cli.parse_args(args) {
+    Ok(opts) => assert_true(opts.format == "sarif")
+    Err(msg) => fail("Should parse sarif: " + msg)
+  }
+}
+
+test "audit sarif format returns 0" {
+  let code = @cli.run_cli_with_args(["audit", "--sarif"])
+  assert_true(code == 0)
+}
+
+test "report sarif format returns 0" {
+  let code = @cli.run_cli_with_args(["report", "--sarif"])
+  assert_true(code == 0)
+}
+
+test "parse_args baseline auto" {
+  let args = ["audit", "--baseline", "auto"]
+  match @cli.parse_args(args) {
+    Ok(opts) => assert_true(opts.baseline == Some("auto"))
+    Err(msg) => fail("Should parse baseline auto: " + msg)
+  }
 }
