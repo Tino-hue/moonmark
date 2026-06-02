@@ -68,6 +68,7 @@ pub struct CliOptions {
   dry_run : Bool
   verbose : Bool
   quiet : Bool
+  scoring_weights : @analyze.ScoreWeights
   ignore : Array[String]
   severity_map : Map[String, String]
   help : Bool
@@ -91,6 +92,7 @@ pub fn CliOptions::new(
   dry_run? : Bool = false,
   verbose? : Bool = false,
   quiet? : Bool = false,
+  scoring_weights? : @analyze.ScoreWeights = @analyze.default_weights(),
   ignore? : Array[String] = [],
   severity_map? : Map[String, String] = {},
   help? : Bool = false,
@@ -112,6 +114,7 @@ pub fn CliOptions::new(
     dry_run,
     verbose,
     quiet,
+    scoring_weights,
     ignore,
     severity_map,
     help,
@@ -131,6 +134,7 @@ priv struct CliConfig {
   ignore : Array[String]
   severity_map : Map[String, String]
   baseline : String?
+  scoring_weights : @analyze.ScoreWeights
 }
 
 ///|
@@ -145,6 +149,7 @@ fn load_config() -> CliConfig {
     ignore: [],
     severity_map: {},
     baseline: None,
+    scoring_weights: @analyze.default_weights(),
   }
   match (fs.read_file)(".depsight.toml") {
     Some(content) => {
@@ -168,6 +173,19 @@ fn load_config() -> CliConfig {
         None => []
       }
       let baseline = map.get("baseline")
+      // 解析评分权重
+      let sw_freshness = parse_int_with_default(map.get("scoring.freshness"), 25)
+      let sw_compliance = parse_int_with_default(map.get("scoring.compliance"), 20)
+      let sw_deprecated = parse_int_with_default(map.get("scoring.deprecated_density"), 25)
+      let sw_size = parse_int_with_default(map.get("scoring.size"), 20)
+      let sw_activity = parse_int_with_default(map.get("scoring.activity"), 10)
+      let scoring_weights = @analyze.ScoreWeights::new(
+        freshness=sw_freshness,
+        compliance=sw_compliance,
+        deprecated_density=sw_deprecated,
+        size_reasonableness=sw_size,
+        activity=sw_activity,
+      )
       // 解析 severity 映射：severity.LICENSE-001 = "warning"
       let severity_map : Map[String, String] = {}
       for pair in map {
@@ -186,6 +204,7 @@ fn load_config() -> CliConfig {
         ignore,
         severity_map,
         baseline,
+        scoring_weights,
       }
     }
     None => defaults
@@ -265,6 +284,8 @@ pub fn parse_args(args : Array[String]) -> Result[CliOptions, String] {
       format = "html"
     } else if arg == "--sarif" {
       format = "sarif"
+    } else if arg == "--markdown" {
+      format = "markdown"
     } else if arg == "--fail-on-score" {
       i = i + 1
       if i >= args.length() {
@@ -338,6 +359,7 @@ pub fn parse_args(args : Array[String]) -> Result[CliOptions, String] {
     dry_run,
     verbose,
     quiet,
+    scoring_weights: config.scoring_weights,
     ignore,
     severity_map,
     help,
@@ -358,6 +380,18 @@ fn parse_int(s : String) -> Int? {
     i = i + 1
   }
   Some(result)
+}
+
+///|
+fn parse_int_with_default(opt : String?, default : Int) -> Int {
+  match opt {
+    Some(s) =>
+      match parse_int(s) {
+        Some(v) => v
+        None => default
+      }
+    None => default
+  }
 }
 
 // ========== 命令执行 ==========
@@ -475,7 +509,11 @@ fn execute_command(opts : CliOptions) -> Int {
     _ => {
       println(@analyze.red("Error: Unknown command '" + opts.command + "'"))
       println("")
-      println(@analyze.yellow("Available commands: tree, audit, report, outdated, why, check"))
+      println(
+        @analyze.yellow(
+          "Available commands: tree, audit, report, outdated, why, check",
+        ),
+      )
       println("Use 'depsight --help' for more information.")
       1
     }
@@ -894,6 +932,8 @@ fn run_audit(opts : CliOptions) -> Int {
     @analyze.render_html_report(display_report, graph, root_id)
   } else if opts.format == "sarif" {
     @analyze.render_sarif_report(display_report, graph, root_id)
+  } else if opts.format == "markdown" {
+    @analyze.render_markdown_report(display_report, graph, root_id)
   } else {
     @analyze.render_audit_report(display_report)
   }
@@ -955,6 +995,8 @@ fn run_report(opts : CliOptions) -> Int {
     @analyze.render_audit_json(display_report)
   } else if opts.format == "sarif" {
     @analyze.render_sarif_report(display_report, graph, root_id)
+  } else if opts.format == "markdown" {
+    @analyze.render_markdown_report(display_report, graph, root_id)
   } else {
     @analyze.render_terminal_report(display_report, graph, root_id)
   }
@@ -1464,6 +1506,7 @@ pub fn audit_help_text() -> String {
   lines.push(
     "  --sarif           Output SARIF v2.1.0 format (GitHub Code Scanning)",
   )
+  lines.push("  --markdown        Output Markdown format")
   lines.push(
     "  --severity <level>   Filter diagnostics: critical, warning, info",
   )
@@ -1497,6 +1540,7 @@ pub fn report_help_text() -> String {
   lines.push(
     "  --sarif           Output SARIF v2.1.0 format (GitHub Code Scanning)",
   )
+  lines.push("  --markdown        Output Markdown format")
   lines.push(
     "  --severity <level>   Filter diagnostics: critical, warning, info",
   )
@@ -1525,17 +1569,21 @@ fn join_cli_lines(lines : Array[String]) -> String {
 
 // ========== 新增命令：outdated, why, check ==========
 
-///| 在字符串中查找字符，返回索引（-1 表示未找到）
+///|
+/// 在字符串中查找字符，返回索引（-1 表示未找到）
 fn str_find_at(s : String, ch : UInt16) -> Int {
   let mut i = 0
   while i < s.length() {
-    if s[i] == ch { return i }
+    if s[i] == ch {
+      return i
+    }
     i = i + 1
   }
   -1
 }
 
-///| 统计数组中满足条件的元素数量
+///|
+/// 统计数组中满足条件的元素数量
 fn[T] count_if(arr : Array[T], pred : (T) -> Bool) -> Int {
   let mut count = 0
   for item in arr {
@@ -1584,17 +1632,39 @@ fn run_outdated(opts : CliOptions) -> Int {
   if rows.is_empty() {
     println(@analyze.green("  All dependencies are up to date!"))
   } else {
-    println("  " + pad_right("Package", 30) + pad_right("Current", 12) + pad_right("Latest", 12) + "Breaking")
-    println("  " + repeat_str("-", 30) + repeat_str("-", 12) + repeat_str("-", 12) + repeat_str("-", 8))
+    println(
+      "  " +
+      pad_right("Package", 30) +
+      pad_right("Current", 12) +
+      pad_right("Latest", 12) +
+      "Breaking",
+    )
+    println(
+      "  " +
+      repeat_str("-", 30) +
+      repeat_str("-", 12) +
+      repeat_str("-", 12) +
+      repeat_str("-", 8),
+    )
     for row in rows {
       let (pkg, current, latest, breaking) = row
-      println("  " + pad_right(pkg, 30) + pad_right(current, 12) + pad_right(latest, 12) + breaking)
+      println(
+        "  " +
+        pad_right(pkg, 30) +
+        pad_right(current, 12) +
+        pad_right(latest, 12) +
+        breaking,
+      )
     }
     println("")
     println("  " + rows.length().to_string() + " outdated package(s) found.")
   }
 
-  if has_outdated { 1 } else { 0 }
+  if has_outdated {
+    1
+  } else {
+    0
+  }
 }
 
 ///|
@@ -1666,7 +1736,9 @@ fn run_why(opts : CliOptions) -> Int {
   }
 
   if dependents.is_empty() {
-    println("  " + @analyze.yellow("No dependencies found for '" + target + "'"))
+    println(
+      "  " + @analyze.yellow("No dependencies found for '" + target + "'"),
+    )
   } else {
     println("  " + @analyze.bold(target) + " is required by:")
     println("")
@@ -1678,7 +1750,9 @@ fn run_why(opts : CliOptions) -> Int {
       } else {
         @analyze.dim("indirect dependency")
       }
-      println("    \u2514\u2500\u2500 " + dep_name + " " + dep_version + " " + label)
+      println(
+        "    \u2514\u2500\u2500 " + dep_name + " " + dep_version + " " + label,
+      )
     }
   }
   0
@@ -1703,7 +1777,16 @@ fn run_check(opts : CliOptions) -> Int {
     @analyze.green("PASS")
   }
 
-  println(status + "  " + score.to_string() + "/100  " + critical_count.to_string() + " critical, " + warning_count.to_string() + " warnings")
+  println(
+    status +
+    "  " +
+    score.to_string() +
+    "/100  " +
+    critical_count.to_string() +
+    " critical, " +
+    warning_count.to_string() +
+    " warnings",
+  )
 
   if critical_count > 0 {
     1

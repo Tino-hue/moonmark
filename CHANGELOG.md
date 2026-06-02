@@ -10,6 +10,8 @@ All notable changes to this project will be documented in this file.
   - `depsight why <package>`: Trace who depends on a specific package (direct vs indirect dependency distinction)
   - `depsight check`: One-line health check output (`PASS`/`WARN`/`FAIL`) for CI pipelines
 - **`--quiet` Flag**: Suppress non-essential output for CI-friendly workflows
+- **Markdown Report** (`--markdown`): Generate Markdown format output, compatible with GitHub README and PR descriptions
+- **Custom Scoring Weights** (`.depsight.toml [scoring]`): Configurable per-dimension weights (freshness, compliance, deprecated_density, size, activity) with automatic validation (must sum to 100)
 - **Zero Build Warnings**: Fixed all deprecated `to_string()` calls to `to_owned()`, eliminated all compiler warnings
 
 ### Added (P2: Professional Features)

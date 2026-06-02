@@ -48,20 +48,55 @@ pub fn HealthScore::new(
   { node_id, total, freshness, compliance, deprecated_density, size_reasonableness, activity }
 }
 
+/// 健康评分权重（总和应为 100）
+pub struct ScoreWeights {
+  freshness : Int
+  compliance : Int
+  deprecated_density : Int
+  size_reasonableness : Int
+  activity : Int
+} derive(Debug)
+
+/// 默认权重
+pub fn default_weights() -> ScoreWeights {
+  { freshness: 25, compliance: 20, deprecated_density: 25, size_reasonableness: 20, activity: 10 }
+}
+
+/// 从权重值构造（如果总和不是 100 则使用默认值）
+pub fn ScoreWeights::new(
+  freshness? : Int = 25,
+  compliance? : Int = 20,
+  deprecated_density? : Int = 25,
+  size_reasonableness? : Int = 20,
+  activity? : Int = 10,
+) -> ScoreWeights {
+  let total = freshness + compliance + deprecated_density + size_reasonableness + activity
+  if total == 100 {
+    { freshness, compliance, deprecated_density, size_reasonableness, activity }
+  } else {
+    default_weights()
+  }
+}
+
 /// 计算单个节点的健康评分（0-100）
-/// 权重：版本新鲜度 25%、协议合规 20%、废弃密度 25%、体积合理性 20%、活跃度 10%
+/// 默认权重：版本新鲜度 25%、协议合规 20%、废弃密度 25%、体积合理性 20%、活跃度 10%
 pub fn calculate_health_score(input : NodeScoreInput) -> HealthScore {
+  calculate_health_score_with_weights(input, default_weights())
+}
+
+/// 使用自定义权重计算健康评分
+pub fn calculate_health_score_with_weights(input : NodeScoreInput, w : ScoreWeights) -> HealthScore {
   let freshness = score_freshness(input.current_version, input.latest_version)
   let compliance = score_compliance(input.license_spdx)
   let deprecated_density = score_deprecated_density(input.deprecated_count, input.total_api_count)
   let size_reasonableness = score_size_reasonableness(input.transitive_size)
   let activity = score_activity(input.last_commit_days_ago)
 
-  let total = freshness * 25 / 100 +
-    compliance * 20 / 100 +
-    deprecated_density * 25 / 100 +
-    size_reasonableness * 20 / 100 +
-    activity * 10 / 100
+  let total = freshness * w.freshness / 100 +
+    compliance * w.compliance / 100 +
+    deprecated_density * w.deprecated_density / 100 +
+    size_reasonableness * w.size_reasonableness / 100 +
+    activity * w.activity / 100
 
   { node_id: input.node_id, total, freshness, compliance, deprecated_density, size_reasonableness, activity }
 }

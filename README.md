@@ -21,12 +21,14 @@ MoonBit Depsight analyzes your `moon.mod.json` and recursively inspects the enti
 - **Cross-Package Propagation**: Reverse-BFS tracking of deprecated API exposure across dependency layers (direct vs. indirect)
 - **Size Attribution**: Transitive size calculation with DFS + memoization, identifies top size offenders
 - **Health Scoring**: 5-dimension weighted model (freshness 25%, compliance 20%, deprecated density 25%, size 20%, activity 10%)
+- **Custom Scoring Weights**: Configurable via `.depsight.toml [scoring]` section
 
 ### Report Output
 - **Terminal Report** (`depsight audit`): Color-coded audit output grouped by Critical/Warning/Info, similar to `npm audit`
 - **HTML Report** (`depsight report --html`): Interactive single-file report with collapsible dependency tree, dashboard, and diagnostics
 - **JSON Output** (`depsight audit --json`): Structured data for CI/CD integration
 - **SARIF Output** (`depsight audit --sarif`): Standard v2.1.0 format for GitHub Code Scanning
+- **Markdown Output** (`depsight audit --markdown`): GitHub README / PR compatible format
 - **Dependency Tree** (`depsight tree`): ASCII tree with `--depth` control and inline diagnostic badges
 
 ### CI/CD Integration
