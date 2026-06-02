@@ -26,7 +26,7 @@ pub fn run_cli_with_args(args : Array[String]) -> Int {
   match parse_args(args) {
     Ok(opts) => {
       if opts.version {
-        println("MoonBit Depsight v0.4.0")
+        println("MoonBit Depsight v0.5.0")
         return 0
       }
       if opts.help {
@@ -67,6 +67,7 @@ pub struct CliOptions {
   offline : Bool
   dry_run : Bool
   verbose : Bool
+  quiet : Bool
   ignore : Array[String]
   severity_map : Map[String, String]
   help : Bool
@@ -89,6 +90,7 @@ pub fn CliOptions::new(
   offline? : Bool = false,
   dry_run? : Bool = false,
   verbose? : Bool = false,
+  quiet? : Bool = false,
   ignore? : Array[String] = [],
   severity_map? : Map[String, String] = {},
   help? : Bool = false,
@@ -109,6 +111,7 @@ pub fn CliOptions::new(
     offline,
     dry_run,
     verbose,
+    quiet,
     ignore,
     severity_map,
     help,
@@ -170,7 +173,7 @@ fn load_config() -> CliConfig {
       for pair in map {
         let (key, value) = pair
         if key.has_prefix("severity.") && key.length() > 9 {
-          let code = key[9:key.length()].to_string()
+          let code = key[9:key.length()].to_owned()
           severity_map[code] = value
         }
       }
@@ -195,7 +198,7 @@ fn split_comma_list(s : String) -> Array[String] {
   let mut start = 0
   for i = 0; i < s.length(); i = i + 1 {
     if s[i] == ',' {
-      let item = s[start:i].trim().to_string()
+      let item = s[start:i].trim().to_owned()
       if !item.is_empty() {
         result.push(item)
       }
@@ -203,7 +206,7 @@ fn split_comma_list(s : String) -> Array[String] {
     }
   }
   if start < s.length() {
-    let item = s[start:s.length()].trim().to_string()
+    let item = s[start:s.length()].trim().to_owned()
     if !item.is_empty() {
       result.push(item)
     }
@@ -226,6 +229,7 @@ pub fn parse_args(args : Array[String]) -> Result[CliOptions, String] {
   let mut offline = false
   let mut dry_run = false
   let mut verbose = false
+  let mut quiet = false
   let mut help = false
   let mut version = false
 
@@ -298,6 +302,8 @@ pub fn parse_args(args : Array[String]) -> Result[CliOptions, String] {
       dry_run = true
     } else if arg == "--verbose" {
       verbose = true
+    } else if arg == "--quiet" {
+      quiet = true
     } else if arg.length() > 0 && arg[0].to_int() == '-'.to_int() {
       return Err("Unknown option: " + arg)
     } else if command == "" {
@@ -331,6 +337,7 @@ pub fn parse_args(args : Array[String]) -> Result[CliOptions, String] {
     offline,
     dry_run,
     verbose,
+    quiet,
     ignore,
     severity_map,
     help,
@@ -462,10 +469,13 @@ fn execute_command(opts : CliOptions) -> Int {
       } else {
         run_report(opts)
       }
+    "outdated" => run_outdated(opts)
+    "why" => run_why(opts)
+    "check" => run_check(opts)
     _ => {
       println(@analyze.red("Error: Unknown command '" + opts.command + "'"))
       println("")
-      println(@analyze.yellow("Available commands: tree, audit, report"))
+      println(@analyze.yellow("Available commands: tree, audit, report, outdated, why, check"))
       println("Use 'depsight --help' for more information.")
       1
     }
@@ -1378,7 +1388,7 @@ fn print_help() -> Unit {
 ///|
 pub fn help_text() -> String {
   let lines : Array[String] = []
-  lines.push(@analyze.bold("MoonBit Depsight v0.4.0"))
+  lines.push(@analyze.bold("MoonBit Depsight v0.5.0"))
   lines.push("Dependency health diagnostic tool for MoonBit ecosystem")
   lines.push("")
   lines.push(@analyze.bold("Usage:"))
@@ -1388,10 +1398,14 @@ pub fn help_text() -> String {
   lines.push("  tree [package]    Show dependency tree")
   lines.push("  audit             Run dependency audit")
   lines.push("  report            Generate full report")
+  lines.push("  outdated          Check for outdated dependencies")
+  lines.push("  why <package>     Trace who depends on a package")
+  lines.push("  check             Quick health check (CI-friendly)")
   lines.push("")
   lines.push(@analyze.bold("Global Options:"))
   lines.push("  -h, --help        Show help")
   lines.push("  -v, --version     Show version")
+  lines.push("  --quiet           Suppress non-essential output")
   lines.push("  --offline         Use local cache only")
   lines.push("  --cache-dir <dir> Set cache directory")
   lines.push("  --dry-run         Simulate without writing files or cache")
@@ -1404,9 +1418,9 @@ pub fn help_text() -> String {
   lines.push("  depsight audit             # Run full dependency audit")
   lines.push("  depsight audit --json      # Output audit results as JSON")
   lines.push("  depsight report --html     # Generate HTML report")
-  lines.push(
-    "  depsight audit --sarif     # Output SARIF for GitHub Code Scanning",
-  )
+  lines.push("  depsight outdated          # Check for outdated packages")
+  lines.push("  depsight why moonbitlang/core  # Who depends on core?")
+  lines.push("  depsight check             # Quick health check")
   lines.push("")
   lines.push("Use 'depsight <command> --help' for command-specific options.")
   join_cli_lines(lines)
@@ -1507,4 +1521,195 @@ fn join_cli_lines(lines : Array[String]) -> String {
     i = i + 1
   }
   result
+}
+
+// ========== 新增命令：outdated, why, check ==========
+
+///| 在字符串中查找字符，返回索引（-1 表示未找到）
+fn str_find_at(s : String, ch : UInt16) -> Int {
+  let mut i = 0
+  while i < s.length() {
+    if s[i] == ch { return i }
+    i = i + 1
+  }
+  -1
+}
+
+///| 统计数组中满足条件的元素数量
+fn[T] count_if(arr : Array[T], pred : (T) -> Bool) -> Int {
+  let mut count = 0
+  for item in arr {
+    if pred(item) {
+      count = count + 1
+    }
+  }
+  count
+}
+
+///|
+/// 显示可更新的依赖包
+fn run_outdated(opts : CliOptions) -> Int {
+  let (_graph, root_id, metas) = build_full_graph(opts)
+
+  println(@analyze.bold("MoonBit Depsight \u2014 Outdated Dependencies"))
+  println("")
+
+  let mut has_outdated = false
+  let rows : Array[(String, String, String, String)] = []
+
+  for pair in metas {
+    let (node_id, meta) = pair
+    if node_id == root_id {
+      continue
+    }
+    match meta.latest_version {
+      Some(latest) => {
+        let parts = split_node_id(node_id)
+        let current = parts.1
+        if current != latest {
+          has_outdated = true
+          let breaking = is_major_update(current, latest)
+          let label = if breaking {
+            @analyze.red("Yes")
+          } else {
+            @analyze.green("No")
+          }
+          rows.push((parts.0, current, latest, label))
+        }
+      }
+      None => ()
+    }
+  }
+
+  if rows.is_empty() {
+    println(@analyze.green("  All dependencies are up to date!"))
+  } else {
+    println("  " + pad_right("Package", 30) + pad_right("Current", 12) + pad_right("Latest", 12) + "Breaking")
+    println("  " + repeat_str("-", 30) + repeat_str("-", 12) + repeat_str("-", 12) + repeat_str("-", 8))
+    for row in rows {
+      let (pkg, current, latest, breaking) = row
+      println("  " + pad_right(pkg, 30) + pad_right(current, 12) + pad_right(latest, 12) + breaking)
+    }
+    println("")
+    println("  " + rows.length().to_string() + " outdated package(s) found.")
+  }
+
+  if has_outdated { 1 } else { 0 }
+}
+
+///|
+fn split_node_id(node_id : String) -> (String, String) {
+  let idx = str_find_at(node_id, '@')
+  if idx >= 0 {
+    let name = node_id[0:idx].to_owned()
+    let version = node_id[idx + 1:node_id.length()].to_owned()
+    (name, version)
+  } else {
+    (node_id, "unknown")
+  }
+}
+
+///|
+pub fn is_major_update(current : String, latest : String) -> Bool {
+  match (@analyze.parse_version(current), @analyze.parse_version(latest)) {
+    (Ok(v1), Ok(v2)) => v1.major != v2.major
+    _ => false
+  }
+}
+
+///|
+fn pad_right(s : String, width : Int) -> String {
+  let mut result = s
+  while result.length() < width {
+    result = result + " "
+  }
+  result
+}
+
+///|
+fn repeat_str(s : String, n : Int) -> String {
+  let mut result = ""
+  let mut i = 0
+  while i < n {
+    result = result + s
+    i = i + 1
+  }
+  result
+}
+
+///|
+/// 显示依赖溯源
+fn run_why(opts : CliOptions) -> Int {
+  let target = opts.target_pkg
+  if target == "root" {
+    println(@analyze.red("Error: Please specify a package name"))
+    println("")
+    println("Usage: depsight why <package-name>")
+    println("Example: depsight why moonbitlang/core")
+    return 1
+  }
+
+  let (graph, root_id, _) = build_full_graph(opts)
+
+  println(@analyze.bold("MoonBit Depsight \u2014 Dependency Trace"))
+  println("")
+
+  let dependents : Array[String] = []
+  for pair in graph.nodes {
+    let (node_id, node) = pair
+    for child_id in node.children {
+      let child_name = split_node_id(child_id).0
+      if child_name == target {
+        dependents.push(node_id)
+      }
+    }
+  }
+
+  if dependents.is_empty() {
+    println("  " + @analyze.yellow("No dependencies found for '" + target + "'"))
+  } else {
+    println("  " + @analyze.bold(target) + " is required by:")
+    println("")
+    for dep in dependents {
+      let (dep_name, dep_version) = split_node_id(dep)
+      let is_direct = dep == root_id
+      let label = if is_direct {
+        @analyze.green("direct dependency")
+      } else {
+        @analyze.dim("indirect dependency")
+      }
+      println("    \u2514\u2500\u2500 " + dep_name + " " + dep_version + " " + label)
+    }
+  }
+  0
+}
+
+///|
+/// 快速健康检查
+fn run_check(opts : CliOptions) -> Int {
+  let (_graph, _root_id, metas) = build_full_graph(opts)
+  let report = @analyze.run_analysis(_graph, metas)
+
+  let score = report.get_overall_score()
+  let diagnostics = report.get_diagnostics()
+  let critical_count = count_if(diagnostics, fn(d) { d.is_critical() })
+  let warning_count = count_if(diagnostics, fn(d) { d.is_warning() })
+
+  let status = if critical_count > 0 {
+    @analyze.red("FAIL")
+  } else if score < 80 {
+    @analyze.yellow("WARN")
+  } else {
+    @analyze.green("PASS")
+  }
+
+  println(status + "  " + score.to_string() + "/100  " + critical_count.to_string() + " critical, " + warning_count.to_string() + " warnings")
+
+  if critical_count > 0 {
+    1
+  } else if score < 80 {
+    1
+  } else {
+    0
+  }
 }

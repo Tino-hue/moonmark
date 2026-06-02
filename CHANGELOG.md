@@ -2,7 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
-## [0.4.0] - 2026-06-05
+## [0.5.0] - 2026-05-29
+
+### Added (P1: Core UX)
+- **New CLI Commands**:
+  - `depsight outdated`: Check for outdated dependencies with breaking change detection (major version diff highlighted in red)
+  - `depsight why <package>`: Trace who depends on a specific package (direct vs indirect dependency distinction)
+  - `depsight check`: One-line health check output (`PASS`/`WARN`/`FAIL`) for CI pipelines
+- **`--quiet` Flag**: Suppress non-essential output for CI-friendly workflows
+- **Zero Build Warnings**: Fixed all deprecated `to_string()` calls to `to_owned()`, eliminated all compiler warnings
 
 ### Added (P2: Professional Features)
 - **SARIF v2.1.0 Output** (`analyze/sarif_reporter.mbt`): `--sarif` flag generates standard Static Analysis Results Interchange Format JSON, compatible with GitHub Code Scanning upload. Supports rules, results, locations, and fix suggestions.

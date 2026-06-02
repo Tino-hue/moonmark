@@ -35,6 +35,12 @@ MoonBit Depsight analyzes your `moon.mod.json` and recursively inspects the enti
 - `--baseline auto`: Diff against previous run (auto-saved to `.depsight-baseline.json`)
 - `--offline`: Use local cache only
 - `--cache-dir <path>`: Specify cache directory
+- `--quiet`: Suppress non-essential output (CI-friendly)
+
+### Quick Commands
+- **`depsight outdated`**: Check for outdated dependencies with breaking change detection
+- **`depsight why <package>`**: Trace who depends on a specific package
+- **`depsight check`**: One-line health check output (PASS/WARN/FAIL) for CI pipelines
 
 ### Configuration (`.depsight.toml`)
 - `ignore`: Comma-separated list of diagnostic codes to suppress
@@ -76,6 +82,18 @@ node _build/js/debug/build/depsight.js audit --json
 node _build/js/debug/build/depsight.js report
 node _build/js/debug/build/depsight.js report --html -o report.html
 node _build/js/debug/build/depsight.js report --json -o report.json
+
+# 检查可更新的依赖包
+node _build/js/debug/build/depsight.js outdated
+
+# 追溯谁依赖了某个包
+node _build/js/debug/build/depsight.js why moonbitlang/core
+
+# 快速健康检查（CI 一行输出）
+node _build/js/debug/build/depsight.js check
+
+# SARIF 格式输出（GitHub Code Scanning）
+node _build/js/debug/build/depsight.js audit --sarif
 ```
 
 ### CI 集成

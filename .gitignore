@@ -34,3 +34,8 @@ __pycache__/
 *.lib
 *.obj
 *.xmind
+
+# Depsight generated files
+.depsight-baseline.json
+report.html
+report.json
