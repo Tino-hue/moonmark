@@ -1,1 +1,1 @@
-{"overall_score":98,"node_count":1,"diagnostics":[],"health_scores":[{"node_id":"LittleFish/depsight@0.4.0","total":98,"freshness":100,"compliance":100,"deprecated_density":100,"size_reasonableness":100,"activity":80}],"summary":{"critical":0,"warning":0,"info":0}}
+{"overall_score":98,"node_count":1,"diagnostics":[],"health_scores":[{"node_id":"Tino-hue/depsight@0.5.1","total":98,"freshness":100,"compliance":100,"deprecated_density":100,"size_reasonableness":100,"activity":80}],"summary":{"critical":0,"warning":0,"info":0}}

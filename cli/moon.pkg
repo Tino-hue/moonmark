@@ -1,8 +1,8 @@
 import {
-  "LittleFish/depsight/analyze",
-  "LittleFish/depsight/cache",
-  "LittleFish/depsight/fetch",
-  "LittleFish/depsight/graph",
-  "LittleFish/depsight/parse",
-  "LittleFish/depsight/report",
+  "Tino-hue/depsight/analyze",
+  "Tino-hue/depsight/cache",
+  "Tino-hue/depsight/fetch",
+  "Tino-hue/depsight/graph",
+  "Tino-hue/depsight/parse",
+  "Tino-hue/depsight/report",
 }

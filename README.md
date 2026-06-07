@@ -62,7 +62,7 @@ moon build --target js
 ### 作为 MoonBit 包依赖
 
 ```bash
-moon add LittleFish/depsight
+moon add Tino-hue/depsight
 ```
 
 ## Usage

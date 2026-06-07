@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.5.1] - 2026-06-05
+
+### Changed
+- **Module renamed**: `LittleFish/depsight` → `Tino-hue/depsight` (aligned with mooncakes.io account)
+- **Default target**: Added `preferred-target: "js"` to `moon.mod.json` for proper JS FFI compilation
+- **Build configuration**: Converted `moon.mod` to `moon.mod.json` format
+
+### Published
+- Published to mooncakes.io as `Tino-hue/depsight@0.5.1`
+
 ## [0.5.0] - 2026-05-29
 
 ### Added (P1: Core UX)
