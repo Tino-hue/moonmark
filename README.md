@@ -132,6 +132,8 @@ node _build/js/debug/build/depsight.js audit --offline --cache-dir ./cache
 
 *Tested on Windows 11, Node.js v22.x, MoonBit JS debug mode*
 
+For detailed usage guide, see [docs/USAGE.md](docs/USAGE.md).
+
 For detailed benchmark methodology and bottleneck analysis, see [docs/benchmark.md](docs/benchmark.md).
 
 ## Development
