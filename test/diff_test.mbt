@@ -1,3 +1,4 @@
+///|
 test "diff_reports detects added diagnostic" {
   let baseline = @analyze.AnalysisReport::new(
     diagnostics=[],
@@ -5,7 +6,9 @@ test "diff_reports detects added diagnostic" {
     node_count=1,
   )
   let current = @analyze.AnalysisReport::new(
-    diagnostics=[@report.Diagnostic::info("LICENSE-002", "No license", ["pkg@1.0.0"])],
+    diagnostics=[
+      @report.Diagnostic::info("LICENSE-002", "No license", ["pkg@1.0.0"]),
+    ],
     overall_score=96,
     node_count=1,
   )
@@ -16,9 +19,12 @@ test "diff_reports detects added diagnostic" {
   assert_true(diff.score_delta == -4)
 }
 
+///|
 test "diff_reports detects removed diagnostic" {
   let baseline = @analyze.AnalysisReport::new(
-    diagnostics=[@report.Diagnostic::info("LICENSE-002", "No license", ["pkg@1.0.0"])],
+    diagnostics=[
+      @report.Diagnostic::info("LICENSE-002", "No license", ["pkg@1.0.0"]),
+    ],
     overall_score=96,
     node_count=1,
   )
@@ -34,6 +40,7 @@ test "diff_reports detects removed diagnostic" {
   assert_true(diff.score_delta == 4)
 }
 
+///|
 test "diff_reports detects unchanged diagnostic" {
   let diag = @report.Diagnostic::info("LICENSE-002", "No license", ["pkg@1.0.0"])
   let baseline = @analyze.AnalysisReport::new(
@@ -53,9 +60,14 @@ test "diff_reports detects unchanged diagnostic" {
   assert_true(diff.score_delta == 0)
 }
 
+///|
 test "parse_audit_json roundtrip" {
   let report = @analyze.AnalysisReport::new(
-    diagnostics=[@report.Diagnostic::warning("DEP-001", "Outdated", ["a@1.0.0"]).with_suggestion("Upgrade to 2.0.0")],
+    diagnostics=[
+      @report.Diagnostic::warning("DEP-001", "Outdated", ["a@1.0.0"]).with_suggestion(
+        "Upgrade to 2.0.0",
+      ),
+    ],
     overall_score=85,
     node_count=2,
   )
@@ -74,6 +86,7 @@ test "parse_audit_json roundtrip" {
   assert_true(r.get_diagnostics()[0].suggestions[0] == "Upgrade to 2.0.0")
 }
 
+///|
 test "render_diff_terminal contains sections" {
   let diff = @analyze.ReportDiff::new(
     added=[@report.Diagnostic::critical("CYCLE-001", "Cycle", ["A"])],

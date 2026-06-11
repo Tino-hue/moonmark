@@ -1,3 +1,4 @@
+///|
 /// 体积信息结构体
 pub struct SizeInfo {
   node_id : String
@@ -5,16 +6,22 @@ pub struct SizeInfo {
   transitive_size : Int
 } derive(Debug)
 
+///|
 /// 构造 SizeInfo
-pub fn SizeInfo::new(node_id : String, self_size : Int, transitive_size : Int) -> SizeInfo {
+pub fn SizeInfo::new(
+  node_id : String,
+  self_size : Int,
+  transitive_size : Int,
+) -> SizeInfo {
   { node_id, self_size, transitive_size }
 }
 
+///|
 /// 计算所有节点的传递大小（自身 + 所有子孙）
 /// `self_sizes` 是节点 ID -> 自身大小的映射
 pub fn calculate_transitive_sizes(
   graph : @graph.DependencyGraph,
-  self_sizes : Map[String, Int]
+  self_sizes : Map[String, Int],
 ) -> Map[String, Int] {
   let memo : Map[String, Int] = {}
   let all_ids = graph.get_all_node_ids()
@@ -24,11 +31,12 @@ pub fn calculate_transitive_sizes(
   memo
 }
 
+///|
 fn calc_transitive(
   graph : @graph.DependencyGraph,
   node_id : String,
   self_sizes : Map[String, Int],
-  memo : Map[String, Int]
+  memo : Map[String, Int],
 ) -> Int {
   if memo.get(node_id) is Some(size) {
     return size
@@ -51,11 +59,12 @@ fn calc_transitive(
   total
 }
 
+///|
 /// 找出体积罪魁祸首：按传递大小降序排列，返回前 top_n 个
 pub fn find_size_offenders(
   graph : @graph.DependencyGraph,
   self_sizes : Map[String, Int],
-  top_n : Int
+  top_n : Int,
 ) -> Array[SizeInfo] {
   let trans_sizes = calculate_transitive_sizes(graph, self_sizes)
   let all_ids = graph.get_all_node_ids()
@@ -85,6 +94,7 @@ pub fn find_size_offenders(
   result
 }
 
+///|
 /// 格式化字节数为人类可读字符串
 pub fn format_size(bytes : Int) -> String {
   if bytes < 1024 {
@@ -96,14 +106,18 @@ pub fn format_size(bytes : Int) -> String {
   }
 }
 
+///|
 /// 将 SizeInfo 数组渲染为可读的文本报告
 pub fn render_size_report(offenders : Array[SizeInfo]) -> String {
   let lines : Array[String] = []
   lines.push("Size Attribution Report")
   lines.push("=======================")
   for info in offenders {
-    let line = info.node_id + ": self " + format_size(info.self_size) +
-      " / transitive " + format_size(info.transitive_size)
+    let line = info.node_id +
+      ": self " +
+      format_size(info.self_size) +
+      " / transitive " +
+      format_size(info.transitive_size)
     lines.push(line)
   }
   join_lines(lines)
@@ -111,14 +125,19 @@ pub fn render_size_report(offenders : Array[SizeInfo]) -> String {
 
 // ---------- 内部辅助 ----------
 
+///|
 fn split_node_id(node_id : String) -> (String, String) {
   let at_idx = index_of_char(node_id, '@')
   if at_idx < 0 {
     return (node_id, "")
   }
-  (substring(node_id, 0, at_idx), substring(node_id, at_idx + 1, node_id.length() - at_idx - 1))
+  (
+    substring(node_id, 0, at_idx),
+    substring(node_id, at_idx + 1, node_id.length() - at_idx - 1),
+  )
 }
 
+///|
 fn sort_by_transitive_size_desc(arr : Array[SizeInfo]) -> Unit {
   let n = arr.length()
   let mut i = 0
@@ -136,12 +155,16 @@ fn sort_by_transitive_size_desc(arr : Array[SizeInfo]) -> Unit {
   }
 }
 
+///|
 fn join_lines(lines : Array[String]) -> String {
   join_lines_loop(lines, 0, "")
 }
 
+///|
 fn join_lines_loop(lines : Array[String], idx : Int, acc : String) -> String {
-  if idx >= lines.length() { return acc }
+  if idx >= lines.length() {
+    return acc
+  }
   let sep = if idx == 0 { "" } else { "\n" }
   join_lines_loop(lines, idx + 1, acc + sep + lines[idx])
 }

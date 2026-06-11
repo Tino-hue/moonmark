@@ -1,3 +1,4 @@
+///|
 /// Cross-Platform Compatibility Tests
 ///
 /// 验证路径分隔符、换行符、编码在不同平台下行为一致。
@@ -19,11 +20,13 @@ test "default_cache_dir uses platform separator" {
   }
 }
 
+///|
 test "platform home dir is non-empty" {
   let home = @cache.platform_home_dir()
   assert_true(home.length() > 0)
 }
 
+///|
 test "platform path sep is single char" {
   let sep = @cache.platform_path_sep()
   assert_true(sep == "\\" || sep == "/")
@@ -31,6 +34,7 @@ test "platform path sep is single char" {
 
 // ========== 换行符兼容性测试 ==========
 
+///|
 test "parse_mod_json handles LF line endings" {
   let content = "{\n  \"name\": \"a\",\n  \"version\": \"1.0.0\"\n}"
   match @parse.parse_mod_json(content) {
@@ -42,6 +46,7 @@ test "parse_mod_json handles LF line endings" {
   }
 }
 
+///|
 test "parse_mod_json handles CRLF line endings" {
   let content = "{\r\n  \"name\": \"a\",\r\n  \"version\": \"1.0.0\"\r\n}"
   match @parse.parse_mod_json(content) {
@@ -55,6 +60,7 @@ test "parse_mod_json handles CRLF line endings" {
 
 // ========== 编码兼容性测试 ==========
 
+///|
 test "parse_mod_json handles unicode package names" {
   let content =
     #|{
@@ -71,6 +77,7 @@ test "parse_mod_json handles unicode package names" {
   }
 }
 
+///|
 test "html report preserves unicode characters" {
   let graph = @graph.DependencyGraph::new()
   graph.add_node("测试包", "1.0.0", 0)
@@ -82,8 +89,10 @@ test "html report preserves unicode characters" {
 
 // ========== 真实文件系统缓存测试 ==========
 
+///|
 let test_cp_dir = "./test_crossplatform_cache"
 
+///|
 test "cache set and get roundtrip on real fs" {
   let fs = @cache.FileSystem::node_js()
   let cache = @cache.CacheManager::new(test_cp_dir, fs, ttl_ms=3600000)
@@ -96,6 +105,7 @@ test "cache set and get roundtrip on real fs" {
   cache.clear()
 }
 
+///|
 test "cache clear removes all entries on real fs" {
   let fs = @cache.FileSystem::node_js()
   let cache = @cache.CacheManager::new(test_cp_dir, fs, ttl_ms=3600000)
@@ -112,6 +122,7 @@ test "cache clear removes all entries on real fs" {
   }
 }
 
+///|
 test "cache purge expired removes old entries on real fs" {
   let fs = @cache.FileSystem::node_js()
   let cache = @cache.CacheManager::new(test_cp_dir, fs, ttl_ms=10)
@@ -125,6 +136,7 @@ test "cache purge expired removes old entries on real fs" {
   }
 }
 
+///|
 extern "js" fn sleep_ms(ms : Int) -> Unit =
   #| (ms) => {
   #|   const start = Date.now();

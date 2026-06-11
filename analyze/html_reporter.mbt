@@ -5,146 +5,205 @@
 
 // ========== 公共入口 ==========
 
+///|
 /// 渲染完整的 HTML 报告
 pub fn render_html_report(
   report : AnalysisReport,
   graph : @graph.DependencyGraph,
-  root_id : String
+  root_id : String,
 ) -> String {
-  let html_parts : Array[String] = []
-  html_parts.push("")
-  html_parts.push("<!DOCTYPE html>")
-  html_parts.push("<html lang=\"zh-CN\">")
-  html_parts.push("<head>")
-  html_parts.push("  <meta charset=\"UTF-8\">")
-  html_parts.push("  <title>MoonBit Depsight Report</title>")
-  html_parts.push("  <style>")
-  html_parts.push(html_css())
-  html_parts.push("  </style>")
-  html_parts.push("</head>")
-  html_parts.push("<body>")
-  html_parts.push("  <div class=\"container\">")
-  html_parts.push(html_header())
-  html_parts.push(html_overview(report))
-  html_parts.push(html_health_scores(report.health_scores))
-  html_parts.push(html_diagnostics(report.diagnostics))
-  html_parts.push(html_dependency_tree(graph, root_id))
-  html_parts.push(html_footer())
-  html_parts.push("  </div>")
-  html_parts.push("</body>")
-  html_parts.push("</html>")
-  html_parts.push("")
-  join_html_parts(html_parts)
+  let buf = StringBuilder()
+  buf <+ "\n<!DOCTYPE html>\n"
+  buf <+ "<html lang=\"zh-CN\">\n"
+  buf <+ "<head>\n"
+  buf <+ "  <meta charset=\"UTF-8\">\n"
+  buf <+ "  <title>MoonBit Depsight Report</title>\n"
+  buf <+ "  <style>\n"
+  buf.write_string(html_css())
+  buf <+ "\n  </style>\n"
+  buf <+ "</head>\n"
+  buf <+ "<body>\n"
+  buf <+ "  <div class=\"container\">\n"
+  buf.write_string(html_header())
+  buf <+ "\n"
+  buf.write_string(html_overview(report))
+  buf <+ "\n"
+  buf.write_string(html_health_scores(report.health_scores))
+  buf <+ "\n"
+  buf.write_string(html_diagnostics(report.diagnostics))
+  buf <+ "\n"
+  buf.write_string(html_dependency_tree(graph, root_id))
+  buf <+ "\n"
+  buf.write_string(html_footer())
+  buf <+ "\n  </div>\n"
+  buf <+ "</body>\n"
+  buf <+ "</html>\n"
+  buf.to_string()
 }
 
 // ========== HTML 区块 ==========
 
+///|
 fn html_header() -> String {
   "<header class=\"header\"><h1>MoonBit Depsight</h1><p>Dependency Health Report</p></header>"
 }
 
+///|
 fn html_overview(report : AnalysisReport) -> String {
   let critical = count_level(report.diagnostics, @report.level_critical())
   let warning = count_level(report.diagnostics, @report.level_warning())
   let info = count_level(report.diagnostics, @report.level_info())
 
-  let parts : Array[String] = []
-  parts.push("<section class=\"overview\">")
-  parts.push("<h2>Overview</h2>")
-  parts.push("<div class=\"stats-grid\">")
-  parts.push("<div class=\"stat-card\">")
-  parts.push("<div class=\"stat-value\" id=\"overall-score\">" + report.overall_score.to_string() + "</div>")
-  parts.push("<div class=\"stat-label\">Health Score</div>")
-  parts.push("</div>")
-  parts.push("<div class=\"stat-card\">")
-  parts.push("<div class=\"stat-value\">" + report.node_count.to_string() + "</div>")
-  parts.push("<div class=\"stat-label\">Nodes</div>")
-  parts.push("</div>")
-  parts.push("<div class=\"stat-card stat-critical\">")
-  parts.push("<div class=\"stat-value\">" + critical.to_string() + "</div>")
-  parts.push("<div class=\"stat-label\">Critical</div>")
-  parts.push("</div>")
-  parts.push("<div class=\"stat-card stat-warning\">")
-  parts.push("<div class=\"stat-value\">" + warning.to_string() + "</div>")
-  parts.push("<div class=\"stat-label\">Warnings</div>")
-  parts.push("</div>")
-  parts.push("<div class=\"stat-card stat-info\">")
-  parts.push("<div class=\"stat-value\">" + info.to_string() + "</div>")
-  parts.push("<div class=\"stat-label\">Info</div>")
-  parts.push("</div>")
-  parts.push("</div>")
-  parts.push("</section>")
-  join_html_parts(parts)
+  let buf = StringBuilder()
+  buf <+ "<section class=\"overview\">\n"
+  buf <+ "<h2>Overview</h2>\n"
+  buf <+ "<div class=\"stats-grid\">\n"
+  buf <+ "<div class=\"stat-card\">\n"
+  buf <+ "<div class=\"stat-value\" id=\"overall-score\">"
+  buf.write_string(report.overall_score.to_string())
+  buf <+ "</div>\n"
+  buf <+ "<div class=\"stat-label\">Health Score</div>\n"
+  buf <+ "</div>\n"
+  buf <+ "<div class=\"stat-card\">\n"
+  buf <+ "<div class=\"stat-value\">"
+  buf.write_string(report.node_count.to_string())
+  buf <+ "</div>\n"
+  buf <+ "<div class=\"stat-label\">Nodes</div>\n"
+  buf <+ "</div>\n"
+  buf <+ "<div class=\"stat-card stat-critical\">\n"
+  buf <+ "<div class=\"stat-value\">"
+  buf.write_string(critical.to_string())
+  buf <+ "</div>\n"
+  buf <+ "<div class=\"stat-label\">Critical</div>\n"
+  buf <+ "</div>\n"
+  buf <+ "<div class=\"stat-card stat-warning\">\n"
+  buf <+ "<div class=\"stat-value\">"
+  buf.write_string(warning.to_string())
+  buf <+ "</div>\n"
+  buf <+ "<div class=\"stat-label\">Warnings</div>\n"
+  buf <+ "</div>\n"
+  buf <+ "<div class=\"stat-card stat-info\">\n"
+  buf <+ "<div class=\"stat-value\">"
+  buf.write_string(info.to_string())
+  buf <+ "</div>\n"
+  buf <+ "<div class=\"stat-label\">Info</div>\n"
+  buf <+ "</div>\n"
+  buf <+ "</div>\n"
+  buf <+ "</section>"
+  buf.to_string()
 }
 
+///|
 fn html_health_scores(scores : Array[HealthScore]) -> String {
-  if scores.length() == 0 { return "" }
-  let parts : Array[String] = []
-  parts.push("<section class=\"health-scores\">")
-  parts.push("<h2>Health Scores</h2>")
-  parts.push("<table class=\"score-table\">")
-  parts.push("<thead><tr><th>Node</th><th>Total</th><th>Fresh</th><th>Comply</th><th>DepDen</th><th>Size</th><th>Actv</th></tr></thead>")
-  parts.push("<tbody>")
+  if scores.length() == 0 {
+    return ""
+  }
+  let buf = StringBuilder()
+  buf <+ "<section class=\"health-scores\">\n"
+  buf <+ "<h2>Health Scores</h2>\n"
+  buf <+ "<table class=\"score-table\">\n"
+  buf <+
+    "<thead><tr><th>Node</th><th>Total</th><th>Fresh</th><th>Comply</th><th>DepDen</th><th>Size</th><th>Actv</th></tr></thead>\n"
+  buf <+ "<tbody>\n"
   for s in scores {
     let row_class = score_css_class(s.total)
-    parts.push("<tr class=\"" + row_class + "\">")
-    parts.push("<td>" + escape_html(s.node_id) + "</td>")
-    parts.push("<td class=\"score-total\">" + s.total.to_string() + "</td>")
-    parts.push("<td>" + s.freshness.to_string() + "</td>")
-    parts.push("<td>" + s.compliance.to_string() + "</td>")
-    parts.push("<td>" + s.deprecated_density.to_string() + "</td>")
-    parts.push("<td>" + s.size_reasonableness.to_string() + "</td>")
-    parts.push("<td>" + s.activity.to_string() + "</td>")
-    parts.push("</tr>")
+    buf <+ "<tr class=\""
+    buf.write_string(row_class)
+    buf <+ "\">\n"
+    buf <+ "<td>"
+    buf.write_string(escape_html(s.node_id))
+    buf <+ "</td>\n"
+    buf <+ "<td class=\"score-total\">"
+    buf.write_string(s.total.to_string())
+    buf <+ "</td>\n"
+    buf <+ "<td>"
+    buf.write_string(s.freshness.to_string())
+    buf <+ "</td>\n"
+    buf <+ "<td>"
+    buf.write_string(s.compliance.to_string())
+    buf <+ "</td>\n"
+    buf <+ "<td>"
+    buf.write_string(s.deprecated_density.to_string())
+    buf <+ "</td>\n"
+    buf <+ "<td>"
+    buf.write_string(s.size_reasonableness.to_string())
+    buf <+ "</td>\n"
+    buf <+ "<td>"
+    buf.write_string(s.activity.to_string())
+    buf <+ "</td>\n"
+    buf <+ "</tr>\n"
   }
-  parts.push("</tbody>")
-  parts.push("</table>")
-  parts.push("</section>")
-  join_html_parts(parts)
+  buf <+ "</tbody>\n"
+  buf <+ "</table>\n"
+  buf <+ "</section>"
+  buf.to_string()
 }
 
+///|
 fn html_diagnostics(diagnostics : Array[@report.Diagnostic]) -> String {
   if diagnostics.length() == 0 {
     return "<section class=\"diagnostics\"><h2>Diagnostics</h2><p class=\"no-issues\">No issues found.</p></section>"
   }
 
-  let parts : Array[String] = []
-  parts.push("<section class=\"diagnostics\">")
-  parts.push("<h2>Diagnostics</h2>")
+  let buf = StringBuilder()
+  buf <+ "<section class=\"diagnostics\">\n"
+  buf <+ "<h2>Diagnostics</h2>\n"
 
   for d in diagnostics {
-    let level_class = if d.is_critical() { "diag-critical" } else if d.is_warning() { "diag-warning" } else { "diag-info" }
-    parts.push("<div class=\"diag-card " + level_class + "\">")
-    parts.push("<div class=\"diag-header\">")
-    parts.push("<span class=\"diag-level\">" + d.level + "</span>")
-    parts.push("<span class=\"diag-code\">" + d.code + "</span>")
-    parts.push("</div>")
-    parts.push("<div class=\"diag-msg\">" + escape_html(d.message) + "</div>")
+    let level_class = if d.is_critical() {
+      "diag-critical"
+    } else if d.is_warning() {
+      "diag-warning"
+    } else {
+      "diag-info"
+    }
+    buf <+ "<div class=\"diag-card "
+    buf.write_string(level_class)
+    buf <+ "\">\n"
+    buf <+ "<div class=\"diag-header\">\n"
+    buf <+ "<span class=\"diag-level\">"
+    buf.write_string(d.level)
+    buf <+ "</span>\n"
+    buf <+ "<span class=\"diag-code\">"
+    buf.write_string(d.code)
+    buf <+ "</span>\n"
+    buf <+ "</div>\n"
+    buf <+ "<div class=\"diag-msg\">"
+    buf.write_string(escape_html(d.message))
+    buf <+ "</div>\n"
 
     if d.path.length() > 0 {
-      parts.push("<div class=\"diag-path\">Path: " + escape_html(join_html_path(d.path)) + "</div>")
+      buf <+ "<div class=\"diag-path\">Path: "
+      buf.write_string(escape_html(join_html_path(d.path)))
+      buf <+ "</div>\n"
     }
 
     if d.suggestions.length() > 0 {
-      parts.push("<div class=\"diag-suggestions\">")
+      buf <+ "<div class=\"diag-suggestions\">\n"
       for s in d.suggestions {
-        parts.push("<div class=\"suggestion\">→ " + escape_html(s) + "</div>")
+        buf <+ "<div class=\"suggestion\">\u{2192} "
+        buf.write_string(escape_html(s))
+        buf <+ "</div>\n"
       }
-      parts.push("</div>")
+      buf <+ "</div>\n"
     }
 
-    parts.push("</div>")
+    buf <+ "</div>\n"
   }
 
-  parts.push("</section>")
-  join_html_parts(parts)
+  buf <+ "</section>"
+  buf.to_string()
 }
 
-fn html_dependency_tree(graph : @graph.DependencyGraph, root_id : String) -> String {
-  let parts : Array[String] = []
-  parts.push("<section class=\"dep-tree\">")
-  parts.push("<h2>Dependency Tree</h2>")
-  parts.push("<div class=\"tree-root\">")
+///|
+fn html_dependency_tree(
+  graph : @graph.DependencyGraph,
+  root_id : String,
+) -> String {
+  let buf = StringBuilder()
+  buf <+ "<section class=\"dep-tree\">\n"
+  buf <+ "<h2>Dependency Tree</h2>\n"
+  buf <+ "<div class=\"tree-root\">\n"
 
   // 根节点标签
   let root_label = escape_html(root_id)
@@ -152,31 +211,42 @@ fn html_dependency_tree(graph : @graph.DependencyGraph, root_id : String) -> Str
   let root_children = graph.get_children(root_name, root_ver)
 
   if root_children.length() > 0 {
-    let child_parts : Array[String] = []
+    buf <+ "<details class=\"tree-branch\" open>\n"
+    buf <+ "<summary>"
+    buf.write_string(root_label)
+    buf <+ "</summary>\n"
+    buf <+ "<div class=\"tree-children\">\n"
     for child in root_children {
       let child_html = html_tree_node(graph, child, 1)
       if child_html.length() > 0 {
-        child_parts.push(child_html)
+        buf.write_string(child_html)
+        buf <+ "\n"
       }
     }
-    parts.push("<details class=\"tree-branch\" open>")
-    parts.push("<summary>" + root_label + "</summary>")
-    parts.push("<div class=\"tree-children\">")
-    for cp in child_parts { parts.push(cp) }
-    parts.push("</div>")
-    parts.push("</details>")
+    buf <+ "</div>\n"
+    buf <+ "</details>\n"
   } else {
-    parts.push("<div class=\"tree-leaf\">" + root_label + "</div>")
+    buf <+ "<div class=\"tree-leaf\">"
+    buf.write_string(root_label)
+    buf <+ "</div>\n"
   }
 
-  parts.push("</div>")
-  parts.push("</section>")
-  join_html_parts(parts)
+  buf <+ "</div>\n"
+  buf <+ "</section>"
+  buf.to_string()
 }
 
 // 递归渲染树节点（用 details/summary 做折叠）
-fn html_tree_node(graph : @graph.DependencyGraph, node_id : String, depth : Int) -> String {
-  if depth >= 8 { return "" } // 限制递归深度
+
+///|
+fn html_tree_node(
+  graph : @graph.DependencyGraph,
+  node_id : String,
+  depth : Int,
+) -> String {
+  if depth >= 8 {
+    return ""
+  } // 限制递归深度
   let (name, ver) = split_at_id(node_id)
   let children = graph.get_children(name, ver)
   let has_children = children.length() > 0
@@ -185,161 +255,187 @@ fn html_tree_node(graph : @graph.DependencyGraph, node_id : String, depth : Int)
   let margin = (depth * 20).to_string()
 
   if has_children {
-    let child_parts : Array[String] = []
+    let child_buf = StringBuilder()
     for child in children {
       let child_html = html_tree_node(graph, child, depth + 1)
       if child_html.length() > 0 {
-        child_parts.push(child_html)
+        child_buf.write_string(child_html)
+        child_buf <+ "\n"
       }
     }
+    let child_str = child_buf.to_string()
 
-    if child_parts.length() == 0 {
-      return "<div class=\"tree-leaf\" style=\"margin-left:" + margin + "px\">" + label + "</div>"
+    if child_str.length() == 0 {
+      let buf = StringBuilder()
+      buf <+ "<div class=\"tree-leaf\" style=\"margin-left:"
+      buf.write_string(margin)
+      buf <+ "px\">"
+      buf.write_string(label)
+      buf <+ "</div>"
+      return buf.to_string()
     }
 
-    let parts : Array[String] = []
-    parts.push("<details class=\"tree-branch\" style=\"margin-left:" + margin + "px\">")
-    parts.push("<summary>" + label + "</summary>")
-    parts.push("<div class=\"tree-children\">")
-    for cp in child_parts { parts.push(cp) }
-    parts.push("</div>")
-    parts.push("</details>")
-    join_html_parts(parts)
+    let buf = StringBuilder()
+    buf <+ "<details class=\"tree-branch\" style=\"margin-left:"
+    buf.write_string(margin)
+    buf <+ "px\">\n"
+    buf <+ "<summary>"
+    buf.write_string(label)
+    buf <+ "</summary>\n"
+    buf <+ "<div class=\"tree-children\">\n"
+    buf.write_string(child_str)
+    buf <+ "</div>\n"
+    buf <+ "</details>"
+    buf.to_string()
   } else {
-    "<div class=\"tree-leaf\" style=\"margin-left:" + margin + "px\">" + label + "</div>"
+    let buf = StringBuilder()
+    buf <+ "<div class=\"tree-leaf\" style=\"margin-left:"
+    buf.write_string(margin)
+    buf <+ "px\">"
+    buf.write_string(label)
+    buf <+ "</div>"
+    buf.to_string()
   }
 }
 
+///|
 fn html_footer() -> String {
   "<footer class=\"footer\"><p>Generated by MoonBit Depsight</p></footer>"
 }
 
 // ========== CSS ==========
 
+///|
 fn html_css() -> String {
-  let parts : Array[String] = []
-  parts.push(":root{--bg:#0d1117;--fg:#c9d1d9;--card:#161b22;--border:#30363d;")
-  parts.push("--green:#238636;--yellow:#d29922;--red:#da3633;--blue:#58a6ff;}")
-  parts.push("body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;")
-  parts.push("background:var(--bg);color:var(--fg);margin:0;padding:20px;}")
-  parts.push(".container{max-width:900px;margin:0 auto;}")
-  parts.push(".header{text-align:center;border-bottom:1px solid var(--border);padding-bottom:20px;margin-bottom:20px;}")
-  parts.push(".header h1{margin:0;font-size:28px;}.header p{margin:6px 0 0;color:#8b949e;}")
-  parts.push(".overview{margin-bottom:24px;}")
-  parts.push(".stats-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;}")
-  parts.push(".stat-card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:16px;text-align:center;}")
-  parts.push(".stat-value{font-size:28px;font-weight:700;}.stat-label{font-size:12px;color:#8b949e;margin-top:4px;}")
-  parts.push(".stat-critical .stat-value{color:var(--red);}.stat-warning .stat-value{color:var(--yellow);}.stat-info .stat-value{color:var(--green);}")
-  parts.push(".score-good{color:var(--green);}.score-mid{color:var(--yellow);}.score-bad{color:var(--red);}")
-  parts.push("#overall-score{color:var(--green);font-size:36px;}#overall-score.score-mid{color:var(--yellow);}#overall-score.score-bad{color:var(--red);}")
-  parts.push(".score-table{width:100%;border-collapse:collapse;margin-top:12px;}")
-  parts.push(".score-table th,.score-table td{padding:8px 12px;text-align:center;border:1px solid var(--border);}")
-  parts.push(".score-table th{background:var(--card);font-weight:600;}.score-total{font-weight:700;font-size:16px;}")
-  parts.push(".diagnostics{margin-top:24px;}")
-  parts.push(".diag-card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:14px;margin-bottom:12px;border-left:4px solid var(--blue);}")
-  parts.push(".diag-critical{border-left-color:var(--red);}.diag-warning{border-left-color:var(--yellow);}.diag-info{border-left-color:var(--green);}")
-  parts.push(".diag-header{display:flex;gap:10px;align-items:center;margin-bottom:6px;}")
-  parts.push(".diag-level{font-size:12px;font-weight:700;padding:2px 8px;border-radius:4px;background:var(--border);}")
-  parts.push(".diag-critical .diag-level{background:var(--red);color:#fff;}.diag-warning .diag-level{background:var(--yellow);color:#000;}.diag-info .diag-level{background:var(--green);color:#fff;}")
-  parts.push(".diag-code{font-family:monospace;color:var(--blue);font-size:13px;}.diag-msg{margin-bottom:6px;}")
-  parts.push(".diag-path{font-size:13px;color:#8b949e;}.diag-suggestions{margin-top:8px;}")
-  parts.push(".suggestion{font-size:13px;color:var(--blue);margin-top:2px;}.no-issues{color:var(--green);}")
-  parts.push(".dep-tree{margin-top:24px;}")
-  parts.push(".tree-root{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px;}")
-  parts.push(".tree-branch{margin:4px 0;}.tree-branch summary{cursor:pointer;font-family:monospace;padding:4px;border-radius:4px;}")
-  parts.push(".tree-branch summary:hover{background:#21262d;}")
-  parts.push(".tree-leaf{font-family:monospace;padding:4px 4px 4px 20px;color:#8b949e;}")
-  parts.push(".footer{text-align:center;color:#8b949e;font-size:12px;margin-top:32px;padding-top:16px;border-top:1px solid var(--border);}")
-  join_css_parts(parts)
-}
-
-fn join_css_parts(parts : Array[String]) -> String {
-  let mut result = ""
-  let mut i = 0
-  while i < parts.length() {
-    result = result + parts[i]
-    i = i + 1
-  }
-  result
+  let buf = StringBuilder()
+  buf <+ ":root{--bg:#0d1117;--fg:#c9d1d9;--card:#161b22;--border:#30363d;"
+  buf <+ "--green:#238636;--yellow:#d29922;--red:#da3633;--blue:#58a6ff;}"
+  buf <+ "body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;"
+  buf <+ "background:var(--bg);color:var(--fg);margin:0;padding:20px;}"
+  buf <+ ".container{max-width:900px;margin:0 auto;}"
+  buf <+
+    ".header{text-align:center;border-bottom:1px solid var(--border);padding-bottom:20px;margin-bottom:20px;}"
+  buf <+
+    ".header h1{margin:0;font-size:28px;}.header p{margin:6px 0 0;color:#8b949e;}"
+  buf <+ ".overview{margin-bottom:24px;}"
+  buf <+
+    ".stats-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;}"
+  buf <+
+    ".stat-card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:16px;text-align:center;}"
+  buf <+
+    ".stat-value{font-size:28px;font-weight:700;}.stat-label{font-size:12px;color:#8b949e;margin-top:4px;}"
+  buf <+
+    ".stat-critical .stat-value{color:var(--red);}.stat-warning .stat-value{color:var(--yellow);}.stat-info .stat-value{color:var(--green);}"
+  buf <+
+    ".score-good{color:var(--green);}.score-mid{color:var(--yellow);}.score-bad{color:var(--red);}"
+  buf <+
+    "#overall-score{color:var(--green);font-size:36px;}#overall-score.score-mid{color:var(--yellow);}#overall-score.score-bad{color:var(--red);}"
+  buf <+ ".score-table{width:100%;border-collapse:collapse;margin-top:12px;}"
+  buf <+
+    ".score-table th,.score-table td{padding:8px 12px;text-align:center;border:1px solid var(--border);}"
+  buf <+
+    ".score-table th{background:var(--card);font-weight:600;}.score-total{font-weight:700;font-size:16px;}"
+  buf <+ ".diagnostics{margin-top:24px;}"
+  buf <+
+    ".diag-card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:14px;margin-bottom:12px;border-left:4px solid var(--blue);}"
+  buf <+
+    ".diag-critical{border-left-color:var(--red);}.diag-warning{border-left-color:var(--yellow);}.diag-info{border-left-color:var(--green);}"
+  buf <+
+    ".diag-header{display:flex;gap:10px;align-items:center;margin-bottom:6px;}"
+  buf <+
+    ".diag-level{font-size:12px;font-weight:700;padding:2px 8px;border-radius:4px;background:var(--border);}"
+  buf <+
+    ".diag-critical .diag-level{background:var(--red);color:#fff;}.diag-warning .diag-level{background:var(--yellow);color:#000;}.diag-info .diag-level{background:var(--green);color:#fff;}"
+  buf <+
+    ".diag-code{font-family:monospace;color:var(--blue);font-size:13px;}.diag-msg{margin-bottom:6px;}"
+  buf <+
+    ".diag-path{font-size:13px;color:#8b949e;}.diag-suggestions{margin-top:8px;}"
+  buf <+
+    ".suggestion{font-size:13px;color:var(--blue);margin-top:2px;}.no-issues{color:var(--green);}"
+  buf <+ ".dep-tree{margin-top:24px;}"
+  buf <+
+    ".tree-root{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px;}"
+  buf <+
+    ".tree-branch{margin:4px 0;}.tree-branch summary{cursor:pointer;font-family:monospace;padding:4px;border-radius:4px;}"
+  buf <+ ".tree-branch summary:hover{background:#21262d;}"
+  buf <+
+    ".tree-leaf{font-family:monospace;padding:4px 4px 4px 20px;color:#8b949e;}"
+  buf <+
+    ".footer{text-align:center;color:#8b949e;font-size:12px;margin-top:32px;padding-top:16px;border-top:1px solid var(--border);}"
+  buf.to_string()
 }
 
 // ========== 工具函数 ==========
 
+///|
 fn score_css_class(score : Int) -> String {
-  if score >= 80 { "score-good" }
-  else if score >= 50 { "score-mid" }
-  else { "score-bad" }
+  if score >= 80 {
+    "score-good"
+  } else if score >= 50 {
+    "score-mid"
+  } else {
+    "score-bad"
+  }
 }
 
+///|
 /// 拆分 "name@version" 为 (name, version)
 fn split_at_id(node_id : String) -> (String, String) {
   let mut i = 0
   while i < node_id.length() {
     if node_id[i].to_int() == '@'.to_int() {
-      return (substring(node_id, 0, i), substring(node_id, i + 1, node_id.length() - i - 1))
+      return (
+        substring(node_id, 0, i),
+        substring(node_id, i + 1, node_id.length() - i - 1),
+      )
     }
     i = i + 1
   }
   (node_id, "")
 }
 
+///|
 fn count_level(diagnostics : Array[@report.Diagnostic], level : String) -> Int {
   let mut count = 0
   for d in diagnostics {
-    if d.level == level { count = count + 1 }
+    if d.level == level {
+      count = count + 1
+    }
   }
   count
 }
 
+///|
 fn escape_html(s : String) -> String {
-  escape_html_loop(s, 0, [])
-}
-
-fn escape_html_loop(s : String, idx : Int, acc : Array[String]) -> String {
-  if idx >= s.length() { return join_inline(acc) }
-  let code = s[idx].to_int()
-  if code == '&'.to_int() { acc.push("&amp;") }
-  else if code == '<'.to_int() { acc.push("&lt;") }
-  else if code == '>'.to_int() { acc.push("&gt;") }
-  else if code == '"'.to_int() { acc.push("&quot;") }
-  else { acc.push(char_code_to_html_string(s[idx])) }
-  escape_html_loop(s, idx + 1, acc)
-}
-
-fn join_inline(parts : Array[String]) -> String {
-  let mut result = ""
-  let mut i = 0
-  while i < parts.length() {
-    result = result + parts[i]
-    i = i + 1
+  let buf = StringBuilder()
+  for i = 0; i < s.length(); i = i + 1 {
+    let code = s[i].to_int()
+    if code == '&'.to_int() {
+      buf <+ "&amp;"
+    } else if code == '<'.to_int() {
+      buf <+ "&lt;"
+    } else if code == '>'.to_int() {
+      buf <+ "&gt;"
+    } else if code == '"'.to_int() {
+      buf <+ "&quot;"
+    } else {
+      let c = s[i].to_int().unsafe_to_char()
+      buf.write_string(c.to_string())
+    }
   }
-  result
+  buf.to_string()
 }
 
-fn char_code_to_html_string(code : UInt16) -> String {
-  let c = code.to_int().unsafe_to_char()
-  let arr : Array[String] = [c.to_string()]
-  join_html_parts(arr)
-}
-
+///|
 fn join_html_path(path : Array[String]) -> String {
-  let mut result = ""
-  let mut i = 0
-  while i < path.length() {
-    if i > 0 { result = result + " -> " }
-    result = result + path[i]
-    i = i + 1
+  let buf = StringBuilder()
+  let mut first = true
+  for p in path {
+    if !first {
+      buf <+ " -> "
+    }
+    buf.write_string(p)
+    first = false
   }
-  result
-}
-
-fn join_html_parts(parts : Array[String]) -> String {
-  let mut result = ""
-  let mut i = 0
-  while i < parts.length() {
-    result = result + parts[i]
-    if i < parts.length() - 1 { result = result + "\n" }
-    i = i + 1
-  }
-  result
+  buf.to_string()
 }

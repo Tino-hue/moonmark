@@ -1,10 +1,18 @@
+///|
 /// 快速构造 Module（仅填充 build 所需的字段）
-fn make_module(name : String, version : String, deps : Map[String, String]) -> @parse.Module {
+fn make_module(
+  name : String,
+  version : String,
+  deps : Map[String, String],
+) -> @parse.Module {
   @parse.Module::new(name, version, deps)
 }
 
+///|
 /// 构造 mock fetch 闭包
-fn make_mock_fetch(registry : Map[String, @parse.Module]) -> (String, String) -> Result[@parse.Module, String] {
+fn make_mock_fetch(
+  registry : Map[String, @parse.Module],
+) -> (String, String) -> Result[@parse.Module, String] {
   fn fetch(name : String, version : String) -> Result[@parse.Module, String] {
     let id = name + "@" + version
     match registry.get(id) {
@@ -15,6 +23,7 @@ fn make_mock_fetch(registry : Map[String, @parse.Module]) -> (String, String) ->
   fetch
 }
 
+///|
 test "build simple dependency tree" {
   let a = make_module("a", "1.0.0", { "c": "1.0.0" })
   let b = make_module("b", "1.0.0", {})
@@ -42,6 +51,7 @@ test "build simple dependency tree" {
   inspect(graph.get_children("c", "1.0.0").length(), content="0")
 }
 
+///|
 test "build with version conflict" {
   // 同一包的两个不同版本应作为独立节点存在
   let a1 = make_module("a", "1.0.0", { "b": "1.0.0" })
@@ -74,6 +84,7 @@ test "build with version conflict" {
   assert_true(graph.get_node("b", "2.0.0") is Some(_))
 }
 
+///|
 test "build respects max depth" {
   let a = make_module("a", "1.0.0", { "b": "1.0.0" })
   let b = make_module("b", "1.0.0", { "c": "1.0.0" })
@@ -102,6 +113,7 @@ test "build respects max depth" {
   assert_true(graph.get_node("c", "1.0.0") is None)
 }
 
+///|
 test "cache prevents redundant fetches" {
   let a = make_module("a", "1.0.0", { "c": "1.0.0" })
   let b = make_module("b", "1.0.0", { "c": "1.0.0" })

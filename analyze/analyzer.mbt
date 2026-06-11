@@ -1,3 +1,4 @@
+///|
 /// 节点分析所需的元数据
 pub struct NodeMeta {
   license : String?
@@ -7,17 +8,19 @@ pub struct NodeMeta {
   last_commit_days_ago : Int?
 }
 
+///|
 /// 构造 NodeMeta
 pub fn NodeMeta::new(
-  license~ : String? = None,
-  deprecated_apis~ : Array[DeprecatedApi] = [],
-  latest_version~ : String? = None,
-  self_size~ : Int = 0,
-  last_commit_days_ago~ : Int? = None
+  license? : String? = None,
+  deprecated_apis? : Array[DeprecatedApi] = [],
+  latest_version? : String? = None,
+  self_size? : Int = 0,
+  last_commit_days_ago? : Int? = None,
 ) -> NodeMeta {
   { license, deprecated_apis, latest_version, self_size, last_commit_days_ago }
 }
 
+///|
 /// 完整分析报告
 pub struct AnalysisReport {
   diagnostics : Array[@report.Diagnostic]
@@ -26,38 +29,48 @@ pub struct AnalysisReport {
   node_count : Int
 } derive(Debug)
 
+///|
 /// 构造 AnalysisReport（用于 blackbox test 直接构造）
 pub fn AnalysisReport::new(
-  diagnostics~ : Array[@report.Diagnostic] = [],
-  health_scores~ : Array[HealthScore] = [],
-  overall_score~ : Int = 100,
-  node_count~ : Int = 0
+  diagnostics? : Array[@report.Diagnostic] = [],
+  health_scores? : Array[HealthScore] = [],
+  overall_score? : Int = 100,
+  node_count? : Int = 0,
 ) -> AnalysisReport {
   { diagnostics, health_scores, overall_score, node_count }
 }
 
-pub fn AnalysisReport::get_diagnostics(self : AnalysisReport) -> Array[@report.Diagnostic] {
+///|
+pub fn AnalysisReport::get_diagnostics(
+  self : AnalysisReport,
+) -> Array[@report.Diagnostic] {
   self.diagnostics
 }
 
-pub fn AnalysisReport::get_health_scores(self : AnalysisReport) -> Array[HealthScore] {
+///|
+pub fn AnalysisReport::get_health_scores(
+  self : AnalysisReport,
+) -> Array[HealthScore] {
   self.health_scores
 }
 
+///|
 pub fn AnalysisReport::get_overall_score(self : AnalysisReport) -> Int {
   self.overall_score
 }
 
+///|
 pub fn AnalysisReport::get_node_count(self : AnalysisReport) -> Int {
   self.node_count
 }
 
+///|
 /// 对依赖图运行完整分析
 ///
 /// `node_metas` 的 key 为节点 ID（`name@version`），value 为该节点的附加元数据。
 pub fn run_analysis(
   graph : @graph.DependencyGraph,
-  node_metas : Map[String, NodeMeta]
+  node_metas : Map[String, NodeMeta],
 ) -> AnalysisReport {
   let diagnostics : Array[@report.Diagnostic] = []
 
@@ -91,35 +104,50 @@ pub fn run_analysis(
 
     // License 诊断
     match meta.license {
-      Some(spdx) => if is_high_risk_license(spdx) {
-        diagnostics.push(@report.Diagnostic::warning(
-          "LICENSE-001",
-          "High-risk license: " + license_name(spdx),
-          [id],
-        ).with_suggestion("Replace with MIT, Apache-2.0, or BSD-3-Clause"))
-      }
-      None => diagnostics.push(@report.Diagnostic::info(
-        "LICENSE-002",
-        "No license info: " + id,
-        [id],
-      ).with_suggestion("Add a license field to moon.mod (e.g., \"Apache-2.0\")"))
+      Some(spdx) =>
+        if is_high_risk_license(spdx) {
+          diagnostics.push(
+            @report.Diagnostic::warning(
+              "LICENSE-001",
+              "High-risk license: " + license_name(spdx),
+              [id],
+            ).with_suggestion("Replace with MIT, Apache-2.0, or BSD-3-Clause"),
+          )
+        }
+      None =>
+        diagnostics.push(
+          @report.Diagnostic::info("LICENSE-002", "No license info: " + id, [id]).with_suggestion(
+            "Add a license field to moon.mod (e.g., \"Apache-2.0\")",
+          ),
+        )
     }
 
     // 废弃 API 诊断
     if meta.deprecated_apis.length() > 0 {
       let mut diag = @report.Diagnostic::warning(
         "DEPRECATED-001",
-        id + " has " + meta.deprecated_apis.length().to_string() + " deprecated API(s)",
+        id +
+        " has " +
+        meta.deprecated_apis.length().to_string() +
+        " deprecated API(s)",
         [id],
       )
       match meta.latest_version {
         Some(v) => diag = diag.with_suggestion("Upgrade to " + v)
-        None => diag = diag.with_suggestion("Check the package changelog for migration guide")
+        None =>
+          diag = diag.with_suggestion(
+            "Check the package changelog for migration guide",
+          )
       }
       diagnostics.push(diag)
     }
   }
 
   let overall = calculate_overall_score(scores)
-  { diagnostics, health_scores: scores, overall_score: overall, node_count: all_ids.length() }
+  {
+    diagnostics,
+    health_scores: scores,
+    overall_score: overall,
+    node_count: all_ids.length(),
+  }
 }

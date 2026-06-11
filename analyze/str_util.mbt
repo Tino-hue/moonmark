@@ -1,5 +1,6 @@
 /// 字符串工具函数
 
+///|
 /// 提取子串 [start, start+len)
 pub fn substring(s : String, start : Int, len : Int) -> String {
   if start < 0 || len <= 0 || start >= s.length() {

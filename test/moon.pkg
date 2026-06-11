@@ -5,4 +5,4 @@ import {
   "Tino-hue/depsight/cache",
   "Tino-hue/depsight/cli",
   "Tino-hue/depsight/report",
-}
+} for "test"

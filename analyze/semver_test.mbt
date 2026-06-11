@@ -1,3 +1,4 @@
+///|
 fn unwrap_version(r : Result[Version, String]) -> Version {
   match r {
     Ok(v) => v
@@ -5,6 +6,7 @@ fn unwrap_version(r : Result[Version, String]) -> Version {
   }
 }
 
+///|
 test "parse simple version" {
   let v = unwrap_version(parse_version("1.2.3"))
   inspect(v.major, content="1")
@@ -13,6 +15,7 @@ test "parse simple version" {
   assert_true(v.prerelease == None)
 }
 
+///|
 test "parse version with prerelease" {
   let v = unwrap_version(parse_version("2.0.0-alpha"))
   inspect(v.major, content="2")
@@ -21,22 +24,26 @@ test "parse version with prerelease" {
   assert_true(v.prerelease == Some("alpha"))
 }
 
+///|
 test "parse invalid version" {
   let r = parse_version("not.a.version")
   assert_true(r is Err(_))
 }
 
+///|
 test "parse empty version" {
   let r = parse_version("")
   assert_true(r is Err(_))
 }
 
+///|
 test "compare equal versions" {
   let v1 = unwrap_version(parse_version("1.2.3"))
   let v2 = unwrap_version(parse_version("1.2.3"))
   inspect(compare(v1, v2), content="0")
 }
 
+///|
 test "compare different major" {
   let v1 = unwrap_version(parse_version("1.0.0"))
   let v2 = unwrap_version(parse_version("2.0.0"))
@@ -44,18 +51,21 @@ test "compare different major" {
   inspect(compare(v2, v1), content="1")
 }
 
+///|
 test "compare different minor" {
   let v1 = unwrap_version(parse_version("1.2.0"))
   let v2 = unwrap_version(parse_version("1.3.0"))
   inspect(compare(v1, v2), content="-1")
 }
 
+///|
 test "compare different patch" {
   let v1 = unwrap_version(parse_version("1.2.3"))
   let v2 = unwrap_version(parse_version("1.2.4"))
   inspect(compare(v1, v2), content="-1")
 }
 
+///|
 test "compare prerelease vs stable" {
   let pre = unwrap_version(parse_version("1.0.0-alpha"))
   let stable = unwrap_version(parse_version("1.0.0"))
@@ -63,12 +73,14 @@ test "compare prerelease vs stable" {
   inspect(compare(stable, pre), content="1")
 }
 
+///|
 test "compare prerelease strings" {
   let v1 = unwrap_version(parse_version("1.0.0-alpha"))
   let v2 = unwrap_version(parse_version("1.0.0-beta"))
   inspect(compare(v1, v2), content="-1")
 }
 
+///|
 test "is outdated" {
   let current = unwrap_version(parse_version("0.1.0"))
   let latest = unwrap_version(parse_version("0.3.0"))
@@ -76,12 +88,14 @@ test "is outdated" {
   assert_false(is_outdated(latest, current))
 }
 
+///|
 test "satisfies exact match" {
   let v = unwrap_version(parse_version("1.2.3"))
   assert_true(satisfies(v, "1.2.3"))
   assert_false(satisfies(v, "1.2.4"))
 }
 
+///|
 test "satisfies caret" {
   let v = unwrap_version(parse_version("1.2.3"))
   assert_true(satisfies(v, "^1.2.0"))
@@ -95,6 +109,7 @@ test "satisfies caret" {
   assert_false(satisfies(v0, "^0.3.0"))
 }
 
+///|
 test "satisfies tilde" {
   let v = unwrap_version(parse_version("1.2.5"))
   assert_true(satisfies(v, "~1.2.0"))
@@ -103,12 +118,14 @@ test "satisfies tilde" {
   assert_false(satisfies(v, "~1.1.0"))
 }
 
+///|
 test "satisfies tilde arrow" {
   let v = unwrap_version(parse_version("0.2.1"))
   assert_true(satisfies(v, "~> 0.2.0"))
   assert_false(satisfies(v, "~> 0.3.0"))
 }
 
+///|
 test "satisfies greater than or equal" {
   let v = unwrap_version(parse_version("2.0.0"))
   assert_true(satisfies(v, ">=1.0.0"))
@@ -116,12 +133,14 @@ test "satisfies greater than or equal" {
   assert_false(satisfies(v, ">=3.0.0"))
 }
 
+///|
 test "satisfies greater than" {
   let v = unwrap_version(parse_version("2.0.0"))
   assert_true(satisfies(v, ">1.0.0"))
   assert_false(satisfies(v, ">2.0.0"))
 }
 
+///|
 test "satisfies less than or equal" {
   let v = unwrap_version(parse_version("1.5.0"))
   assert_true(satisfies(v, "<=2.0.0"))
@@ -129,12 +148,14 @@ test "satisfies less than or equal" {
   assert_false(satisfies(v, "<=1.0.0"))
 }
 
+///|
 test "satisfies less than" {
   let v = unwrap_version(parse_version("1.0.0"))
   assert_true(satisfies(v, "<2.0.0"))
   assert_false(satisfies(v, "<1.0.0"))
 }
 
+///|
 test "satisfies equal" {
   let v = unwrap_version(parse_version("3.0.0"))
   assert_true(satisfies(v, "=3.0.0"))

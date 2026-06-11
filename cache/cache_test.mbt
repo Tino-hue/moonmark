@@ -1,5 +1,7 @@
+///|
 let test_cache_dir = "./test_cache_tmp"
 
+///|
 fn cleanup_test_cache(fs : @cache.FileSystem) -> Unit {
   match (fs.readdir)(test_cache_dir) {
     Some(files) => {
@@ -12,6 +14,7 @@ fn cleanup_test_cache(fs : @cache.FileSystem) -> Unit {
   }
 }
 
+///|
 test "cache set and get" {
   let fs = @cache.FileSystem::node_js()
   cleanup_test_cache(fs)
@@ -25,6 +28,7 @@ test "cache set and get" {
   cleanup_test_cache(fs)
 }
 
+///|
 test "cache miss returns none" {
   let fs = @cache.FileSystem::node_js()
   cleanup_test_cache(fs)
@@ -37,6 +41,7 @@ test "cache miss returns none" {
   cleanup_test_cache(fs)
 }
 
+///|
 test "cache clear removes all" {
   let fs = @cache.FileSystem::node_js()
   cleanup_test_cache(fs)
@@ -57,6 +62,7 @@ test "cache clear removes all" {
   cleanup_test_cache(fs)
 }
 
+///|
 test "cache purge does not remove valid entries" {
   let fs = @cache.FileSystem::node_js()
   cleanup_test_cache(fs)

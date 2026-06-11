@@ -1,13 +1,17 @@
+///|
 fn find_prop_by_node(
   props : Array[DeprecatedPropagation],
-  node_id : String
+  node_id : String,
 ) -> DeprecatedPropagation? {
   for p in props {
-    if p.node_id == node_id { return Some(p) }
+    if p.node_id == node_id {
+      return Some(p)
+    }
   }
   None
 }
 
+///|
 test "three-level propagation" {
   let graph = @graph.DependencyGraph::new()
   graph.add_node("A", "1.0.0", 0)
@@ -39,6 +43,7 @@ test "three-level propagation" {
   inspect(c_prop.api_name, content="old_fn")
 }
 
+///|
 test "direct and indirect mixed" {
   let graph = @graph.DependencyGraph::new()
   graph.add_node("A", "1.0.0", 0)
@@ -66,6 +71,7 @@ test "direct and indirect mixed" {
   inspect(d.level, content="indirect")
 }
 
+///|
 test "no deprecated nodes" {
   let graph = @graph.DependencyGraph::new()
   graph.add_node("A", "1.0.0", 0)
@@ -77,6 +83,7 @@ test "no deprecated nodes" {
   inspect(props.length(), content="0")
 }
 
+///|
 test "multiple deprecated apis" {
   let graph = @graph.DependencyGraph::new()
   graph.add_node("A", "1.0.0", 0)
@@ -84,16 +91,14 @@ test "multiple deprecated apis" {
   graph.add_edge("B", "1.0.0", "A", "1.0.0")
 
   let deprecated_map : Map[String, Array[DeprecatedApi]] = {
-    "A@1.0.0": [
-      DeprecatedApi::new("old_fn"),
-      DeprecatedApi::new("old_struct"),
-    ],
+    "A@1.0.0": [DeprecatedApi::new("old_fn"), DeprecatedApi::new("old_struct")],
   }
 
   let props = find_deprecated_propagation(graph, deprecated_map)
   inspect(props.length(), content="2")
 }
 
+///|
 test "self deprecated not included" {
   let graph = @graph.DependencyGraph::new()
   graph.add_node("A", "1.0.0", 0)

@@ -1,3 +1,4 @@
+///|
 /// 从许可证文本中检测 SPDX 标识符（基于关键词匹配）
 pub fn detect_license(text : String) -> String? {
   let t = to_lower(text)
@@ -13,28 +14,43 @@ pub fn detect_license(text : String) -> String? {
     not_contains(t, "affero") {
     return Some("GPL-3.0")
   }
-  if contains_any(t, ["gnu lesser general public license", "lgpl v3", "lgpl-3.0"]) {
+  if contains_any(t, [
+      "gnu lesser general public license", "lgpl v3", "lgpl-3.0",
+    ]) {
     return Some("LGPL-3.0")
   }
-  if contains_any(t, ["apache license", "apache-2.0", "licensed under the apache license"]) {
+  if contains_any(t, [
+      "apache license", "apache-2.0", "licensed under the apache license",
+    ]) {
     return Some("Apache-2.0")
   }
-  if contains(t, "mit license") || contains(t, "permission is hereby granted, free of charge") {
+  if contains(t, "mit license") ||
+    contains(t, "permission is hereby granted, free of charge") {
     return Some("MIT")
   }
-  if contains_any(t, ["bsd 3-clause", "three-clause bsd", "redistribution and use in source and binary forms"]) {
+  if contains_any(t, [
+      "bsd 3-clause", "three-clause bsd", "redistribution and use in source and binary forms",
+    ]) {
     return Some("BSD-3-Clause")
   }
-  if contains_any(t, ["bsd 2-clause", "two-clause bsd", "simplified bsd license"]) {
+  if contains_any(t, [
+      "bsd 2-clause", "two-clause bsd", "simplified bsd license",
+    ]) {
     return Some("BSD-2-Clause")
   }
-  if contains_any(t, ["mozilla public license", "mpl 2.0", "mozilla public license 2.0"]) {
+  if contains_any(t, [
+      "mozilla public license", "mpl 2.0", "mozilla public license 2.0",
+    ]) {
     return Some("MPL-2.0")
   }
-  if contains_any(t, ["isc license", "permission to use, copy, modify, and/or distribute"]) {
+  if contains_any(t, [
+      "isc license", "permission to use, copy, modify, and/or distribute",
+    ]) {
     return Some("ISC")
   }
-  if contains_any(t, ["unlicense", "this is free and unencumbered software", "public domain dedication"]) {
+  if contains_any(t, [
+      "unlicense", "this is free and unencumbered software", "public domain dedication",
+    ]) {
     return Some("Unlicense")
   }
   if contains_any(t, ["cc0 1.0", "creative commons zero", "cc0-1.0"]) {
@@ -47,6 +63,7 @@ pub fn detect_license(text : String) -> String? {
   }
 }
 
+///|
 /// 判断是否为高风险强 copyleft 协议
 pub fn is_high_risk_license(spdx_id : String) -> Bool {
   match spdx_id {
@@ -55,6 +72,7 @@ pub fn is_high_risk_license(spdx_id : String) -> Bool {
   }
 }
 
+///|
 /// 获取许可证的友好名称
 pub fn license_name(spdx_id : String) -> String {
   match spdx_id {
@@ -77,6 +95,7 @@ pub fn license_name(spdx_id : String) -> String {
 
 // ---------- 内部辅助 ----------
 
+///|
 fn to_lower(s : String) -> String {
   let mut result = ""
   let mut i = 0
@@ -92,71 +111,98 @@ fn to_lower(s : String) -> String {
   result
 }
 
+///|
 fn contains(haystack : String, needle : String) -> Bool {
-  if needle.length() == 0 { return true }
-  if needle.length() > haystack.length() { return false }
+  if needle.length() == 0 {
+    return true
+  }
+  if needle.length() > haystack.length() {
+    return false
+  }
   let max = haystack.length() - needle.length()
   let mut i = 0
   while i <= max {
-    if starts_at(haystack, needle, i) { return true }
+    if starts_at(haystack, needle, i) {
+      return true
+    }
     i = i + 1
   }
   false
 }
 
+///|
 fn not_contains(haystack : String, needle : String) -> Bool {
   contains(haystack, needle) == false
 }
 
+///|
 fn contains_any(haystack : String, needles : Array[String]) -> Bool {
   for needle in needles {
-    if contains(haystack, needle) { return true }
+    if contains(haystack, needle) {
+      return true
+    }
   }
   false
 }
 
+///|
 fn starts_at(haystack : String, needle : String, start : Int) -> Bool {
   let mut j = 0
   while j < needle.length() {
-    if haystack[start + j] != needle[j] { return false }
+    if haystack[start + j] != needle[j] {
+      return false
+    }
     j = j + 1
   }
   true
 }
 
+///|
 fn extract_spdx_tag(text : String) -> String? {
   let lower = to_lower(text)
   let marker = "spdx-license-identifier:"
   let idx = index_of_string(lower, marker)
-  if idx < 0 { return None }
+  if idx < 0 {
+    return None
+  }
   let start = idx + marker.length()
   let end = find_line_end(lower, start)
   let raw = substring(text, start, end - start) // 从原始文本提取，保持大小写
   let trimmed = trim(raw)
-  if trimmed.length() == 0 { return None }
+  if trimmed.length() == 0 {
+    return None
+  }
   Some(trimmed)
 }
 
+///|
 fn index_of_string(s : String, sub : String) -> Int {
-  if sub.length() == 0 { return 0 }
-  if sub.length() > s.length() { return -1 }
+  if sub.length() == 0 {
+    return 0
+  }
+  if sub.length() > s.length() {
+    return -1
+  }
   let max = s.length() - sub.length()
   let mut i = 0
   while i <= max {
-    if starts_at(s, sub, i) { return i }
+    if starts_at(s, sub, i) {
+      return i
+    }
     i = i + 1
   }
   -1
 }
 
+///|
 fn find_line_end(s : String, start : Int) -> Int {
   let mut i = start
   while i < s.length() {
     let ch = s[i].to_int()
-    if ch == 10 || ch == 13 { return i }
+    if ch == 10 || ch == 13 {
+      return i
+    }
     i = i + 1
   }
   s.length()
 }
-
-

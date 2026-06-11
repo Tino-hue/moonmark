@@ -1,3 +1,4 @@
+///|
 /// 跨包废弃 API 传递检测结果
 pub struct DeprecatedPropagation {
   node_id : String
@@ -6,21 +7,23 @@ pub struct DeprecatedPropagation {
   level : String
 } derive(Debug)
 
+///|
 /// 构造 DeprecatedPropagation（用于测试）
 pub fn DeprecatedPropagation::new(
   node_id : String,
   source_node_id : String,
   api_name : String,
-  level : String
+  level : String,
 ) -> DeprecatedPropagation {
   { node_id, source_node_id, api_name, level }
 }
 
+///|
 /// 在依赖图中发现所有暴露于废弃 API 的节点
 /// `deprecated_map` 的 key 是节点 ID（name@version），value 是该节点的废弃 API 列表
 pub fn find_deprecated_propagation(
   graph : @graph.DependencyGraph,
-  deprecated_map : Map[String, Array[DeprecatedApi]]
+  deprecated_map : Map[String, Array[DeprecatedApi]],
 ) -> Array[DeprecatedPropagation] {
   let result : Array[DeprecatedPropagation] = []
   for pair in deprecated_map {
@@ -28,7 +31,9 @@ pub fn find_deprecated_propagation(
     let visited = bfs_ancestors(graph, source_id)
     for entry in visited {
       let (node_id, dist) = entry
-      if dist == 0 { continue } // 跳过源节点自身
+      if dist == 0 {
+        continue
+      } // 跳过源节点自身
       let level = if dist == 1 { "direct" } else { "indirect" }
       for api in apis {
         result.push({
@@ -45,9 +50,10 @@ pub fn find_deprecated_propagation(
 
 // ---------- 内部辅助 ----------
 
+///|
 fn bfs_ancestors(
   graph : @graph.DependencyGraph,
-  start_id : String
+  start_id : String,
 ) -> Array[(String, Int)] {
   let queue : Array[(String, Int)] = [(start_id, 0)]
   let visited : Map[String, Int] = {}
@@ -55,7 +61,9 @@ fn bfs_ancestors(
   while head < queue.length() {
     let (current, dist) = queue[head]
     head = head + 1
-    if visited.get(current) is Some(_) { continue }
+    if visited.get(current) is Some(_) {
+      continue
+    }
     visited[current] = dist
     let (name, version) = split_node_id(current)
     let parents = graph.get_parents(name, version)
@@ -72,5 +80,3 @@ fn bfs_ancestors(
   }
   result
 }
-
-

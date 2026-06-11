@@ -1,9 +1,10 @@
+///|
 /// Day 24 — 性能基准测试
 /// 使用 JS FFI Date.now() 测量各阶段耗时（微秒）
-
 extern "js" fn date_now() -> Double =
   #| () => Date.now()
 
+///|
 /// 简易基准测试：返回单次迭代平均耗时（微秒）
 fn simple_bench(f : () -> Unit, iterations : Int) -> Double {
   // warmup
@@ -20,6 +21,7 @@ fn simple_bench(f : () -> Unit, iterations : Int) -> Double {
 
 // ---------- 测试数据生成器 ----------
 
+///|
 fn make_bench_registry_chain(n : Int) -> Map[String, @parse.Module] {
   let r = {}
   let mut i = 0
@@ -36,7 +38,10 @@ fn make_bench_registry_chain(n : Int) -> Map[String, @parse.Module] {
   r
 }
 
-fn make_bench_mock_fetch(registry : Map[String, @parse.Module]) -> (String, String) -> Result[@parse.Module, String] {
+///|
+fn make_bench_mock_fetch(
+  registry : Map[String, @parse.Module],
+) -> (String, String) -> Result[@parse.Module, String] {
   fn fetch(name : String, version : String) -> Result[@parse.Module, String] {
     let id = name + "@" + version
     match registry.get(id) {
@@ -47,6 +52,7 @@ fn make_bench_mock_fetch(registry : Map[String, @parse.Module]) -> (String, Stri
   fetch
 }
 
+///|
 fn build_graph(registry : Map[String, @parse.Module]) -> @graph.DependencyGraph {
   let fetch = make_bench_mock_fetch(registry)
   let builder = @graph.GraphBuilder::new()
@@ -56,7 +62,10 @@ fn build_graph(registry : Map[String, @parse.Module]) -> @graph.DependencyGraph 
   }
 }
 
-fn build_and_analyze(registry : Map[String, @parse.Module]) -> (@graph.DependencyGraph, @analyze.AnalysisReport) {
+///|
+fn build_and_analyze(
+  registry : Map[String, @parse.Module],
+) -> (@graph.DependencyGraph, @analyze.AnalysisReport) {
   let graph = build_graph(registry)
   let metas : Map[String, @analyze.NodeMeta] = {}
   let report = @analyze.run_analysis(graph, metas)
@@ -65,6 +74,7 @@ fn build_and_analyze(registry : Map[String, @parse.Module]) -> (@graph.Dependenc
 
 // ---------- 小规模（5 节点）----------
 
+///|
 #skip("slow benchmarking test")
 test "benchmark: small graph build (5 nodes)" {
   let registry = make_bench_registry_chain(5)
@@ -80,6 +90,7 @@ test "benchmark: small graph build (5 nodes)" {
   assert_true(mean_us < 50000.0)
 }
 
+///|
 #skip("slow benchmarking test")
 test "benchmark: small full pipeline (5 nodes)" {
   let registry = make_bench_registry_chain(5)
@@ -99,6 +110,7 @@ test "benchmark: small full pipeline (5 nodes)" {
 
 // ---------- 中规模（50 节点）----------
 
+///|
 #skip("slow benchmarking test")
 test "benchmark: medium graph build (50 nodes)" {
   let registry = make_bench_registry_chain(50)
@@ -114,6 +126,7 @@ test "benchmark: medium graph build (50 nodes)" {
   assert_true(mean_us < 200000.0)
 }
 
+///|
 #skip("slow benchmarking test")
 test "benchmark: medium analysis (50 nodes)" {
   let registry = make_bench_registry_chain(50)
@@ -129,6 +142,7 @@ test "benchmark: medium analysis (50 nodes)" {
   assert_true(mean_us < 100000.0)
 }
 
+///|
 #skip("slow benchmarking test")
 test "benchmark: medium full pipeline (50 nodes)" {
   let registry = make_bench_registry_chain(50)
@@ -148,6 +162,7 @@ test "benchmark: medium full pipeline (50 nodes)" {
 
 // ---------- 大规模（200 节点）----------
 
+///|
 #skip("slow benchmarking test")
 test "benchmark: large graph build (200 nodes)" {
   let registry = make_bench_registry_chain(200)
@@ -163,6 +178,7 @@ test "benchmark: large graph build (200 nodes)" {
   assert_true(mean_us < 1000000.0)
 }
 
+///|
 #skip("slow benchmarking test")
 test "benchmark: large analysis (200 nodes)" {
   let registry = make_bench_registry_chain(200)
@@ -178,6 +194,7 @@ test "benchmark: large analysis (200 nodes)" {
   assert_true(mean_us < 500000.0)
 }
 
+///|
 #skip("slow benchmarking test")
 test "benchmark: large report rendering (200 nodes)" {
   let registry = make_bench_registry_chain(200)
@@ -195,6 +212,7 @@ test "benchmark: large report rendering (200 nodes)" {
   assert_true(mean_us < 2000000.0)
 }
 
+///|
 #skip("slow benchmarking test")
 test "benchmark: large full pipeline (200 nodes)" {
   let registry = make_bench_registry_chain(200)

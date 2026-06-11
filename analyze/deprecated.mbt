@@ -1,3 +1,4 @@
+///|
 /// 废弃 API 信息
 pub struct DeprecatedApi {
   name : String
@@ -5,11 +6,17 @@ pub struct DeprecatedApi {
   message : String?
 } derive(Debug)
 
+///|
 /// 构造 DeprecatedApi（用于测试）
-pub fn DeprecatedApi::new(name : String, since~ : String? = None, message~ : String? = None) -> DeprecatedApi {
+pub fn DeprecatedApi::new(
+  name : String,
+  since? : String? = None,
+  message? : String? = None,
+) -> DeprecatedApi {
   { name, since, message }
 }
 
+///|
 /// 扫描 MoonBit 源码，提取所有标记 @deprecated 的 API
 pub fn scan_deprecated_apis(source : String) -> Array[DeprecatedApi] {
   let lines = split_lines(source)
@@ -38,16 +45,19 @@ pub fn scan_deprecated_apis(source : String) -> Array[DeprecatedApi] {
         if contains(c, "@deprecated") {
           has_deprecated = true
           let (s, m) = parse_deprecated_comment(c)
-          if s is Some(_) { deprecated_since = s }
-          if m is Some(_) { deprecated_msg = m }
+          if s is Some(_) {
+            deprecated_since = s
+          }
+          if m is Some(_) {
+            deprecated_msg = m
+          }
         }
       }
       if has_deprecated && i < lines.length() {
         let def_line = trim(lines[i])
         match extract_definition_name(def_line) {
-          Some(name) => {
+          Some(name) =>
             apis.push({ name, since: deprecated_since, message: deprecated_msg })
-          }
           None => ()
         }
       }
@@ -59,6 +69,7 @@ pub fn scan_deprecated_apis(source : String) -> Array[DeprecatedApi] {
 
 // ---------- 内部辅助 ----------
 
+///|
 fn split_lines(s : String) -> Array[String] {
   let lines : Array[String] = []
   let mut start = 0
@@ -83,16 +94,21 @@ fn split_lines(s : String) -> Array[String] {
   lines
 }
 
+///|
 fn parse_deprecated_comment(line : String) -> (String?, String?) {
   let idx = index_of_string(line, "@deprecated")
-  if idx < 0 { return (None, None) }
+  if idx < 0 {
+    return (None, None)
+  }
   let rest = substring(
     line,
     idx + "@deprecated".length(),
     line.length() - idx - "@deprecated".length(),
   )
   let trimmed = trim(rest)
-  if trimmed.length() == 0 { return (None, None) }
+  if trimmed.length() == 0 {
+    return (None, None)
+  }
 
   // 提取 since
   let since = if starts_with(trimmed, "since ") {
@@ -105,7 +121,11 @@ fn parse_deprecated_comment(line : String) -> (String?, String?) {
     )
     let end = find_word_end(after)
     let ver = trim(substring(after, 0, end))
-    if ver.length() > 0 { Some(ver) } else { None }
+    if ver.length() > 0 {
+      Some(ver)
+    } else {
+      None
+    }
   } else {
     None
   }
@@ -115,13 +135,13 @@ fn parse_deprecated_comment(line : String) -> (String?, String?) {
     Some(ver) => {
       let prefix = "since " + ver
       let rest2 = trim(
-        substring(
-          trimmed,
-          prefix.length(),
-          trimmed.length() - prefix.length(),
-        ),
+        substring(trimmed, prefix.length(), trimmed.length() - prefix.length()),
       )
-      if rest2.length() > 0 { Some(rest2) } else { None }
+      if rest2.length() > 0 {
+        Some(rest2)
+      } else {
+        None
+      }
     }
     None => Some(trimmed)
   }
@@ -129,6 +149,7 @@ fn parse_deprecated_comment(line : String) -> (String?, String?) {
   (since, msg)
 }
 
+///|
 fn extract_definition_name(line : String) -> String? {
   let s = trim(line)
   // 跳过访问修饰符
@@ -142,7 +163,9 @@ fn extract_definition_name(line : String) -> String? {
     let after = trim(substring(body, 3, body.length() - 3))
     let end = find_char(after, '(')
     let name = trim(substring(after, 0, end))
-    if name.length() > 0 { return Some(name) }
+    if name.length() > 0 {
+      return Some(name)
+    }
   }
 
   // let name = ... / const NAME = ...
@@ -150,18 +173,24 @@ fn extract_definition_name(line : String) -> String? {
     let after = trim(substring(body, 4, body.length() - 4))
     let end = find_char(after, '=')
     let name = trim(substring(after, 0, end))
-    if name.length() > 0 { return Some(name) }
+    if name.length() > 0 {
+      return Some(name)
+    }
   }
   if starts_with(body, "const ") {
     let after = trim(substring(body, 6, body.length() - 6))
     let end = find_char(after, '=')
     let name = trim(substring(after, 0, end))
-    if name.length() > 0 { return Some(name) }
+    if name.length() > 0 {
+      return Some(name)
+    }
   }
 
   // struct Name { ... / enum Name { ... / trait Name { ... / type Name ...
-  if starts_with(body, "struct ") || starts_with(body, "enum ") ||
-    starts_with(body, "trait ") || starts_with(body, "type ") {
+  if starts_with(body, "struct ") ||
+    starts_with(body, "enum ") ||
+    starts_with(body, "trait ") ||
+    starts_with(body, "type ") {
     let keyword_len = if starts_with(body, "struct ") {
       7
     } else if starts_with(body, "enum ") {
@@ -171,17 +200,18 @@ fn extract_definition_name(line : String) -> String? {
     } else {
       5
     }
-    let after = trim(
-      substring(body, keyword_len, body.length() - keyword_len),
-    )
+    let after = trim(substring(body, keyword_len, body.length() - keyword_len))
     let end = find_char(after, '{')
     let name = trim(substring(after, 0, end))
-    if name.length() > 0 { return Some(name) }
+    if name.length() > 0 {
+      return Some(name)
+    }
   }
 
   None
 }
 
+///|
 fn find_word_end(s : String) -> Int {
   let mut i = 0
   while i < s.length() {
@@ -194,6 +224,7 @@ fn find_word_end(s : String) -> Int {
   s.length()
 }
 
+///|
 fn find_char(s : String, target : Char) -> Int {
   let mut i = 0
   while i < s.length() {

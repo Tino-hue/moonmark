@@ -1,58 +1,70 @@
+///|
 test "audit without flags returns 0" {
   let code = @cli.run_cli_with_args(["audit"])
   assert_true(code == 0)
 }
 
+///|
 test "audit fail-on-score 101 returns 1" {
   let code = @cli.run_cli_with_args(["audit", "--fail-on-score", "101"])
   assert_true(code == 1)
 }
 
+///|
 test "audit fail-on-score 0 returns 0" {
   let code = @cli.run_cli_with_args(["audit", "--fail-on-score", "0"])
   assert_true(code == 0)
 }
 
+///|
 test "audit fail-on-critical returns 0 (no critical in mock)" {
   let code = @cli.run_cli_with_args(["audit", "--fail-on-critical"])
   assert_true(code == 0)
 }
 
+///|
 test "tree returns 0" {
   let code = @cli.run_cli_with_args(["tree", "root"])
   assert_true(code == 0)
 }
 
+///|
 test "report returns 0" {
   let code = @cli.run_cli_with_args(["report"])
   assert_true(code == 0)
 }
 
+///|
 test "invalid args returns 1" {
   let code = @cli.run_cli_with_args(["audit", "--unknown-flag"])
   assert_true(code == 1)
 }
 
+///|
 test "audit json format returns 0" {
   let code = @cli.run_cli_with_args(["audit", "--json"])
   assert_true(code == 0)
 }
 
+///|
 test "report html format returns 0" {
   let code = @cli.run_cli_with_args(["report", "--html"])
   assert_true(code == 0)
 }
 
+///|
 test "tree with depth returns 0" {
   let code = @cli.run_cli_with_args(["tree", "root", "--depth", "2"])
   assert_true(code == 0)
 }
 
+///|
 test "help returns 0" {
   let code = @cli.run_cli_with_args(["--help"])
   assert_true(code == 0)
 }
 
+///|
 test "version returns 0" {
   let code = @cli.run_cli_with_args(["--version"])
   assert_true(code == 0)
@@ -60,6 +72,7 @@ test "version returns 0" {
 
 // ========== parse_args 详细测试 ==========
 
+///|
 test "parse_args audit with all flags" {
   let args = [
     "audit", "--json", "--fail-on-score", "80", "--fail-on-critical", "--offline",
@@ -79,6 +92,7 @@ test "parse_args audit with all flags" {
   }
 }
 
+///|
 test "parse_args report html output" {
   let args = ["report", "--html", "-o", "report.html"]
   match @cli.parse_args(args) {
@@ -91,6 +105,7 @@ test "parse_args report html output" {
   }
 }
 
+///|
 test "parse_args tree depth" {
   let args = ["tree", "root", "--depth", "3"]
   match @cli.parse_args(args) {
@@ -103,6 +118,7 @@ test "parse_args tree depth" {
   }
 }
 
+///|
 test "parse_args flag order independence" {
   let args1 = ["audit", "--json", "--fail-on-score", "80"]
   let args2 = ["audit", "--fail-on-score", "80", "--json"]
@@ -116,6 +132,7 @@ test "parse_args flag order independence" {
   }
 }
 
+///|
 test "parse_args unknown flag errors" {
   let args = ["audit", "--unknown-flag"]
   match @cli.parse_args(args) {
@@ -124,6 +141,7 @@ test "parse_args unknown flag errors" {
   }
 }
 
+///|
 test "parse_args no command errors" {
   let args = ["--json"]
   match @cli.parse_args(args) {
@@ -132,6 +150,7 @@ test "parse_args no command errors" {
   }
 }
 
+///|
 test "parse_args missing depth value errors" {
   let args = ["tree", "--depth"]
   match @cli.parse_args(args) {
@@ -140,6 +159,7 @@ test "parse_args missing depth value errors" {
   }
 }
 
+///|
 test "parse_args help without command" {
   let args = ["--help"]
   match @cli.parse_args(args) {
@@ -148,6 +168,7 @@ test "parse_args help without command" {
   }
 }
 
+///|
 test "parse_args dry-run flag" {
   let args = ["audit", "--dry-run", "--json"]
   match @cli.parse_args(args) {
@@ -160,10 +181,11 @@ test "parse_args dry-run flag" {
   }
 }
 
+///|
 test "parse_args all flags including dry-run" {
   let args = [
-    "report", "--html", "--dry-run", "--offline", "--workspace",
-    "--fail-on-score", "75", "--fail-on-critical", "-o", "out.html",
+    "report", "--html", "--dry-run", "--offline", "--workspace", "--fail-on-score",
+    "75", "--fail-on-critical", "-o", "out.html",
   ]
   match @cli.parse_args(args) {
     Ok(opts) => {
@@ -180,16 +202,19 @@ test "parse_args all flags including dry-run" {
   }
 }
 
+///|
 test "dry-run audit returns 0" {
   let code = @cli.run_cli_with_args(["audit", "--dry-run"])
   assert_true(code == 0)
 }
 
+///|
 test "dry-run tree returns 0" {
   let code = @cli.run_cli_with_args(["tree", "--dry-run"])
   assert_true(code == 0)
 }
 
+///|
 test "parse_args verbose flag" {
   let args = ["audit", "--verbose"]
   match @cli.parse_args(args) {
@@ -198,6 +223,7 @@ test "parse_args verbose flag" {
   }
 }
 
+///|
 test "verbose audit returns 0" {
   let code = @cli.run_cli_with_args(["audit", "--verbose"])
   assert_true(code == 0)
@@ -205,6 +231,7 @@ test "verbose audit returns 0" {
 
 // ---------- P2: SARIF, baseline, severity_map ----------
 
+///|
 test "parse_args sarif flag" {
   let args = ["audit", "--sarif"]
   match @cli.parse_args(args) {
@@ -213,16 +240,19 @@ test "parse_args sarif flag" {
   }
 }
 
+///|
 test "audit sarif format returns 0" {
   let code = @cli.run_cli_with_args(["audit", "--sarif"])
   assert_true(code == 0)
 }
 
+///|
 test "report sarif format returns 0" {
   let code = @cli.run_cli_with_args(["report", "--sarif"])
   assert_true(code == 0)
 }
 
+///|
 test "parse_args baseline auto" {
   let args = ["audit", "--baseline", "auto"]
   match @cli.parse_args(args) {

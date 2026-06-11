@@ -1,3 +1,4 @@
+///|
 test "render_html_report contains key sections" {
   let graph = @graph.DependencyGraph::new()
   graph.add_node("root", "1.0.0", 0)
@@ -22,6 +23,7 @@ test "render_html_report contains key sections" {
   assert_true(html.contains("</html>"))
 }
 
+///|
 test "render_html_report with no diagnostics shows no issues" {
   let graph = @graph.DependencyGraph::new()
   graph.add_node("pkg", "1.0.0", 0)
@@ -35,9 +37,18 @@ test "render_html_report with no diagnostics shows no issues" {
   assert_true(html.contains("No issues found"))
 }
 
+///|
 test "render_html_report escapes html in messages" {
-  let diag = @report.Diagnostic::warning("XSS-001", "Package <script>alert(1)</script> is unsafe", ["pkg@1.0.0"])
-  let report = AnalysisReport::new(diagnostics=[diag], overall_score=50, node_count=1)
+  let diag = @report.Diagnostic::warning(
+    "XSS-001",
+    "Package <script>alert(1)</script> is unsafe",
+    ["pkg@1.0.0"],
+  )
+  let report = AnalysisReport::new(
+    diagnostics=[diag],
+    overall_score=50,
+    node_count=1,
+  )
   let graph = @graph.DependencyGraph::new()
   graph.add_node("pkg", "1.0.0", 0)
 
@@ -49,6 +60,7 @@ test "render_html_report escapes html in messages" {
   assert_true(html.contains("<script>alert") == false)
 }
 
+///|
 test "render_html_report with critical diagnostics" {
   let graph = @graph.DependencyGraph::new()
   graph.add_node("A", "1.0.0", 0)
@@ -64,9 +76,15 @@ test "render_html_report with critical diagnostics" {
   assert_true(html.contains("CYCLE-001"))
 }
 
+///|
 test "render_html_report has score coloring" {
   let diag = @report.Diagnostic::info("INFO-001", "No license", ["pkg@1.0.0"])
-  let report = AnalysisReport::new(diagnostics=[diag], health_scores=[HealthScore::new("pkg@1.0.0", 90)], overall_score=90, node_count=1)
+  let report = AnalysisReport::new(
+    diagnostics=[diag],
+    health_scores=[HealthScore::new("pkg@1.0.0", 90)],
+    overall_score=90,
+    node_count=1,
+  )
   let graph = @graph.DependencyGraph::new()
   graph.add_node("pkg", "1.0.0", 0)
 
@@ -75,6 +93,7 @@ test "render_html_report has score coloring" {
   assert_true(html.contains("score-good"))
 }
 
+///|
 test "render_html_report has interactive tree" {
   let graph = @graph.DependencyGraph::new()
   graph.add_node("root", "1.0.0", 0)

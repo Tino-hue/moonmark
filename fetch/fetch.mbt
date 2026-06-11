@@ -208,7 +208,7 @@ pub fn http_get(url : String) -> Result[String, String] {
     return Err("Empty response from " + url)
   }
   if raw.has_prefix("__HTTP_ERROR__") {
-    let msg = raw[14:].to_string()
+    let msg = raw[14:].to_owned()
     return Err("HTTP error: " + msg)
   }
   Ok(raw)
@@ -238,13 +238,13 @@ fn split_path(path : String) -> Array[String] {
   for i = 0; i < path.length(); i = i + 1 {
     if path[i] == '/' {
       if i > start {
-        result.push(path[start:i].to_string())
+        result.push(path[start:i].to_owned())
       }
       start = i + 1
     }
   }
   if start < path.length() {
-    result.push(path[start:path.length()].to_string())
+    result.push(path[start:path.length()].to_owned())
   }
   result
 }
@@ -313,9 +313,9 @@ fn parse_iso_date_to_days_ago(date_str : String) -> Result[Int, String] {
   if date_str.length() < 10 {
     return Err("Date string too short")
   }
-  let year_str = date_str[0:4].to_string()
-  let month_str = date_str[5:7].to_string()
-  let day_str = date_str[8:10].to_string()
+  let year_str = date_str[0:4].to_owned()
+  let month_str = date_str[5:7].to_owned()
+  let day_str = date_str[8:10].to_owned()
   let year = match parse_int_simple(year_str) {
     Some(y) => y
     None => return Err("Invalid year")

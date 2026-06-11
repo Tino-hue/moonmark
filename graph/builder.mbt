@@ -1,19 +1,23 @@
+///|
 /// 依赖图构建器：从根模块递归解析传递依赖
 pub struct GraphBuilder {
   max_depth : Int
   cache : Map[String, @parse.Module]
 }
 
+///|
 /// 创建构建器，默认最大递归深度 10
 pub fn GraphBuilder::new() -> GraphBuilder {
   { max_depth: 10, cache: {} }
 }
 
+///|
 /// 创建构建器，指定最大递归深度
 pub fn GraphBuilder::new_with_max_depth(max_depth : Int) -> GraphBuilder {
   { max_depth, cache: {} }
 }
 
+///|
 /// 从根模块递归构建完整依赖图
 /// 
 /// `fetch` 是一个同步函数，输入 (包名, 版本)，返回 `Module` 或错误。
@@ -22,7 +26,7 @@ pub fn GraphBuilder::build(
   self : GraphBuilder,
   root_name : String,
   root_version : String,
-  fetch : (String, String) -> Result[@parse.Module, String]
+  fetch : (String, String) -> Result[@parse.Module, String],
 ) -> Result[DependencyGraph, String] {
   let graph = DependencyGraph::new()
   match self.build_recursive(graph, root_name, root_version, 0, fetch) {
@@ -31,13 +35,14 @@ pub fn GraphBuilder::build(
   }
 }
 
+///|
 fn GraphBuilder::build_recursive(
   self : GraphBuilder,
   graph : DependencyGraph,
   name : String,
   version : String,
   depth : Int,
-  fetch : (String, String) -> Result[@parse.Module, String]
+  fetch : (String, String) -> Result[@parse.Module, String],
 ) -> Result[String, String] {
   // 超过最大深度时停止探索（不报错，只截断）
   if depth > self.max_depth {
@@ -66,7 +71,8 @@ fn GraphBuilder::build_recursive(
   for pair in pkg.deps {
     let (dep_name, dep_version) = pair
     match self.build_recursive(graph, dep_name, dep_version, depth + 1, fetch) {
-      Ok(child_resolved) => graph.add_edge(name, resolved, dep_name, child_resolved)
+      Ok(child_resolved) =>
+        graph.add_edge(name, resolved, dep_name, child_resolved)
       Err(e) => return Err(e)
     }
   }

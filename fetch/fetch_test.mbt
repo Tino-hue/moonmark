@@ -1,27 +1,31 @@
+///|
 test "build_github_raw_url converts github url" {
   let url = @fetch.build_github_raw_url(
-    "https://github.com/moonbitlang/x",
-    "main",
-    "moon.mod.json"
+    "https://github.com/moonbitlang/x", "main", "moon.mod.json",
   )
   inspect(
     url,
-    content="https://raw.githubusercontent.com/moonbitlang/x/main/moon.mod.json"
+    content="https://raw.githubusercontent.com/moonbitlang/x/main/moon.mod.json",
   )
 }
 
+///|
 test "fetch_package_meta with mock success" {
   fn mock_get(_url : String) -> Result[String, String] {
     Ok("{\"name\":\"test\",\"version\":\"1.0.0\"}")
   }
 
-  let result = @fetch.fetch_package_meta(mock_get, "test", "1.0.0", "https://github.com/user/test")
+  let result = @fetch.fetch_package_meta(
+    mock_get, "test", "1.0.0", "https://github.com/user/test",
+  )
   match result {
-    Ok(content) => inspect(content, content="{\"name\":\"test\",\"version\":\"1.0.0\"}")
+    Ok(content) =>
+      inspect(content, content="{\"name\":\"test\",\"version\":\"1.0.0\"}")
     Err(msg) => fail("Should succeed: " + msg)
   }
 }
 
+///|
 test "fetch_package_meta falls back to master branch" {
   let mut call_count = 0
   fn mock_get(url : String) -> Result[String, String] {
@@ -33,7 +37,9 @@ test "fetch_package_meta falls back to master branch" {
     }
   }
 
-  let result = @fetch.fetch_package_meta(mock_get, "test", "1.0.0", "https://github.com/user/test")
+  let result = @fetch.fetch_package_meta(
+    mock_get, "test", "1.0.0", "https://github.com/user/test",
+  )
   match result {
     Ok(content) => {
       inspect(content, content="{\"name\":\"test\",\"version\":\"1.0.0\"}")
@@ -43,18 +49,22 @@ test "fetch_package_meta falls back to master branch" {
   }
 }
 
+///|
 test "fetch_package_meta returns error on both branches fail" {
   fn mock_get(_url : String) -> Result[String, String] {
     Err("Network error")
   }
 
-  let result = @fetch.fetch_package_meta(mock_get, "test", "1.0.0", "https://github.com/user/test")
+  let result = @fetch.fetch_package_meta(
+    mock_get, "test", "1.0.0", "https://github.com/user/test",
+  )
   match result {
     Ok(_) => fail("Should fail")
     Err(msg) => assert_true(msg.contains("Failed to fetch"))
   }
 }
 
+///|
 test "Registry fetch known package" {
   let reg = @fetch.Registry::new()
   reg.add("moonbitlang/x", "https://github.com/moonbitlang/x")
@@ -65,11 +75,16 @@ test "Registry fetch known package" {
 
   let result = reg.fetch(mock_get, "moonbitlang/x", "0.4.44", false)
   match result {
-    Ok(content) => inspect(content, content="{\"name\":\"moonbitlang/x\",\"version\":\"0.4.44\"}")
+    Ok(content) =>
+      inspect(
+        content,
+        content="{\"name\":\"moonbitlang/x\",\"version\":\"0.4.44\"}",
+      )
     Err(msg) => fail("Should succeed: " + msg)
   }
 }
 
+///|
 test "Registry fetch unknown package returns error" {
   let reg = @fetch.Registry::new()
 

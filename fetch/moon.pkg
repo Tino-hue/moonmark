@@ -1,3 +1,4 @@
 import {
   "Tino-hue/depsight/cache",
+  "moonbitlang/core/json",
 }

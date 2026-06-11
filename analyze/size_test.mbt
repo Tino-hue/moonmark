@@ -1,3 +1,4 @@
+///|
 test "single node transitive size" {
   let graph = @graph.DependencyGraph::new()
   graph.add_node("root", "1.0.0", 0)
@@ -12,6 +13,7 @@ test "single node transitive size" {
   inspect(root_size, content="100")
 }
 
+///|
 test "chain transitive size" {
   let graph = @graph.DependencyGraph::new()
   graph.add_node("a", "1.0.0", 0)
@@ -21,11 +23,7 @@ test "chain transitive size" {
   graph.add_edge("a", "1.0.0", "b", "1.0.0")
   graph.add_edge("b", "1.0.0", "c", "1.0.0")
 
-  let self_sizes = {
-    "a@1.0.0": 100,
-    "b@1.0.0": 200,
-    "c@1.0.0": 300,
-  }
+  let self_sizes = { "a@1.0.0": 100, "b@1.0.0": 200, "c@1.0.0": 300 }
   let trans = calculate_transitive_sizes(graph, self_sizes)
 
   let c_size = match trans.get("c@1.0.0") {
@@ -45,6 +43,7 @@ test "chain transitive size" {
   inspect(a_size, content="600")
 }
 
+///|
 test "fork transitive size" {
   let graph = @graph.DependencyGraph::new()
   graph.add_node("root", "1.0.0", 0)
@@ -54,11 +53,7 @@ test "fork transitive size" {
   graph.add_edge("root", "1.0.0", "a", "1.0.0")
   graph.add_edge("root", "1.0.0", "b", "1.0.0")
 
-  let self_sizes = {
-    "root@1.0.0": 50,
-    "a@1.0.0": 100,
-    "b@1.0.0": 200,
-  }
+  let self_sizes = { "root@1.0.0": 50, "a@1.0.0": 100, "b@1.0.0": 200 }
   let trans = calculate_transitive_sizes(graph, self_sizes)
 
   let root_size = match trans.get("root@1.0.0") {
@@ -78,6 +73,7 @@ test "fork transitive size" {
   inspect(b_size, content="200")
 }
 
+///|
 test "find size offenders" {
   let graph = @graph.DependencyGraph::new()
   graph.add_node("root", "1.0.0", 0)
@@ -87,11 +83,7 @@ test "find size offenders" {
   graph.add_edge("root", "1.0.0", "a", "1.0.0")
   graph.add_edge("root", "1.0.0", "b", "1.0.0")
 
-  let self_sizes = {
-    "root@1.0.0": 50,
-    "a@1.0.0": 100,
-    "b@1.0.0": 200,
-  }
+  let self_sizes = { "root@1.0.0": 50, "a@1.0.0": 100, "b@1.0.0": 200 }
 
   let offenders = find_size_offenders(graph, self_sizes, 2)
   inspect(offenders.length(), content="2")
@@ -101,18 +93,22 @@ test "find size offenders" {
   inspect(offenders[1].transitive_size, content="200")
 }
 
+///|
 test "format size bytes" {
   inspect(format_size(512), content="512 B")
 }
 
+///|
 test "format size kb" {
   inspect(format_size(12 * 1024), content="12 KB")
 }
 
+///|
 test "format size mb" {
   inspect(format_size(3 * 1024 * 1024), content="3 MB")
 }
 
+///|
 test "render size report" {
   let infos : Array[SizeInfo] = [
     SizeInfo::new("root@1.0.0", 50, 350),

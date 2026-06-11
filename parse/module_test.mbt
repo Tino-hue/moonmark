@@ -1,3 +1,4 @@
+///|
 test "parse simple moon.mod.json" {
   let content =
     #|{
@@ -16,6 +17,7 @@ test "parse simple moon.mod.json" {
   }
 }
 
+///|
 test "parse full moon.mod.json" {
   let content =
     #|{
@@ -51,6 +53,7 @@ test "parse full moon.mod.json" {
   }
 }
 
+///|
 test "parse invalid name type" {
   let content =
     #|{
@@ -64,6 +67,7 @@ test "parse invalid name type" {
   }
 }
 
+///|
 test "parse missing name" {
   let content =
     #|{
@@ -76,6 +80,7 @@ test "parse missing name" {
   }
 }
 
+///|
 test "parse missing version" {
   let content =
     #|{
@@ -88,6 +93,7 @@ test "parse missing version" {
   }
 }
 
+///|
 test "parse empty name" {
   let content =
     #|{
@@ -101,6 +107,7 @@ test "parse empty name" {
   }
 }
 
+///|
 test "parse malformed json" {
   let content = "{ \"name\": \"test\", \"version\": "
   let result = @parse.parse_mod_json(content)
@@ -110,6 +117,7 @@ test "parse malformed json" {
   }
 }
 
+///|
 test "parse root is array" {
   let content = "[{\"name\": \"test\"}]"
   let result = @parse.parse_mod_json(content)
@@ -119,6 +127,7 @@ test "parse root is array" {
   }
 }
 
+///|
 test "parse deps with non-string values" {
   let content =
     #|{
@@ -139,6 +148,7 @@ test "parse deps with non-string values" {
   }
 }
 
+///|
 test "parse keywords with non-string items" {
   let content =
     #|{
@@ -148,13 +158,12 @@ test "parse keywords with non-string items" {
     #|}
   let result = @parse.parse_mod_json(content)
   match result {
-    Ok(pkg) => {
-      inspect(pkg.keywords.length(), content="2")
-    }
+    Ok(pkg) => inspect(pkg.keywords.length(), content="2")
     Err(msg) => fail("Should parse with skipped non-string keywords: " + msg)
   }
 }
 
+///|
 test "parse empty deps" {
   let content =
     #|{
@@ -169,6 +178,7 @@ test "parse empty deps" {
   }
 }
 
+///|
 test "parse no optional fields" {
   let content =
     #|{
@@ -191,6 +201,7 @@ test "parse no optional fields" {
 
 // ---------- parse_config_toml with sections (P2) ----------
 
+///|
 test "parse_config_toml simple keys" {
   let content =
     #|fail_on_score = 80
@@ -200,6 +211,7 @@ test "parse_config_toml simple keys" {
   assert_true(map.get("format") == Some("json"))
 }
 
+///|
 test "parse_config_toml with section" {
   let content =
     #|format = "terminal"
@@ -212,6 +224,7 @@ test "parse_config_toml with section" {
   assert_true(map.get("severity.DEPRECATED-001") == Some("info"))
 }
 
+///|
 test "parse_config_toml empty" {
   let map = @parse.parse_config_toml("")
   assert_true(map.is_empty())

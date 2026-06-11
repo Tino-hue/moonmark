@@ -1,3 +1,4 @@
+///|
 test "detect deprecated function" {
   let source =
     #|/// @deprecated since 0.1.0 Use new_fn instead
@@ -11,6 +12,7 @@ test "detect deprecated function" {
   assert_true(apis[0].message == Some("Use new_fn instead"))
 }
 
+///|
 test "detect deprecated without since" {
   let source =
     #|/// @deprecated This function is obsolete
@@ -24,6 +26,7 @@ test "detect deprecated without since" {
   assert_true(apis[0].message == Some("This function is obsolete"))
 }
 
+///|
 test "no deprecated in source" {
   let source =
     #|pub fn normal_fn() -> Unit {
@@ -33,6 +36,7 @@ test "no deprecated in source" {
   inspect(apis.length(), content="0")
 }
 
+///|
 test "detect deprecated let binding" {
   let source =
     #|/// @deprecated since 0.2.0
@@ -43,6 +47,7 @@ test "detect deprecated let binding" {
   assert_true(apis[0].since == Some("0.2.0"))
 }
 
+///|
 test "detect deprecated struct" {
   let source =
     #|/// @deprecated since 1.0.0 Use NewStruct
@@ -56,6 +61,7 @@ test "detect deprecated struct" {
   assert_true(apis[0].message == Some("Use NewStruct"))
 }
 
+///|
 test "multiple deprecated apis" {
   let source =
     #|/// @deprecated since 0.1.0
@@ -69,6 +75,7 @@ test "multiple deprecated apis" {
   inspect(apis[1].name, content="second")
 }
 
+///|
 test "deprecated const" {
   let source =
     #|/// @deprecated since 0.3.0
@@ -78,6 +85,7 @@ test "deprecated const" {
   inspect(apis[0].name, content="OLD_CONST")
 }
 
+///|
 test "deprecated enum" {
   let source =
     #|/// @deprecated since 0.4.0
@@ -90,6 +98,7 @@ test "deprecated enum" {
   inspect(apis[0].name, content="OldEnum")
 }
 
+///|
 test "deprecated trait" {
   let source =
     #|/// @deprecated since 0.5.0
