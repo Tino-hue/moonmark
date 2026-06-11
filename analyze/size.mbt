@@ -109,18 +109,18 @@ pub fn format_size(bytes : Int) -> String {
 ///|
 /// 将 SizeInfo 数组渲染为可读的文本报告
 pub fn render_size_report(offenders : Array[SizeInfo]) -> String {
-  let lines : Array[String] = []
-  lines.push("Size Attribution Report")
-  lines.push("=======================")
+  let buf = StringBuilder()
+  buf <+ "Size Attribution Report\n"
+  buf <+ "=======================\n"
   for info in offenders {
-    let line = info.node_id +
-      ": self " +
-      format_size(info.self_size) +
-      " / transitive " +
-      format_size(info.transitive_size)
-    lines.push(line)
+    buf.write_string(info.node_id)
+    buf <+ ": self "
+    buf.write_string(format_size(info.self_size))
+    buf <+ " / transitive "
+    buf.write_string(format_size(info.transitive_size))
+    buf <+ "\n"
   }
-  join_lines(lines)
+  buf.to_string()
 }
 
 // ---------- 内部辅助 ----------
@@ -153,18 +153,4 @@ fn sort_by_transitive_size_desc(arr : Array[SizeInfo]) -> Unit {
     }
     i = i + 1
   }
-}
-
-///|
-fn join_lines(lines : Array[String]) -> String {
-  join_lines_loop(lines, 0, "")
-}
-
-///|
-fn join_lines_loop(lines : Array[String], idx : Int, acc : String) -> String {
-  if idx >= lines.length() {
-    return acc
-  }
-  let sep = if idx == 0 { "" } else { "\n" }
-  join_lines_loop(lines, idx + 1, acc + sep + lines[idx])
 }

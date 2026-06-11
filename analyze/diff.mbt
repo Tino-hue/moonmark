@@ -60,8 +60,18 @@ pub fn diff_reports(
 ///|
 /// 用 code + path 作为诊断的唯一标识
 fn diag_key(d : @report.Diagnostic) -> String {
-  let path_str = join_diag_path(d.path)
-  d.code + "::" + path_str
+  let buf = StringBuilder()
+  buf.write_string(d.code)
+  buf <+ "::"
+  let mut first = true
+  for p in d.path {
+    if !first {
+      buf <+ "->"
+    }
+    buf.write_string(p)
+    first = false
+  }
+  buf.to_string()
 }
 
 ///|
@@ -76,25 +86,11 @@ fn diag_map(
 }
 
 ///|
-fn join_diag_path(path : Array[String]) -> String {
-  let mut result = ""
-  let mut i = 0
-  while i < path.length() {
-    if i > 0 {
-      result = result + "->"
-    }
-    result = result + path[i]
-    i = i + 1
-  }
-  result
-}
-
-///|
 /// 渲染 diff 为终端可读格式
 pub fn render_diff_terminal(diff : ReportDiff) -> String {
-  let lines : Array[String] = []
-  lines.push(bold("╔══ MoonBit Depsight Diff ══╗"))
-  lines.push("")
+  let buf = StringBuilder()
+  buf.write_string(bold("╔══ MoonBit Depsight Diff ══╗"))
+  buf <+ "\n\n"
 
   // 分数变化
   let score_color = if diff.score_delta > 0 {
@@ -105,48 +101,52 @@ pub fn render_diff_terminal(diff : ReportDiff) -> String {
     dim
   }
   let score_sign = if diff.score_delta > 0 { "+" } else { "" }
-  lines.push(
-    "  Overall Score: " + score_color(score_sign + diff.score_delta.to_string()),
-  )
+  buf <+ "  Overall Score: "
+  buf.write_string(score_color(score_sign + diff.score_delta.to_string()))
+  buf <+ "\n"
   if diff.node_count_delta != 0 {
     let node_sign = if diff.node_count_delta > 0 { "+" } else { "" }
-    lines.push(
-      "  Node Count:    " + node_sign + diff.node_count_delta.to_string(),
-    )
+    buf <+ "  Node Count:    "
+    buf.write_string(node_sign + diff.node_count_delta.to_string())
+    buf <+ "\n"
   }
-  lines.push("")
+  buf <+ "\n"
 
   // 新增
   if diff.added.length() > 0 {
-    lines.push(
+    buf.write_string(
       red(
         bold("  ── Added (" + diff.added.length().to_string() + ") ──"),
       ),
     )
+    buf <+ "\n"
     for d in diff.added {
-      lines.push(render_diff_item(d, "+"))
+      buf.write_string(render_diff_item(d, "+"))
+      buf <+ "\n"
     }
-    lines.push("")
+    buf <+ "\n"
   }
 
   // 修复
   if diff.removed.length() > 0 {
-    lines.push(
+    buf.write_string(
       green(
         bold(
           "  ── Fixed (" + diff.removed.length().to_string() + ") ──",
         ),
       ),
     )
+    buf <+ "\n"
     for d in diff.removed {
-      lines.push(render_diff_item(d, "-"))
+      buf.write_string(render_diff_item(d, "-"))
+      buf <+ "\n"
     }
-    lines.push("")
+    buf <+ "\n"
   }
 
   // 不变
   if diff.unchanged.length() > 0 {
-    lines.push(
+    buf.write_string(
       dim(
         bold(
           "  ── Unchanged (" +
@@ -155,36 +155,24 @@ pub fn render_diff_terminal(diff : ReportDiff) -> String {
         ),
       ),
     )
+    buf <+ "\n"
     for d in diff.unchanged {
-      lines.push(render_diff_item(d, " "))
+      buf.write_string(render_diff_item(d, " "))
+      buf <+ "\n"
     }
-    lines.push("")
+    buf <+ "\n"
   }
 
   if diff.added.is_empty() && diff.removed.is_empty() {
-    lines.push(green("  ✅ No changes since baseline."))
-    lines.push("")
+    buf.write_string(green("  ✅ No changes since baseline."))
+    buf <+ "\n\n"
   }
 
-  join_diff_lines(lines)
+  buf.to_string()
 }
 
 ///|
 fn render_diff_item(d : @report.Diagnostic, marker : String) -> String {
   let level_tag = color_level(d.level)
   "  " + marker + " " + level_tag + " " + bold(d.code) + " — " + d.message
-}
-
-///|
-fn join_diff_lines(lines : Array[String]) -> String {
-  let mut result = ""
-  let mut i = 0
-  while i < lines.length() {
-    if i > 0 {
-      result = result + "\n"
-    }
-    result = result + lines[i]
-    i = i + 1
-  }
-  result
 }
