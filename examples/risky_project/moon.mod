@@ -1,0 +1,7 @@
+name = "examples/risky"
+version = "1.0.0"
+description = "A project with risky dependencies"
+import {
+  "legacy/gpl-lib@1.0.0"
+  "unmaintained/old-util@0.5.0"
+}
