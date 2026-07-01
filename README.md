@@ -4,7 +4,7 @@ A dependency health diagnostic tool for the MoonBit ecosystem.
 
 ## Overview
 
-MoonBit Depsight analyzes your `moon.mod.json` and recursively inspects the entire transitive dependency tree to surface risks before they become problems.
+MoonBit Depsight analyzes your `moon.mod` and recursively inspects the entire transitive dependency tree to surface risks before they become problems.
 
 ## Features
 
@@ -155,7 +155,7 @@ moon check --target js
 ## Project Structure
 
 ```
-├── parse/         # moon.mod.json parser & Module data structure
+├── parse/         # moon.mod parser & Module data structure
 ├── fetch/         # Registry abstraction & GitHub raw content fetcher
 ├── graph/         # Dependency graph, builder, topological sort, cycle detection
 ├── analyze/       # Core analysis engine (semver, license, deprecated, health score, size)
