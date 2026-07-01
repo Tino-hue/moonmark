@@ -38,6 +38,7 @@ __pycache__/
 
 # Depsight generated files
 .depsight-baseline.json
+**/.depsight-baseline.json
 report.html
 demo_report.html
 report.json

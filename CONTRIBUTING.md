@@ -4,14 +4,14 @@ Thank you for your interest in contributing to MoonBit Depsight!
 
 ## Project Overview
 
-MoonBit Depsight is a dependency health diagnostic CLI tool for the MoonBit ecosystem. It reads `moon.mod.json`, recursively builds the transitive dependency graph, scores each dependency across five dimensions, and generates terminal/HTML/JSON reports.
+MoonBit Depsight is a dependency health diagnostic CLI tool for the MoonBit ecosystem. It reads `moon.mod`, recursively builds the transitive dependency graph, scores each dependency across five dimensions, and generates terminal/HTML/JSON reports.
 
 ## Development Setup
 
 ### Prerequisites
 
 - [MoonBit](https://www.moonbitlang.cn/) toolchain (`moon` CLI)
-- Node.js 18+ (for running WASM/JS build output)
+- Node.js 18+ (for running the JS build output)
 
 ### Build & Test
 
@@ -36,7 +36,7 @@ moon check --target js
 
 | Directory | Responsibility |
 |-----------|---------------|
-| `parse/` | `moon.mod.json` parser, `Module` data structure |
+| `parse/` | `moon.mod` parser, `Module` data structure |
 | `fetch/` | Registry abstraction, GitHub raw content fetcher |
 | `graph/` | `DependencyGraph`, `GraphBuilder`, topological sort, cycle detection |
 | `analyze/` | SemVer, license, deprecated API, health score, size attribution, report renderers |
