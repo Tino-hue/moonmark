@@ -2,12 +2,26 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+
+### Changed
+- **Build configuration**: Migrated `moon.mod.json` back to `moon.mod` (new TOML format recommended by MoonBit 0.10.0 toolchain). 5 files updated: root `moon.mod`, `examples/healthy_project/moon.mod`, `examples/outdated_project/moon.mod`, `examples/risky_project/moon.mod`, `test/real_package_test/moon.mod`.
+- **Code modernization (MoonBit 0.10.0)**: Migrated all 5 report renderers (`terminal`, `html`, `json`, `sarif`, `markdown`) from manual `write_string` concatenation to native `<+` template write syntax. Removed 13 handwritten `join_*` helper functions in favor of `StringBuilder` template literals. Net code reduction: -35 lines across `analyze/reporter.mbt`, `analyze/size.mbt`, `analyze/diff.mbt`.
+
+### Documentation
+- Updated `README.md` to reflect new `moon.mod` (TOML) format references.
+- Updated `.gitignore` to exclude legacy `%USERPROFILE%/` artifact directory.
+- Unified CI workflows (`ci.yml` + `depsight.yml`): upgraded `actions/checkout@v4` → `v6`, added `moon fmt --check` step.
+
+### Tests
+- Test suite: **267 tests, 100% passing** (up from 250 in 0.5.0).
+
 ## [0.5.1] - 2026-06-05
 
 ### Changed
 - **Module renamed**: `LittleFish/depsight` → `Tino-hue/depsight` (aligned with mooncakes.io account)
 - **Default target**: Added `preferred-target: "js"` to `moon.mod.json` for proper JS FFI compilation
-- **Build configuration**: Converted `moon.mod` to `moon.mod.json` format
+- **Build configuration**: Converted `moon.mod` to `moon.mod.json` format (later reverted in [Unreleased])
 
 ### Published
 - Published to mooncakes.io as `Tino-hue/depsight@0.5.1`
