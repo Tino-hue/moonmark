@@ -2,26 +2,34 @@
 
 All notable changes to this project will be documented in this file.
 
-## [Unreleased]
+## [0.5.2] - 2026-07-01
 
 ### Changed
 - **Build configuration**: Migrated `moon.mod.json` back to `moon.mod` (new TOML format recommended by MoonBit 0.10.0 toolchain). 5 files updated: root `moon.mod`, `examples/healthy_project/moon.mod`, `examples/outdated_project/moon.mod`, `examples/risky_project/moon.mod`, `test/real_package_test/moon.mod`.
 - **Code modernization (MoonBit 0.10.0)**: Migrated all 5 report renderers (`terminal`, `html`, `json`, `sarif`, `markdown`) from manual `write_string` concatenation to native `<+` template write syntax. Removed 13 handwritten `join_*` helper functions in favor of `StringBuilder` template literals. Net code reduction: -35 lines across `analyze/reporter.mbt`, `analyze/size.mbt`, `analyze/diff.mbt`.
 
 ### Documentation
-- Updated `README.md` to reflect new `moon.mod` (TOML) format references.
-- Updated `.gitignore` to exclude legacy `%USERPROFILE%/` artifact directory.
+- Updated `README.md` to reflect new `moon.mod` (TOML) format references, added 6 status badges.
+- Updated `CONTRIBUTING.md` to remove stale `moon.mod.json` / WASM references.
+- Updated `docs/USAGE.md`, `docs/architecture.md`, `docs/benchmark.md` to reflect `moon.mod` format and 267-test count.
+- Updated `.gitignore` to exclude legacy `%USERPROFILE%/` artifact directory and `**/.depsight-baseline.json` (example project baselines).
+- Added `docs/wechat_article.md` for community publication.
+
+### CI / Build
 - Unified CI workflows (`ci.yml` + `depsight.yml`): upgraded `actions/checkout@v4` → `v6`, added `moon fmt --check` step.
+- Pinned MoonBit CLI version `0.1.20260529` for reproducible builds (via `MOONBIT_INSTALL_VERSION` env var).
+- Added `CODE_OF_CONDUCT.md`, `SECURITY.md`, and 3 issue/PR templates for community health.
 
 ### Tests
 - Test suite: **267 tests, 100% passing** (up from 250 in 0.5.0).
+- Example project baselines (`.depsight-baseline.json`) removed from git tracking.
 
 ## [0.5.1] - 2026-06-05
 
 ### Changed
 - **Module renamed**: `LittleFish/depsight` → `Tino-hue/depsight` (aligned with mooncakes.io account)
 - **Default target**: Added `preferred-target: "js"` to `moon.mod.json` for proper JS FFI compilation
-- **Build configuration**: Converted `moon.mod` to `moon.mod.json` format (later reverted in [Unreleased])
+- **Build configuration**: Converted `moon.mod` to `moon.mod.json` format (later reverted in 0.5.2)
 
 ### Published
 - Published to mooncakes.io as `Tino-hue/depsight@0.5.1`

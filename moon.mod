@@ -1,5 +1,5 @@
 name = "Tino-hue/depsight"
-version = "0.5.1"
+version = "0.5.2"
 readme = "README.md"
 repository = "https://github.com/Tino-hue/moonmark"
 license = "Apache-2.0"
