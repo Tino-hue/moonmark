@@ -56,7 +56,7 @@ All notable changes to this project will be documented in this file.
 - SARIF version bumped from 0.4.0 to 0.5.0.
 - `.gitignore` updated to exclude generated files (`report.html`, `report.json`, `.depsight-baseline.json`).
 
-### Performance Benchmarks
+### Performance Benchmarks (Updated 2026-06-08)
 
 | Metric | Value | Notes |
 |--------|-------|-------|
@@ -66,8 +66,9 @@ All notable changes to this project will be documented in this file.
 | Audit (JSON output) | ~132ms | Same analysis, JSON serialization |
 | Audit (HTML output) | ~137ms | Includes HTML template rendering |
 | JS Bundle Size | 466 KB | Single-file deployment |
-| Source Code | 717 .mbt files | 5.2 MB total |
-| Test Coverage | 250/250 (100%) | Zero failures |
+| Source Code | ~30 .mbt files | ~7 KB report renderer code (after `<+` migration) |
+| Test Coverage | **267/267 (100%)** | Up from 250 in 0.5.0; 0 failures |
+| Report Renderer Join Functions | **0** | Removed 13 handwritten `join_*` helpers |
 
 ## [0.3.0] - 2026-06-02
 
