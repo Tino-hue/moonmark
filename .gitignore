@@ -18,6 +18,7 @@ target/
 _build/
 core/
 trace.json
+%USERPROFILE%/
 
 # Test generated directories
 test_crossplatform_cache/
