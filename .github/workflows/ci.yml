@@ -29,6 +29,11 @@ jobs:
           export PATH="$HOME/.moon/bin:$PATH"
           moon update
 
+      - name: Format check
+        run: |
+          export PATH="$HOME/.moon/bin:$PATH"
+          moon fmt --check
+
       - name: Type check
         run: |
           export PATH="$HOME/.moon/bin:$PATH"
