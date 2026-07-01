@@ -179,3 +179,17 @@ For detailed architecture design, see [docs/architecture.md](docs/architecture.m
 ## License
 
 Apache-2.0
+
+## Reproducible Builds
+
+MoonBit Depsight does not use a traditional dependency lock file. To ensure reproducible builds:
+
+- The CI pipeline pins `MOONBIT_INSTALL_VERSION=0.1.20260529` (see `.github/workflows/`)
+- The local package cache is stored in `.mooncakes/` (gitignored)
+- Run `moon update` to refresh the local cache to the latest registry state
+
+To match the CI environment exactly, install the same MoonBit CLI version:
+
+```bash
+MOONBIT_INSTALL_VERSION=0.1.20260529 curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
+```
