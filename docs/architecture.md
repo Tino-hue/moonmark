@@ -56,7 +56,7 @@ MoonBit Depsight 是一个模块化的依赖健康诊断工具，采用分层架
 ## 数据流
 
 ```
-moon.mod.json
+moon.mod
      │
      ▼
 ┌─────────────────┐
@@ -93,7 +93,7 @@ moon.mod.json
 
 ### 1. Parse Layer (`parse/`)
 
-**职责**：解析 `moon.mod.json` 和 `.depsight.toml` 配置文件
+**职责**：解析 `moon.mod` 和 `.depsight.toml` 配置文件
 
 **核心数据结构**：
 ```moonbit

@@ -78,7 +78,7 @@ _build/js/debug/build/depsight.js
 
 ## 快速开始
 
-假设你有一个 MoonBit 项目，目录下有 `moon.mod.json`：
+假设你有一个 MoonBit 项目，目录下有 `moon.mod`：
 
 ```bash
 # 第一步：查看依赖树
@@ -369,7 +369,7 @@ Depsight 从 5 个维度评估每个依赖的健康度（0-100 分）：
 |------|------|------|----------|
 | `CYCLE-001` | Critical | 检测到循环依赖 | 检查依赖链，移除其中一条边以打破循环 |
 | `LICENSE-001` | Warning | 高风险许可证 | 替换为 MIT、Apache-2.0 或 BSD-3-Clause |
-| `LICENSE-002` | Info | 未声明许可证 | 在 `moon.mod.json` 中添加 `license` 字段 |
+| `LICENSE-002` | Info | 未声明许可证 | 在 `moon.mod` 中添加 `license` 字段 |
 | `DEPRECATED-001` | Warning | 包含废弃 API | 升级到最新版本，参考包的 changelog 迁移 |
 
 ---

@@ -33,7 +33,7 @@
 
 ### 测量阶段
 
-1. **Graph Build**：`moon.mod.json` 解析 + `GraphBuilder::build()` 递归构建依赖图
+1. **Graph Build**：`moon.mod` 解析 + `GraphBuilder::build()` 递归构建依赖图
 2. **Analysis**：`run_analysis()` 循环检测 + 逐节点评分 + 诊断生成
 3. **Report Rendering**：审计报告 + 终端报告 + HTML 报告 + JSON 报告 四种格式串行渲染
 4. **End-to-End**：完整流程（Build → Analysis → Report）

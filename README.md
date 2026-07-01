@@ -142,11 +142,14 @@ For detailed benchmark methodology and bottleneck analysis, see [docs/benchmark.
 # 构建 JS 产物
 moon build --target js
 
-# 运行测试（204 个，秒级完成）
+# 运行测试（267 个，秒级完成）
 moon test --target js
 
 # 运行所有测试（含 8 个性能测试，约 30-60 秒）
 moon test --target js --no-skip
+
+# 格式化检查
+moon fmt --check
 
 # 运行 linter（JS target only；wasm-gc 不支持 JS FFI）
 moon check --target js
