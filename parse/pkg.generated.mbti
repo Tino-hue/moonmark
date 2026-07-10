@@ -1,0 +1,34 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "Tino-hue/depsight/parse"
+
+import {
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn parse_config_toml(String) -> Map[String, String]
+
+pub fn parse_mod_json(String) -> Result[Module, String]
+
+pub fn parse_mod_toml(String) -> Result[Module, String]
+
+// Errors
+
+// Types and methods
+pub struct Module {
+  name : String
+  version : String
+  readme : String?
+  repository : String?
+  license : String?
+  keywords : Array[String]
+  description : String?
+  source : String?
+  deps : Map[String, String]
+} derive(@debug.Debug)
+pub fn Module::new(String, String, Map[String, String]) -> Self
+
+// Type aliases
+
+// Traits
+

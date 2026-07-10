@@ -1,0 +1,33 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "Tino-hue/depsight/fetch"
+
+import {
+  "Tino-hue/depsight/cache",
+}
+
+// Values
+pub fn build_github_raw_url(String, String, String) -> String
+
+pub fn fetch_last_commit_days((String) -> Result[String, String], String) -> Result[Int, String]
+
+pub fn fetch_package_meta((String) -> Result[String, String], String, String, String) -> Result[String, String]
+
+pub fn http_get(String) -> Result[String, String]
+
+// Errors
+
+// Types and methods
+pub struct Registry {
+  packages : Map[String, String]
+  mut cache : @cache.CacheManager?
+}
+pub fn Registry::add(Self, String, String) -> Unit
+pub fn Registry::fetch(Self, (String) -> Result[String, String], String, String, Bool) -> Result[String, String]
+pub fn Registry::new() -> Self
+pub fn Registry::with_cache(Self, @cache.CacheManager) -> Self
+pub fn Registry::with_defaults(Self) -> Self
+
+// Type aliases
+
+// Traits
+

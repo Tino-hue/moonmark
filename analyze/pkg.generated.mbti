@@ -1,0 +1,201 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "Tino-hue/depsight/analyze"
+
+import {
+  "Tino-hue/depsight/cache",
+  "Tino-hue/depsight/graph",
+  "Tino-hue/depsight/report",
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn bold(String) -> String
+
+pub fn build_realistic_node_meta(String, String?, @cache.FileSystem, String?, Int?) -> NodeMeta
+
+pub fn calculate_health_score(NodeScoreInput) -> HealthScore
+
+pub fn calculate_health_score_with_weights(NodeScoreInput, ScoreWeights) -> HealthScore
+
+pub fn calculate_overall_score(Array[HealthScore]) -> Int
+
+pub fn calculate_transitive_sizes(@graph.DependencyGraph, Map[String, Int]) -> Map[String, Int]
+
+pub fn color_level(String) -> String
+
+pub fn color_score(Int) -> String
+
+pub fn compare(Version, Version) -> Int
+
+pub fn compute_self_size_from_dir(String, @cache.FileSystem) -> Int
+
+pub fn default_weights() -> ScoreWeights
+
+pub fn detect_license(String) -> String?
+
+pub fn diff_reports(AnalysisReport, AnalysisReport) -> ReportDiff
+
+pub fn dim(String) -> String
+
+pub fn estimate_size_from_content(String) -> Int
+
+pub fn find_deprecated_propagation(@graph.DependencyGraph, Map[String, Array[DeprecatedApi]]) -> Array[DeprecatedPropagation]
+
+pub fn find_size_offenders(@graph.DependencyGraph, Map[String, Int], Int) -> Array[SizeInfo]
+
+pub fn format_size(Int) -> String
+
+pub fn green(String) -> String
+
+pub fn is_high_risk_license(String) -> Bool
+
+pub fn is_outdated(Version, Version) -> Bool
+
+pub fn license_name(String) -> String
+
+pub fn locate_package_dir(String, String) -> String
+
+pub fn pad_center(String, Int) -> String
+
+pub fn pad_left(String, Int) -> String
+
+pub fn pad_right(String, Int) -> String
+
+pub fn parse_audit_json(String) -> Result[AnalysisReport, String]
+
+pub fn parse_version(String) -> Result[Version, String]
+
+pub fn red(String) -> String
+
+pub fn render_audit_json(AnalysisReport) -> String
+
+pub fn render_audit_report(AnalysisReport) -> String
+
+pub fn render_diff_terminal(ReportDiff) -> String
+
+pub fn render_html_report(AnalysisReport, @graph.DependencyGraph, String) -> String
+
+pub fn render_markdown_report(AnalysisReport, @graph.DependencyGraph, String) -> String
+
+pub fn render_report(AnalysisReport) -> String
+
+pub fn render_sarif_report(AnalysisReport, @graph.DependencyGraph, String) -> String
+
+pub fn render_size_report(Array[SizeInfo]) -> String
+
+pub fn render_terminal_report(AnalysisReport, @graph.DependencyGraph, String) -> String
+
+pub fn repeat_char(String, Int) -> String
+
+pub fn run_analysis(@graph.DependencyGraph, Map[String, NodeMeta]) -> AnalysisReport
+
+pub fn satisfies(Version, String) -> Bool
+
+pub fn scan_deprecated_apis(String) -> Array[DeprecatedApi]
+
+pub fn scan_deprecated_from_dir(String, @cache.FileSystem) -> Array[DeprecatedApi]
+
+pub fn scan_license_from_dir(String, @cache.FileSystem, String?) -> String?
+
+pub fn substring(String, Int, Int) -> String
+
+pub fn yellow(String) -> String
+
+// Errors
+
+// Types and methods
+pub struct AnalysisReport {
+  diagnostics : Array[@report.Diagnostic]
+  health_scores : Array[HealthScore]
+  overall_score : Int
+  node_count : Int
+} derive(@debug.Debug)
+pub fn AnalysisReport::get_diagnostics(Self) -> Array[@report.Diagnostic]
+pub fn AnalysisReport::get_health_scores(Self) -> Array[HealthScore]
+pub fn AnalysisReport::get_node_count(Self) -> Int
+pub fn AnalysisReport::get_overall_score(Self) -> Int
+pub fn AnalysisReport::new(diagnostics? : Array[@report.Diagnostic], health_scores? : Array[HealthScore], overall_score? : Int, node_count? : Int) -> Self
+
+pub struct DeprecatedApi {
+  name : String
+  since : String?
+  message : String?
+} derive(@debug.Debug)
+pub fn DeprecatedApi::new(String, since? : String?, message? : String?) -> Self
+
+pub struct DeprecatedPropagation {
+  node_id : String
+  source_node_id : String
+  api_name : String
+  level : String
+} derive(@debug.Debug)
+pub fn DeprecatedPropagation::new(String, String, String, String) -> Self
+
+pub struct HealthScore {
+  node_id : String
+  total : Int
+  freshness : Int
+  compliance : Int
+  deprecated_density : Int
+  size_reasonableness : Int
+  activity : Int
+} derive(@debug.Debug)
+pub fn HealthScore::new(String, Int, freshness? : Int, compliance? : Int, deprecated_density? : Int, size_reasonableness? : Int, activity? : Int) -> Self
+
+pub struct NodeMeta {
+  license : String?
+  deprecated_apis : Array[DeprecatedApi]
+  latest_version : String?
+  self_size : Int
+  last_commit_days_ago : Int?
+}
+pub fn NodeMeta::new(license? : String?, deprecated_apis? : Array[DeprecatedApi], latest_version? : String?, self_size? : Int, last_commit_days_ago? : Int?) -> Self
+
+pub struct NodeScoreInput {
+  node_id : String
+  current_version : String
+  latest_version : String?
+  license_spdx : String?
+  deprecated_count : Int
+  total_api_count : Int
+  transitive_size : Int?
+  last_commit_days_ago : Int?
+}
+pub fn NodeScoreInput::new(String, String, latest_version? : String?, license_spdx? : String?, deprecated_count? : Int, total_api_count? : Int, transitive_size? : Int?, last_commit_days_ago? : Int?) -> Self
+
+pub struct ReportDiff {
+  added : Array[@report.Diagnostic]
+  removed : Array[@report.Diagnostic]
+  unchanged : Array[@report.Diagnostic]
+  score_delta : Int
+  node_count_delta : Int
+}
+pub fn ReportDiff::new(added? : Array[@report.Diagnostic], removed? : Array[@report.Diagnostic], unchanged? : Array[@report.Diagnostic], score_delta? : Int, node_count_delta? : Int) -> Self
+
+pub struct ScoreWeights {
+  freshness : Int
+  compliance : Int
+  deprecated_density : Int
+  size_reasonableness : Int
+  activity : Int
+} derive(@debug.Debug)
+pub fn ScoreWeights::new(freshness? : Int, compliance? : Int, deprecated_density? : Int, size_reasonableness? : Int, activity? : Int) -> Self
+
+pub struct SizeInfo {
+  node_id : String
+  self_size : Int
+  transitive_size : Int
+} derive(@debug.Debug)
+pub fn SizeInfo::new(String, Int, Int) -> Self
+
+pub struct Version {
+  major : Int
+  minor : Int
+  patch : Int
+  prerelease : String?
+} derive(@debug.Debug)
+
+// Type aliases
+
+// Traits
+

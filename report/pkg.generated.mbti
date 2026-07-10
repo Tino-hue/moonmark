@@ -1,0 +1,41 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "Tino-hue/depsight/report"
+
+import {
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn level_critical() -> String
+
+pub fn level_info() -> String
+
+pub fn level_warning() -> String
+
+pub fn severity_rank(String) -> Int
+
+// Errors
+
+// Types and methods
+pub struct Diagnostic {
+  level : String
+  code : String
+  message : String
+  path : Array[String]
+  suggestions : Array[String]
+} derive(@debug.Debug)
+pub fn Diagnostic::critical(String, String, Array[String]) -> Self
+pub fn Diagnostic::info(String, String, Array[String]) -> Self
+pub fn Diagnostic::is_critical(Self) -> Bool
+pub fn Diagnostic::is_info(Self) -> Bool
+pub fn Diagnostic::is_warning(Self) -> Bool
+pub fn Diagnostic::new(String, String, String, Array[String], Array[String]) -> Self
+pub fn Diagnostic::to_json_string(Self) -> String
+pub fn Diagnostic::to_string(Self) -> String
+pub fn Diagnostic::warning(String, String, Array[String]) -> Self
+pub fn Diagnostic::with_suggestion(Self, String) -> Self
+
+// Type aliases
+
+// Traits
+

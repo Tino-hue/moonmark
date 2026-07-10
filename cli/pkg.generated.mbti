@@ -1,0 +1,55 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "Tino-hue/depsight/cli"
+
+import {
+  "Tino-hue/depsight/analyze",
+}
+
+// Values
+pub fn audit_help_text() -> String
+
+pub fn help_text() -> String
+
+pub fn is_major_update(String, String) -> Bool
+
+pub fn parse_args(Array[String]) -> Result[CliOptions, String]
+
+pub fn report_help_text() -> String
+
+pub fn run_cli() -> Int
+
+pub fn run_cli_with_args(Array[String]) -> Int
+
+pub fn tree_help_text() -> String
+
+// Errors
+
+// Types and methods
+pub struct CliOptions {
+  command : String
+  target_pkg : String
+  depth : Int
+  output : String?
+  format : String
+  fail_on_score : Int?
+  fail_on_critical : Bool
+  severity : String?
+  baseline : String?
+  workspace : Bool
+  cache_dir : String?
+  offline : Bool
+  dry_run : Bool
+  verbose : Bool
+  quiet : Bool
+  scoring_weights : @analyze.ScoreWeights
+  ignore : Array[String]
+  severity_map : Map[String, String]
+  help : Bool
+  version : Bool
+}
+pub fn CliOptions::new(command? : String, target_pkg? : String, depth? : Int, output? : String?, format? : String, fail_on_score? : Int?, fail_on_critical? : Bool, severity? : String?, baseline? : String?, workspace? : Bool, cache_dir? : String?, offline? : Bool, dry_run? : Bool, verbose? : Bool, quiet? : Bool, scoring_weights? : @analyze.ScoreWeights, ignore? : Array[String], severity_map? : Map[String, String], help? : Bool, version? : Bool) -> Self
+
+// Type aliases
+
+// Traits
+

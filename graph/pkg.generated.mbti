@@ -1,0 +1,53 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "Tino-hue/depsight/graph"
+
+import {
+  "Tino-hue/depsight/parse",
+  "Tino-hue/depsight/report",
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn array_contains(Array[String], String) -> Bool
+
+// Errors
+
+// Types and methods
+pub struct DependencyGraph {
+  nodes : Map[String, DependencyNode]
+} derive(@debug.Debug)
+pub fn DependencyGraph::add_edge(Self, String, String, String, String) -> Unit
+pub fn DependencyGraph::add_node(Self, String, String, Int) -> Unit
+pub fn DependencyGraph::check_cycles(Self) -> Array[@report.Diagnostic]
+pub fn DependencyGraph::find_cycle(Self) -> Array[String]
+pub fn DependencyGraph::get_all_node_ids(Self) -> Array[String]
+pub fn DependencyGraph::get_children(Self, String, String) -> Array[String]
+pub fn DependencyGraph::get_node(Self, String, String) -> DependencyNode?
+pub fn DependencyGraph::get_node_by_id(Self, String) -> DependencyNode?
+pub fn DependencyGraph::get_parents(Self, String, String) -> Array[String]
+pub fn DependencyGraph::new() -> Self
+pub fn DependencyGraph::render_tree(Self, String, Int) -> String
+pub fn DependencyGraph::render_tree_with_markers(Self, String, Int, Map[String, String]) -> String
+pub fn DependencyGraph::size(Self) -> Int
+pub fn DependencyGraph::topological_sort(Self) -> Result[Array[String], String]
+
+pub struct DependencyNode {
+  name : String
+  version : String
+  depth : Int
+  parents : Array[String]
+  children : Array[String]
+} derive(@debug.Debug)
+
+pub struct GraphBuilder {
+  max_depth : Int
+  cache : Map[String, @parse.Module]
+}
+pub fn GraphBuilder::build(Self, String, String, (String, String) -> Result[@parse.Module, String]) -> Result[DependencyGraph, String]
+pub fn GraphBuilder::new() -> Self
+pub fn GraphBuilder::new_with_max_depth(Int) -> Self
+
+// Type aliases
+
+// Traits
+

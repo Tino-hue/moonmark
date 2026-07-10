@@ -712,19 +712,35 @@ fn build_node_metas(
   commit_days : Map[String, Int],
 ) -> Map[String, @analyze.NodeMeta] {
   let metas : Map[String, @analyze.NodeMeta] = {}
+  let fs = @cache.FileSystem::node_js()
+  let cache_root = ".mooncakes"
   for pair in modules {
     let (id, mod) = pair
     let days = match commit_days.get(id) {
       Some(d) => Some(d)
       None => None
     }
-    metas[id] = @analyze.NodeMeta::new(
-      license=mod.license,
-      deprecated_apis=[],
-      latest_version=None,
-      self_size=0,
-      last_commit_days_ago=days,
-    )
+    // 尝试读取本地缓存 .mooncakes 以做实际扫描
+    let (name, _) = split_node_id(id)
+    let pkg_dir = @analyze.locate_package_dir(cache_root, name)
+    let has_local_cache = match (fs.readdir)(pkg_dir) {
+      Some(_) => true
+      None => false
+    }
+    let meta = if has_local_cache {
+      // 真实扫描：LICENSE 文件 + 实际体积 + 废弃 API
+      @analyze.build_realistic_node_meta(pkg_dir, mod.license, fs, None, days)
+    } else {
+      // 降级：仅用 moon.mod 声明
+      @analyze.NodeMeta::new(
+        license=mod.license,
+        deprecated_apis=[],
+        latest_version=None,
+        self_size=0,
+        last_commit_days_ago=days,
+      )
+    }
+    metas[id] = meta
   }
   metas
 }

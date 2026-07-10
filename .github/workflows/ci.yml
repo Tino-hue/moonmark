@@ -31,6 +31,69 @@ jobs:
           export PATH="$HOME/.moon/bin:$PATH"
           moon update
 
+      # 1. moon check — 静态类型检查（启用 --deny-warn 把 warning 视为 error）
+      - name: Check (type) — moon check --deny-warn
+        run: |
+          export PATH="$HOME/.moon/bin:$PATH"
+          moon check --target js --deny-warn
+
+      # 2. moon fmt — 格式检查
+      # 注：MoonBit 0.10.0 工具链的 `moon fmt` 支持 --check 与 --warn
+      #     `--check --warn` 组合在格式不合规时返回非 0，效果等同于 --deny-warn
+      - name: Format check — moon fmt --check --warn
+        run: |
+          export PATH="$HOME/.moon/bin:$PATH"
+          moon fmt --check --warn
+
+      # 3. moon info — 生成 .mbti 接口文件
+      # 注：`moon info` 不支持 --deny-warn；如未来支持该选项，将自动启用
+      - name: Generate interface — moon info
+        run: |
+          export PATH="$HOME/.moon/bin:$PATH"
+          moon info
+
+      # 4. moon test — 运行 267 个测试用例
+      - name: Run tests — moon test
+        run: |
+          export PATH="$HOME/.moon/bin:$PATH"
+          moon test --target js
+
+      - name: Build for JS target
+        run: |
+          export PATH="$HOME/.moon/bin:$PATH"
+          moon build --target jsname: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    name: Build & Test
+    runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install MoonBit CLI
+        env:
+          MOONBIT_INSTALL_VERSION: "0.1.20260529"
+        run: |
+          curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
+
+      - name: Verify MoonBit installation
+        run: |
+          export PATH="$HOME/.moon/bin:$PATH"
+          moon version --all
+
+      - name: Update MoonBit registry
+        run: |
+          export PATH="$HOME/.moon/bin:$PATH"
+          moon update
+
       - name: Format check
         run: |
           export PATH="$HOME/.moon/bin:$PATH"

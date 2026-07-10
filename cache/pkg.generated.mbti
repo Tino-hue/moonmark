@@ -1,0 +1,43 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "Tino-hue/depsight/cache"
+
+// Values
+pub fn default_cache_dir() -> String
+
+pub fn join_path(String, String) -> String
+
+pub fn platform_home_dir() -> String
+
+pub fn platform_path_sep() -> String
+
+// Errors
+
+// Types and methods
+pub struct CacheManager {
+  dir : String
+  ttl_ms : Double
+  fs : FileSystem
+}
+pub fn CacheManager::clear(Self) -> Unit
+pub fn CacheManager::get(Self, String) -> String?
+pub fn CacheManager::new(String, FileSystem, ttl_ms? : Double) -> Self
+pub fn CacheManager::purge_expired(Self) -> Unit
+pub fn CacheManager::set(Self, String, String) -> Unit
+
+pub struct FileSystem {
+  read_file : (String) -> String?
+  write_file : (String, String) -> Unit
+  exists : (String) -> Bool
+  readdir : (String) -> Array[String]?
+  stat_mtime : (String) -> Double?
+  unlink : (String) -> Unit
+  rmdir : (String) -> Unit
+  mkdir : (String) -> Unit
+  timestamp_ms : () -> Double
+}
+pub fn FileSystem::node_js() -> Self
+
+// Type aliases
+
+// Traits
+

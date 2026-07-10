@@ -1,5 +1,6 @@
 import {
   "Tino-hue/depsight/graph",
   "Tino-hue/depsight/report",
+  "Tino-hue/depsight/cache",
   "moonbitlang/core/json",
 }
