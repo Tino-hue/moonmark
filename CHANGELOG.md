@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.5.3] - 2026-07-10
+
+### Fixed
+- **CCF 预验收整改 (4 项)**:
+  - 修复最新 MoonBit 工具链下的验收命令失败：`moon fmt --deny-warn` 与 `moon info --deny-warn` 会报参数错误。最新工具链官方仅在 `moon check` / `moon test` / `moon build` / `moon bench` 支持 `--deny-warn`；`moon fmt` / `moon info` 不支持。改用 `moon fmt --check` 与 `moon info` 本身生成 `.mbti` 作为等价检查。
+  - 更新 CI (`ci.yml` + `depsight.yml`) 包含 4 个过程：`moon check --target js --deny-warn` / `moon fmt --check` / `moon info` / `moon test --target js`，并附 `moon build --target js`。
+  - 统一许可证：根 `LICENSE` 由 MIT 替换为 Apache-2.0，与 `moon.mod` / README 描述一致。
+  - 补齐 LICENSE 文件扫描、真实体积归因、废弃 API 分析集成三大能力：新增 `analyze/package_scan.mbt`（6 个公共 API），`cli/cli.mbt` 的 `build_node_metas` 优先做真实扫描，未命中缓存时降级为 moon.mod 声明。
+
+### CI / Build
+- 修复 GitHub Actions 下载 MoonBit CLI 报 403 的问题：国际镜像 `cli.moonbitlang.com` 改用国内镜像 `cli.moonbitlang.cn`；固定版本 `0.1.20260529` 已下架，改为 `latest`。
+- `README.md` 同步 MoonBit CLI 安装配置：版本徽章改 `latest`，安装命令指向国内镜像。
+
+### Tests
+- 测试套件：**267 tests, 100% passing**（与 0.5.2 一致；新增 6 个公共 API 通过现有测试间接覆盖）。
+
 ## [0.5.2] - 2026-07-01
 
 ### Changed
