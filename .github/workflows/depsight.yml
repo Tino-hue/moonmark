@@ -18,21 +18,31 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
+      # 国际镜像 cli.moonbitlang.com 在 GitHub Actions 上返回 403，
+      # 改用国内镜像 cli.moonbitlang.cn 下载安装；
+      # 固定版本 0.1.20260529 在两个镜像均已下架，改为 latest。
       - name: Setup MoonBit
         env:
-          MOONBIT_INSTALL_VERSION: "0.1.20260529"
+          MOONBIT_INSTALL_VERSION: "latest"
         run: |
-          curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
+          curl -fsSL https://cli.moonbitlang.cn/install/unix.sh | bash
           echo "$HOME/.moon/bin" >> $GITHUB_PATH
 
+      # 1. moon fmt — 格式检查（不支持 --deny-warn，用 --check 替代）
       - name: Format check (deny-warn equivalent)
-        run: moon fmt --check --warn
+        run: moon fmt --check
 
+      # 2. moon check — 类型检查
       - name: Type check (deny-warn)
         run: moon check --target js --deny-warn
 
+      # 3. moon info — 生成接口（不支持 --deny-warn）
       - name: Generate interface
         run: moon info
+
+      # 4. moon test — 测试
+      - name: Run tests
+        run: moon test --target js
 
       - name: Build depsight
         run: |
