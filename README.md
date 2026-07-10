@@ -1,9 +1,9 @@
 # MoonBit Depsight
-
+ 
 [![CI](https://github.com/Tino-hue/moonmark/actions/workflows/ci.yml/badge.svg)](https://github.com/Tino-hue/moonmark/actions/workflows/ci.yml)
 [![Depsight Audit](https://github.com/Tino-hue/moonmark/actions/workflows/depsight.yml/badge.svg)](https://github.com/Tino-hue/moonmark/actions/workflows/depsight.yml)
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![MoonBit](https://img.shields.io/badge/MoonBit-0.1.20260529-orange.svg)](https://www.moonbitlang.cn/)
+[![MoonBit](https://img.shields.io/badge/MoonBit-latest-blue.svg)](https://www.moonbitlang.cn/)
 [![Tests](https://img.shields.io/badge/tests-267%20passing-brightgreen.svg)](#development)
 [![GitHub stars](https://img.shields.io/github/stars/Tino-hue/moonmark?style=social)](https://github.com/Tino-hue/moonmark/stargazers)
 
@@ -184,12 +184,13 @@ Apache-2.0
 
 MoonBit Depsight does not use a traditional dependency lock file. To ensure reproducible builds:
 
-- The CI pipeline pins `MOONBIT_INSTALL_VERSION=0.1.20260529` (see `.github/workflows/`)
+- The CI pipeline pins `MOONBIT_INSTALL_VERSION=latest` (see `.github/workflows/`)
 - The local package cache is stored in `.mooncakes/` (gitignored)
 - Run `moon update` to refresh the local cache to the latest registry state
 
-To match the CI environment exactly, install the same MoonBit CLI version:
+To match the CI environment exactly, install the same MoonBit CLI version via the Chinese mirror:
 
 ```bash
-MOONBIT_INSTALL_VERSION=0.1.20260529 curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
+# 国内镜像（GitHub Actions 默认使用，避免 403）
+MOONBIT_INSTALL_VERSION=latest curl -fsSL https://cli.moonbitlang.cn/install/unix.sh | bash
 ```
