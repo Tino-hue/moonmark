@@ -1,0 +1,55 @@
+==========================================================
+MoonBit Depsight Audit Report (ASCII snapshot)
+==========================================================
+
+Tool        : Tino-hue/depsight v0.5.3
+              (MoonBit CLI build, released 2026-07-10)
+Target      : d:\moonbit-depsight
+              (self-audit; only direct dep is moonbitlang/core)
+Run command : moon run --target js . -- audit --json
+Exit code   : 0
+
+----------------------------------------------------------
+Result
+----------------------------------------------------------
+   [OK] No issues found. All dependencies look healthy.
+
+----------------------------------------------------------
+Summary
+----------------------------------------------------------
+   0 critical, 0 warning, 0 info
+   Health Score: 98 / 100
+
+   Dimension breakdown for Tino-hue/depsight@0.5.3
+   ------------------------------------------------
+   Freshness          : 100 / 100
+   Compliance         : 100 / 100
+   Deprecated density : 100 / 100
+   Size reasonableness: 100 / 100
+   Activity           :  80 / 100
+   ------------------------------------------------
+   Total              :  98 / 100  (weighted average)
+
+----------------------------------------------------------
+Raw JSON Evidence
+----------------------------------------------------------
+{"overall_score":98,"node_count":1,"diagnostics":[],"health_scores":[{"node_id":"Tino-hue/depsight@0.5.3","total":98,"freshness":100,"compliance":100,"deprecated_density":100,"size_reasonableness":100,"activity":80}],"summary":{"critical":0,"warning":0,"info":0}}
+
+----------------------------------------------------------
+Reproducibility
+----------------------------------------------------------
+This report is reproducible. See:
+  * .github/workflows/depsight.yml
+    https://github.com/Tino-hue/moonmark/actions/workflows/depsight.yml
+  * Local equivalent: moon run --target js . -- audit
+  * HTML artifact:    node depsight.js report --html -o depsight-report.html
+  * JSON artifact:    saved alongside this file as depsight-audit-report.json
+  * CI environment:   Node.js v22.x, MoonBit latest (cli.moonbitlang.cn mirror)
+
+==========================================================[1m鈺斺晲鈺?MoonBit Depsight Audit 鈺愨晲鈺?[0m
+
+[32m  鉁?No issues found. All dependencies look healthy.[0m
+
+[1m鈹€鈹€鈹€ Summary 鈹€鈹€鈹€[0m
+  [31m0 critical[0m, [33m0 warnings[0m, [32m0 info[0m
+  Health Score: [32m98/100[0m
