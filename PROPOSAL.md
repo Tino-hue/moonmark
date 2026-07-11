@@ -9,7 +9,10 @@
 | **申报人** | 肖若愚 |
 | **团队名称** | 鱼仔爱开发 |
 | **GitHub 仓库** | https://github.com/Tino-hue/moonmark |
-| **GitLink 仓库** | https://www.gitlink.org.cn/LittleFish/moonbit-depsight/tree/main |
+| **Gitee 仓库** | https://gitee.com/xiaoruoyu1206/moon-bit-depsight |
+| **GitLink 仓库（main 分支）** | https://www.gitlink.org.cn/LittleFish/moonbit-depsight/tree/main |
+| **GitLink 仓库（master 分支）** | https://www.gitlink.org.cn/LittleFish/moonbit-depsight/tree/master |
+| **当前版本** | 0.5.3（已发布至 mooncakes.io，build_status=success） |
 | **主要实现语言** | MoonBit |
 | **目标平台** | mooncakes.io |
 | **项目类型** | 生态工具（CLI + 可视化报告） |
@@ -18,9 +21,9 @@
 
 ## 二、项目简介
 
-MoonBit Depsight 是一个面向 MoonBit 生态的依赖健康诊断 CLI 工具。它读取项目的 `moon.mod.json`，递归构建传递依赖图，从版本新鲜度、许可证合规、废弃 API 密度、体积合理性、维护活跃度五个维度对每个依赖包进行量化评分，并生成终端彩色报告、HTML 可视化报告和 JSON 结构化输出。
+MoonBit Depsight 是一个面向 MoonBit 生态的依赖健康诊断 CLI 工具。它读取项目的 `moon.mod`，递归构建传递依赖图，从版本新鲜度、许可证合规、废弃 API 密度、体积合理性、维护活跃度五个维度对每个依赖包进行量化评分，并生成终端彩色报告、HTML 可视化报告、JSON / SARIF / Markdown 多格式结构化输出。
 
-工具以纯 MoonBit 实现，编译为 WASM/JS 通过 Node.js 运行，计划发布至 mooncakes.io 供所有 MoonBit 开发者使用。
+工具以纯 MoonBit 实现，编译为 WASM/JS 通过 Node.js 运行；**已发布至 [mooncakes.io](https://mooncakes.io/Tino-hue/depsight)** 供所有 MoonBit 开发者使用，最新版本 `0.5.3` 构建状态 `success`，可被 `moon add Tino-hue/depsight` 直接添加为依赖。
 
 ---
 
@@ -211,7 +214,7 @@ activity = 20     # 维护活跃度权重
 | Git 集成 | MoonBit | GitLink API FFI |
 | HTTP 请求 | MoonBit | Node.js FFI（跨平台） |
 
-**意义**：证明 MoonBit 不仅能写 Web 应用，更能构建**生产级系统工具**。717 个 .mbt 文件、250 个测试、0 error 0 warning，是对语言成熟度的最佳注脚。
+**意义**：证明 MoonBit 不仅能写 Web 应用，更能构建**生产级系统工具**。**52 个 .mbt 源文件、267 个单元测试（含 8 个性能基准）、0 error 0 warning**，是对语言成熟度的最佳注脚。本工具自身的依赖审计在 `moon run --target js . -- audit` 下得到 `Health Score: 98/100`，是 MoonBit 生态首批"自描述、可验证"的工程实践之一。
 
 ---
 
@@ -224,7 +227,7 @@ activity = 20     # 维护活跃度权重
 | "传递体积归因"（基于 DFS + Memo） | DFS 累加每个包的 `self_size` | 因无法获取真实源码体积和编译后 WASM 符号表，当前采用静态估算累加。符号级归因需 MoonBit 编译器暴露体积数据，待生态成熟后升级。 |
 | "LICENSE 文件自动识别" | 读取 `moon.mod.json` 的 `license` 字段 | 未实现 LICENSE 文件全文扫描。MoonBit 生态中大多数包已在 `moon.mod.json` 中声明 license，当前策略覆盖主要场景。 |
 | "源码 AST 定位 @deprecated" | 基于 doc comment 文本正则匹配 | 未实现完整 AST 解析。当前通过 `/// @deprecated` doc comment 正则提取，覆盖 MoonBit 现有语法模式，与 AST 方式在结果上等价。 |
-| "维护活跃度"（硬编码 100 分） | **v0.4.0 已修复**：通过 GitHub API 获取最后提交时间计算真实活跃度 | 原 v0.3.0 为占位符，v0.4.0 接入 `api.github.com/repos/{owner}/{repo}/commits` 查询，按天分段评分。 |
+| "维护活跃度"（硬编码 100 分） | **v0.5.3 演进**：v0.4.0 接入 `api.github.com/repos/{owner}/{repo}/commits` 计算真实活跃度；v0.5.0 增加按天分段评分；v0.5.3 引入 30/90/180/365 天多档衰减权重 | 历经 v0.4.0 → v0.5.0 → v0.5.3 三次迭代，从"占位符 → 接入 API → 多档衰减"逐步完善。 |
 
 ---
 
