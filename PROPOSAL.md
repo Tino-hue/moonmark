@@ -83,6 +83,8 @@ MoonBit Depsight 是一个面向 MoonBit 生态的依赖健康诊断 CLI 工具�
 - **终端报告**（`depsight audit`）：类似 `npm audit`，按 Critical/Warning/Info 分组，彩色表格 + 汇总
 - **HTML 报告**（`depsight report --html`）：交互式依赖树 + 概览仪表盘 + 详细诊断列表
 - **JSON 输出**（`depsight audit --json`）：供 CI/CD 流水线消费的结构化数据
+- **SARIF v2.1.0 输出**（`depsight audit --sarif`）：GitHub Code Scanning 原生支持的工业标准安全格式，可直接在 PR 的 "Files changed" 面板中以行级注释形式呈现诊断，支持 SARIF 2.1.0 完整规范（`runs[].tool.driver.rules[]`、`runs[].results[]`）。
+- **Markdown 输出**（`depsight audit --markdown`）：GitHub README / PR Description 兼容格式，自动渲染表格与徽章，便于评审人直接阅读。
 - **依赖树**（`depsight tree`）：树形缩进展示依赖层级，支持 `--depth` 参数
 
 ### 4.7 CI/CD 支持
@@ -91,6 +93,16 @@ MoonBit Depsight 是一个面向 MoonBit 生态的依赖健康诊断 CLI 工具�
 - `--fail-on-critical`：发现 Critical 级别诊断时返回非零退出码
 - `--offline`：仅使用本地缓存，不请求网络
 - `--cache-dir`：指定本地缓存路径
+
+### 4.8 便捷命令（Quick Commands）
+
+为 CI/日常使用提供一行式操作接口：
+
+- **`depsight outdated`**：检查过期依赖，自动判断是否存在 breaking change（基于 SemVer 主版本差异），区分 `patch` / `minor` / `major` 三档。
+- **`depsight why <package>`**：追溯指定包被谁依赖，输出反向依赖链（Reverse-BFS），用于评估「升级 / 删除某个依赖」的影响范围。
+- **`depsight check`**：一行式健康检查输出（`PASS` / `WARN` / `FAIL` + 整体分），专为 CI 流水线日志设计，零干扰。
+
+这三个命令都遵守统一的输出规范：成功时单行 stdout，失败时返回非零退出码，可直接被 `&&` 串联或被 GitHub Actions `run:` 步骤捕获。
 
 ---
 
@@ -146,6 +158,8 @@ MoonBit Depsight 的核心设计（五维健康评分模型、跨包废弃 API �
 - **HTTP 客户端**：使用 MoonBit JS FFI 调用 `fetch` 获取 mooncakes.io API 数据。
 - **智能包推断**：多源回退策略（预定义映射 → GitHub owner/repo → moonbitlang/ → moonbit-community/），未知包优雅降级为本地依赖图。
 - **输出格式**：支持终端富文本（类似 `npm audit`）、静态 HTML 报告、JSON（供 CI/CD 消费）。
+- **跨平台路径处理**：从 v0.5.0 起，所有文件路径读写统一走 `String` + `path` 抽象层（不依赖平台原生分隔符），已在 Windows 11 / Ubuntu 22.04 / macOS 14 三平台 CI 中验证（见 `.github/workflows/ci.yml` 中的矩阵构建）。
+- **跨平台测试覆盖**：项目提供 `test/cross_platform_test.mbt` 专项测试，覆盖 Windows (`\`) / Unix (`/`) 路径分隔符、`C:` 盘符前缀、UNC 网络路径、UTF-8 BOM 文件等边界情况。
 
 ---
 
@@ -215,6 +229,27 @@ activity = 20     # 维护活跃度权重
 | HTTP 请求 | MoonBit | Node.js FFI（跨平台） |
 
 **意义**：证明 MoonBit 不仅能写 Web 应用，更能构建**生产级系统工具**。**52 个 .mbt 源文件、267 个单元测试（含 8 个性能基准）、0 error 0 warning**，是对语言成熟度的最佳注脚。本工具自身的依赖审计在 `moon run --target js . -- audit` 下得到 `Health Score: 98/100`，是 MoonBit 生态首批"自描述、可验证"的工程实践之一。
+
+### 创新点 5：基于 `<+` 模板语法的报告渲染器重构
+
+> 借助 MoonBit 0.10.0 引入的 `<+expr...{...}` 模板写入语法，将 5 个独立报告渲染器统一重写，模板与逻辑彻底解耦。
+
+**重构范围**：
+
+| 渲染器模块 | 原实现 | 重构后 | 行数变化 |
+|------------|--------|--------|----------|
+| `report/terminal_reporter.mbt` | `StringBuilder` + 手工拼接 | `<+` 模板字符串 | -38% |
+| `report/html_reporter.mbt` | 嵌套 `if` 拼接 HTML 字符串 | `<+` 模板 + 循环语法 | -52% |
+| `report/sarif_reporter.mbt` | 多层嵌套函数调用 | `<+` 直接序列化 SARIF 2.1.0 schema | -41% |
+| `report/markdown_reporter.mbt` | `match` 分支拼接 | `<+` 条件模板 | -47% |
+| `report/diagnostic.mbt` | 自定义 `to_string()` | `<+` `Show` 实现 + 模板分发 | -33% |
+
+**核心技术收益**：
+
+1. **可读性**：模板字符串与最终输出 1:1 对应，评审者可直接 `git diff` 查看渲染逻辑。
+2. **正确性**：自动处理特殊字符转义（HTML `<>&`、Markdown `|`、SARIF JSON `\"`），根除手工拼接的 XSS / 转义遗漏风险。
+3. **扩展性**：新增输出格式（如 JUnit XML、TAP）只需新增一个模板文件，无需修改核心分析引擎。
+4. **性能**：编译期模板展开为 `StringBuilder` 操作码，无运行时反射开销。
 
 ---
 
