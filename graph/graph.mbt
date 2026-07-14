@@ -34,7 +34,7 @@ pub fn array_contains(arr : Array[String], item : String) -> Bool {
 ///|
 /// 创建空依赖图
 pub fn DependencyGraph::new() -> DependencyGraph {
-  { nodes: {} }
+  { nodes: Map([]) }
 }
 
 ///|
@@ -139,7 +139,7 @@ pub fn DependencyGraph::get_all_node_ids(
 pub fn DependencyGraph::topological_sort(
   self : DependencyGraph,
 ) -> Result[Array[String], String] {
-  let in_degree : Map[String, Int] = {}
+  let in_degree : Map[String, Int] = Map([])
   for pair in self.nodes {
     let (id, _) = pair
     in_degree[id] = 0
@@ -210,7 +210,7 @@ pub fn DependencyGraph::render_tree(
   root_id : String,
   max_depth : Int,
 ) -> String {
-  self.render_tree_with_markers(root_id, max_depth, {})
+  self.render_tree_with_markers(root_id, max_depth, Map([]))
 }
 
 ///|
@@ -309,7 +309,7 @@ priv struct CycleDetector {
 
 ///|
 fn CycleDetector::new() -> CycleDetector {
-  { grey: {}, black: {} }
+  { grey: Map([]), black: Map([]) }
 }
 
 ///|

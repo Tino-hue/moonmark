@@ -78,7 +78,7 @@ test "no deprecated nodes" {
   graph.add_node("B", "1.0.0", 1)
   graph.add_edge("B", "1.0.0", "A", "1.0.0")
 
-  let deprecated_map : Map[String, Array[DeprecatedApi]] = {}
+  let deprecated_map : Map[String, Array[DeprecatedApi]] = Map([])
   let props = find_deprecated_propagation(graph, deprecated_map)
   inspect(props.length(), content="0")
 }

@@ -8,7 +8,7 @@ pub struct Registry {
 ///|
 /// 创建空注册表
 pub fn Registry::new() -> Registry {
-  { packages: {}, cache: None }
+  { packages: Map([]), cache: None }
 }
 
 ///|
@@ -420,7 +420,7 @@ fn try_infer_github_repo(
 
 ///|
 fn default_package_repos() -> Map[String, String] {
-  let map : Map[String, String] = {}
+  let map : Map[String, String] = Map([])
   map["moonbitlang/core"] = "https://github.com/moonbitlang/core"
   map["moonbitlang/x"] = "https://github.com/moonbitlang/x"
   map["moonbitlang/json5"] = "https://github.com/moonbitlang/json5"

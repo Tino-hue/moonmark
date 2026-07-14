@@ -6,13 +6,13 @@
 // ---------- 生态样本定义 ----------
 
 fn make_ecosystem_registry() -> Map[String, @parse.Module] {
-  let r = {}
+  let r : Map[String, @parse.Module] = Map([])
 
   // 1. moonbitlang/core — 生态基石，被几乎所有包依赖
   r["moonbitlang/core@0.1.0"] = @parse.Module::new(
     "moonbitlang/core",
     "0.1.0",
-    {},
+    Map([]),
   )
 
   // 2. moonbitlang/x — 实验性扩展包
@@ -128,7 +128,7 @@ fn run_ecosystem_sampling(
   }
 
   // 构造元数据（模拟真实包的 license 信息）
-  let metas : Map[String, @analyze.NodeMeta] = {}
+  let metas : Map[String, @analyze.NodeMeta] = Map([])
   let license_map : Map[String, String] = {
     "moonbitlang/core@0.1.0": "Apache-2.0",
     "moonbitlang/x@0.4.44": "Apache-2.0",
@@ -185,7 +185,7 @@ fn calculate_ecosystem_stats(
   }
 
   // 计算被依赖次数
-  let dep_count : Map[String, Int] = {}
+  let dep_count : Map[String, Int] = Map([])
   for id in ids {
     match graph.get_node_by_id(id) {
       Some(node) =>
@@ -209,7 +209,7 @@ fn calculate_ecosystem_stats(
   }
 
   // 许可证分布
-  let license_dist : Map[String, Int] = {}
+  let license_dist : Map[String, Int] = Map([])
   for pair in license_map {
     let (_, spdx) = pair
     license_dist[spdx] = match license_dist.get(spdx) {

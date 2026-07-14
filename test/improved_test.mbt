@@ -8,7 +8,7 @@ test "concurrent fetch multiple packages" {
   let registry : Map[String, @parse.Module] = {
     "a@1.0.0": @parse.Module::new("a", "1.0.0", { "b": "1.0.0" }),
     "b@1.0.0": @parse.Module::new("b", "1.0.0", { "c": "1.0.0" }),
-    "c@1.0.0": @parse.Module::new("c", "1.0.0", {}),
+    "c@1.0.0": @parse.Module::new("c", "1.0.0", Map([])),
   }
 
   let mut fetch_count = 0
@@ -40,7 +40,7 @@ test "concurrent fetch multiple packages" {
 test "concurrent fetch with partial failures" {
   let registry : Map[String, @parse.Module] = {
     "a@1.0.0": @parse.Module::new("a", "1.0.0", { "b": "1.0.0", "c": "1.0.0" }),
-    "b@1.0.0": @parse.Module::new("b", "1.0.0", {}),
+    "b@1.0.0": @parse.Module::new("b", "1.0.0", Map([])),
     // c 不存在
   }
 
@@ -72,11 +72,11 @@ test "concurrent fetch with partial failures" {
 
 ///|
 test "perf: graph build 10 nodes under 100ms" {
-  let registry : Map[String, @parse.Module] = {}
+  let registry : Map[String, @parse.Module] = Map([])
   let mut i = 0
   while i < 10 {
     let name = "pkg" + i.to_string()
-    let deps : Map[String, String] = {}
+    let deps : Map[String, String] = Map([])
     if i > 0 {
       deps["pkg" + (i - 1).to_string()] = "1.0.0"
     }
@@ -110,7 +110,7 @@ test "perf: graph build 10 nodes under 100ms" {
 ///|
 test "perf: analysis 10 nodes under 50ms" {
   let graph = @graph.DependencyGraph::new()
-  let metas : Map[String, @analyze.NodeMeta] = {}
+  let metas : Map[String, @analyze.NodeMeta] = Map([])
   let mut i = 0
   while i < 10 {
     let name = "pkg" + i.to_string()
@@ -133,7 +133,7 @@ test "perf: analysis 10 nodes under 50ms" {
 ///|
 test "perf: report rendering under 100ms" {
   let graph = @graph.DependencyGraph::new()
-  let metas : Map[String, @analyze.NodeMeta] = {}
+  let metas : Map[String, @analyze.NodeMeta] = Map([])
   let mut i = 0
   while i < 10 {
     let name = "pkg" + i.to_string()

@@ -81,7 +81,7 @@ test "parse_mod_json handles unicode package names" {
 test "html report preserves unicode characters" {
   let graph = @graph.DependencyGraph::new()
   graph.add_node("测试包", "1.0.0", 0)
-  let metas : Map[String, @analyze.NodeMeta] = {}
+  let metas : Map[String, @analyze.NodeMeta] = Map([])
   let report = @analyze.run_analysis(graph, metas)
   let html = @analyze.render_html_report(report, graph, "测试包@1.0.0")
   assert_true(html.contains("测试包"))

@@ -94,7 +94,7 @@ pub fn CliOptions::new(
   quiet? : Bool = false,
   scoring_weights? : @analyze.ScoreWeights = @analyze.default_weights(),
   ignore? : Array[String] = [],
-  severity_map? : Map[String, String] = {},
+  severity_map? : Map[String, String] = Map([]),
   help? : Bool = false,
   version? : Bool = false,
 ) -> CliOptions {
@@ -147,7 +147,7 @@ fn load_config() -> CliConfig {
     format: "terminal",
     output: None,
     ignore: [],
-    severity_map: {},
+    severity_map: Map([]),
     baseline: None,
     scoring_weights: @analyze.default_weights(),
   }
@@ -196,7 +196,7 @@ fn load_config() -> CliConfig {
         activity=sw_activity,
       )
       // 解析 severity 映射：severity.LICENSE-001 = "warning"
-      let severity_map : Map[String, String] = {}
+      let severity_map : Map[String, String] = Map([])
       for pair in map {
         let (key, value) = pair
         if key.has_prefix("severity.") && key.length() > 9 {
@@ -580,7 +580,7 @@ fn build_full_graph_for_dir(
     None => {
       let g = build_mock_graph(opts.target_pkg)
       let rid = opts.target_pkg + "@1.0.0"
-      return (g, rid, {})
+      return (g, rid, Map([]))
     }
   }
 
@@ -595,7 +595,7 @@ fn build_full_graph_for_dir(
   }
 
   let builder = @graph.GraphBuilder::new_with_max_depth(opts.depth)
-  let modules : Map[String, @parse.Module] = {}
+  let modules : Map[String, @parse.Module] = Map([])
 
   fn fetch_cb(
     name : String,
@@ -644,7 +644,7 @@ fn build_full_graph_for_dir(
           println(@analyze.yellow("  -> " + e))
         }
         if e.contains("Unknown package") {
-          let m = @parse.Module::new(name, version, {})
+          let m = @parse.Module::new(name, version, Map([]))
           let id = name + "@" + version
           modules[id] = m
           Ok(m)
@@ -658,7 +658,7 @@ fn build_full_graph_for_dir(
   match builder.build(root_mod.name, root_mod.version, fetch_cb) {
     Ok(graph) => {
       // 获取每个远程 module 的 GitHub 最后提交时间（用于真实活跃度评分）
-      let commit_days : Map[String, Int] = {}
+      let commit_days : Map[String, Int] = Map([])
       for pair in modules {
         let (id, mod) = pair
         match mod.repository {
@@ -711,7 +711,7 @@ fn build_node_metas(
   modules : Map[String, @parse.Module],
   commit_days : Map[String, Int],
 ) -> Map[String, @analyze.NodeMeta] {
-  let metas : Map[String, @analyze.NodeMeta] = {}
+  let metas : Map[String, @analyze.NodeMeta] = Map([])
   let fs = @cache.FileSystem::node_js()
   let cache_root = ".mooncakes"
   for pair in modules {
@@ -749,7 +749,7 @@ fn build_node_metas(
 fn build_node_metas_from_single(
   root_mod : @parse.Module,
 ) -> Map[String, @analyze.NodeMeta] {
-  let metas : Map[String, @analyze.NodeMeta] = {}
+  let metas : Map[String, @analyze.NodeMeta] = Map([])
   let root_id = root_mod.name + "@" + root_mod.version
   metas[root_id] = @analyze.NodeMeta::new(
     license=root_mod.license,
@@ -809,7 +809,7 @@ fn run_tree(opts : CliOptions) -> Int {
   let report = @analyze.run_analysis(graph, metas)
 
   // 为 tree 节点构建诊断标记
-  let markers : Map[String, String] = {}
+  let markers : Map[String, String] = Map([])
   for d in report.get_diagnostics() {
     if d.path.length() > 0 {
       let node_id = d.path[0]

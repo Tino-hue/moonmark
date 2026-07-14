@@ -75,7 +75,7 @@ priv struct SarifRule {
 
 ///|
 fn collect_rules(diags : Array[@report.Diagnostic]) -> Array[SarifRule] {
-  let seen : Map[String, Bool] = {}
+  let seen : Map[String, Bool] = Map([])
   let result = []
   for d in diags {
     if seen.get(d.code) is None {

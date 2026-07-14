@@ -68,7 +68,7 @@ test "render_html_report with critical diagnostics" {
   graph.add_edge("A", "1.0.0", "B", "1.0.0")
   graph.add_edge("B", "1.0.0", "A", "1.0.0")
 
-  let metas : Map[String, NodeMeta] = {}
+  let metas : Map[String, NodeMeta] = Map([])
   let report = run_analysis(graph, metas)
   let html = render_html_report(report, graph, "A@1.0.0")
 
@@ -100,7 +100,7 @@ test "render_html_report has interactive tree" {
   graph.add_node("child", "1.0.0", 1)
   graph.add_edge("root", "1.0.0", "child", "1.0.0")
 
-  let metas : Map[String, NodeMeta] = {}
+  let metas : Map[String, NodeMeta] = Map([])
   let report = run_analysis(graph, metas)
   let html = render_html_report(report, graph, "root@1.0.0")
 

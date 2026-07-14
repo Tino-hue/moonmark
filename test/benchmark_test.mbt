@@ -23,12 +23,12 @@ fn simple_bench(f : () -> Unit, iterations : Int) -> Double {
 
 ///|
 fn make_bench_registry_chain(n : Int) -> Map[String, @parse.Module] {
-  let r = {}
+  let r : Map[String, @parse.Module] = Map([])
   let mut i = 0
   while i < n {
     let name = "p" + i.to_string()
     let version = "1.0.0"
-    let deps : Map[String, String] = {}
+    let deps : Map[String, String] = Map([])
     if i + 1 < n {
       deps["p" + (i + 1).to_string()] = "1.0.0"
     }
@@ -67,7 +67,7 @@ fn build_and_analyze(
   registry : Map[String, @parse.Module],
 ) -> (@graph.DependencyGraph, @analyze.AnalysisReport) {
   let graph = build_graph(registry)
-  let metas : Map[String, @analyze.NodeMeta] = {}
+  let metas : Map[String, @analyze.NodeMeta] = Map([])
   let report = @analyze.run_analysis(graph, metas)
   (graph, report)
 }
@@ -133,7 +133,7 @@ test "benchmark: medium analysis (50 nodes)" {
   let graph = build_graph(registry)
   let mean_us = simple_bench(
     () => {
-      let metas : Map[String, @analyze.NodeMeta] = {}
+      let metas : Map[String, @analyze.NodeMeta] = Map([])
       ignore(@analyze.run_analysis(graph, metas))
     },
     20,
@@ -185,7 +185,7 @@ test "benchmark: large analysis (200 nodes)" {
   let graph = build_graph(registry)
   let mean_us = simple_bench(
     () => {
-      let metas : Map[String, @analyze.NodeMeta] = {}
+      let metas : Map[String, @analyze.NodeMeta] = Map([])
       ignore(@analyze.run_analysis(graph, metas))
     },
     5,

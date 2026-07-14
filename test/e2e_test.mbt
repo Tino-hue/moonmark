@@ -32,7 +32,7 @@ test "e2e minimal moon.mod.json pipeline" {
   assert_true(graph.size() == 1)
 
   // Run analysis (no license => compliance=80, self_size=0 => size=100 => total=94)
-  let metas : Map[String, @analyze.NodeMeta] = {}
+  let metas : Map[String, @analyze.NodeMeta] = Map([])
   let report = @analyze.run_analysis(graph, metas)
   assert_true(report.node_count == 1)
   assert_true(report.overall_score == 94)
@@ -73,8 +73,8 @@ test "e2e multi-dep moon.mod.json pipeline" {
   }
 
   // Mock fetch registry
-  let registry : Map[String, @parse.Module] = {}
-  registry["lib/core@0.5.0"] = @parse.Module::new("lib/core", "0.5.0", {})
+  let registry : Map[String, @parse.Module] = Map([])
+  registry["lib/core@0.5.0"] = @parse.Module::new("lib/core", "0.5.0", Map([]))
   registry["lib/util@0.3.0"] = @parse.Module::new("lib/util", "0.3.0", {
     "lib/core": "0.5.0",
   })
@@ -100,7 +100,7 @@ test "e2e multi-dep moon.mod.json pipeline" {
   // app → core, util; util → core
   assert_true(graph.size() == 3)
 
-  let metas : Map[String, @analyze.NodeMeta] = {}
+  let metas : Map[String, @analyze.NodeMeta] = Map([])
   let report = @analyze.run_analysis(graph, metas)
   assert_true(report.node_count == 3)
 
@@ -157,7 +157,7 @@ test "e2e legacy moon.mod.json without deps field" {
     Ok(g) => g
     Err(msg) => fail("Build failed: " + msg)
   }
-  let metas : Map[String, @analyze.NodeMeta] = {}
+  let metas : Map[String, @analyze.NodeMeta] = Map([])
   let report = @analyze.run_analysis(graph, metas)
   let json = @analyze.render_audit_json(report)
   // No license => compliance=80, self_size=0 => size=100 => overall_score = 94
@@ -186,11 +186,15 @@ test "e2e empty string version in deps" {
 ///|
 test "e2e offline mode with local cache fallback" {
   // Simulate offline: all deps resolved from local registry
-  let registry : Map[String, @parse.Module] = {}
+  let registry : Map[String, @parse.Module] = Map([])
   registry["offline/root@1.0.0"] = @parse.Module::new("offline/root", "1.0.0", {
     "offline/a": "1.0.0",
   })
-  registry["offline/a@1.0.0"] = @parse.Module::new("offline/a", "1.0.0", {})
+  registry["offline/a@1.0.0"] = @parse.Module::new(
+    "offline/a",
+    "1.0.0",
+    Map([]),
+  )
 
   let builder = @graph.GraphBuilder::new_with_max_depth(3)
   let graph = match
@@ -205,7 +209,7 @@ test "e2e offline mode with local cache fallback" {
   }
 
   assert_true(graph.size() == 2)
-  let metas : Map[String, @analyze.NodeMeta] = {}
+  let metas : Map[String, @analyze.NodeMeta] = Map([])
   let report = @analyze.run_analysis(graph, metas)
   let html = @analyze.render_html_report(report, graph, "offline/root@1.0.0")
   assert_true(html.contains("offline/root@1.0.0"))
@@ -231,7 +235,7 @@ test "e2e html report structure completeness" {
     Ok(g) => g
     Err(msg) => fail("Build failed: " + msg)
   }
-  let metas : Map[String, @analyze.NodeMeta] = {}
+  let metas : Map[String, @analyze.NodeMeta] = Map([])
   let report = @analyze.run_analysis(graph, metas)
   let html = @analyze.render_html_report(report, graph, "report/test@1.0.0")
 
@@ -262,7 +266,7 @@ test "e2e json report schema validation" {
     Ok(g) => g
     Err(msg) => fail("Build failed: " + msg)
   }
-  let metas : Map[String, @analyze.NodeMeta] = {}
+  let metas : Map[String, @analyze.NodeMeta] = Map([])
   let report = @analyze.run_analysis(graph, metas)
   let json = @analyze.render_audit_json(report)
 
@@ -296,7 +300,7 @@ test "e2e fetch failure propagates error" {
 
 ///|
 test "e2e cycle detection in pipeline" {
-  let registry : Map[String, @parse.Module] = {}
+  let registry : Map[String, @parse.Module] = Map([])
   registry["cycle/a@1.0.0"] = @parse.Module::new("cycle/a", "1.0.0", {
     "cycle/b": "1.0.0",
   })
@@ -319,7 +323,7 @@ test "e2e cycle detection in pipeline" {
   // Builder caches nodes, so cycle is prevented by early return; graph has 2 nodes
   assert_true(graph.size() == 2)
 
-  let metas : Map[String, @analyze.NodeMeta] = {}
+  let metas : Map[String, @analyze.NodeMeta] = Map([])
   let report = @analyze.run_analysis(graph, metas)
   // Cycle should be detected by analysis (edge exists even though recursive build stopped)
   let has_cycle_diag = report.diagnostics

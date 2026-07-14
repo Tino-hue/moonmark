@@ -8,13 +8,13 @@ pub struct GraphBuilder {
 ///|
 /// 创建构建器，默认最大递归深度 10
 pub fn GraphBuilder::new() -> GraphBuilder {
-  { max_depth: 10, cache: {} }
+  { max_depth: 10, cache: Map([]) }
 }
 
 ///|
 /// 创建构建器，指定最大递归深度
 pub fn GraphBuilder::new_with_max_depth(max_depth : Int) -> GraphBuilder {
-  { max_depth, cache: {} }
+  { max_depth, cache: Map([]) }
 }
 
 ///|

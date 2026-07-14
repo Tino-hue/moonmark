@@ -87,7 +87,7 @@ test "render_terminal_report with diagnostics" {
   graph.add_edge("B", "1.0.0", "C", "1.0.0")
   graph.add_edge("C", "1.0.0", "A", "1.0.0")
 
-  let metas : Map[String, NodeMeta] = {}
+  let metas : Map[String, NodeMeta] = Map([])
   let report = run_analysis(graph, metas)
   let text = render_terminal_report(report, graph, "A@1.0.0")
 

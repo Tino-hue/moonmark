@@ -7,7 +7,7 @@ test "parse moonbitlang/core single-line moon.mod" {
   assert_true(result is Ok(_))
   let mod = match result {
     Ok(m) => m
-    Err(_) => @parse.Module::new("", "", {})
+    Err(_) => @parse.Module::new("", "", Map([]))
   }
   assert_true(mod.name == "moonbitlang/core")
   assert_true(mod.version == "0.1.0")
@@ -29,7 +29,7 @@ test "parse moonbitlang/x single-line moon.mod" {
   assert_true(result is Ok(_))
   let mod = match result {
     Ok(m) => m
-    Err(_) => @parse.Module::new("", "", {})
+    Err(_) => @parse.Module::new("", "", Map([]))
   }
   assert_true(mod.name == "moonbitlang/x")
   assert_true(mod.version == "0.4.44")
@@ -65,7 +65,7 @@ test "parse moonbitlang/async multi-line moon.mod" {
   assert_true(result is Ok(_))
   let mod = match result {
     Ok(m) => m
-    Err(_) => @parse.Module::new("", "", {})
+    Err(_) => @parse.Module::new("", "", Map([]))
   }
   assert_true(mod.name == "moonbitlang/async")
   assert_true(mod.version == "0.19.1")

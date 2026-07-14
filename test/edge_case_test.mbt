@@ -5,7 +5,7 @@
 // ---------- 空依赖 ----------
 
 test "empty deps graph has only root node" {
-  let root = @parse.Module::new("root", "1.0.0", {})
+  let root = @parse.Module::new("root", "1.0.0", Map([]))
   let registry = { "root@1.0.0": root }
   let fetch = make_mock_fetch(registry)
   let builder = @graph.GraphBuilder::new()
@@ -59,7 +59,7 @@ test "self dependency in analysis" {
   graph.add_node("A", "1.0.0", 0)
   graph.add_edge("A", "1.0.0", "A", "1.0.0")
 
-  let metas : Map[String, @analyze.NodeMeta] = {}
+  let metas : Map[String, @analyze.NodeMeta] = Map([])
   let report = @analyze.run_analysis(graph, metas)
   inspect(report.node_count, content="1")
   assert_true(report.diagnostics.length() > 0)

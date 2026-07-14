@@ -88,7 +88,7 @@ pub fn parse_mod_json(content : String) -> Result[Module, String] {
   // Parse deps object
   let deps = match obj.get("deps") {
     Some(Object(dep_map)) => {
-      let result : Map[String, String] = {}
+      let result : Map[String, String] = Map([])
       for pair in dep_map {
         let (key, value) = pair
         guard value is String(v) else { continue }
@@ -96,7 +96,7 @@ pub fn parse_mod_json(content : String) -> Result[Module, String] {
       }
       result
     }
-    _ => {}
+    _ => Map([])
   }
 
   Ok({
@@ -124,7 +124,7 @@ pub fn parse_mod_toml(content : String) -> Result[Module, String] {
   let mut description : String? = None
   let mut source : String? = None
   let keywords : Array[String] = []
-  let deps : Map[String, String] = {}
+  let deps : Map[String, String] = Map([])
 
   let lines = toml_split_entries(content)
   for line in lines {
@@ -182,7 +182,7 @@ pub fn parse_mod_toml(content : String) -> Result[Module, String] {
 /// 解析简单配置 TOML，返回 key->value 字典（支持 key = "value" 和 [section] 格式）
 /// section 内的 key 会被编码为 "section.key"
 pub fn parse_config_toml(content : String) -> Map[String, String] {
-  let result : Map[String, String] = {}
+  let result : Map[String, String] = Map([])
   let lines = toml_split_lines(content)
   let mut current_section = ""
   for line in lines {

@@ -23,7 +23,7 @@ pub fn calculate_transitive_sizes(
   graph : @graph.DependencyGraph,
   self_sizes : Map[String, Int],
 ) -> Map[String, Int] {
-  let memo : Map[String, Int] = {}
+  let memo : Map[String, Int] = Map([])
   let all_ids = graph.get_all_node_ids()
   for id in all_ids {
     let _ = calc_transitive(graph, id, self_sizes, memo)

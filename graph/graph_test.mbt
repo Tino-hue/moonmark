@@ -185,9 +185,13 @@ test "performance: topological_sort on 150 node DAG" {
 
 ///|
 test "real package graph: moonbitlang/x has no cycle" {
-  let x = @parse.Module::new("moonbitlang/x", "0.4.44", {})
-  let chalk = @parse.Module::new("Lampese/moonbit-chalk", "0.4.0", {})
-  let parser = @parse.Module::new("peter-jerry-ye/parser-combinator", "0.9.1", {})
+  let x = @parse.Module::new("moonbitlang/x", "0.4.44", Map([]))
+  let chalk = @parse.Module::new("Lampese/moonbit-chalk", "0.4.0", Map([]))
+  let parser = @parse.Module::new(
+    "peter-jerry-ye/parser-combinator",
+    "0.9.1",
+    Map([]),
+  )
 
   let registry = {
     "moonbitlang/x@0.4.44": x,

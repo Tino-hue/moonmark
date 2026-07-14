@@ -56,7 +56,7 @@ fn bfs_ancestors(
   start_id : String,
 ) -> Array[(String, Int)] {
   let queue : Array[(String, Int)] = [(start_id, 0)]
-  let visited : Map[String, Int] = {}
+  let visited : Map[String, Int] = Map([])
   let mut head = 0
   while head < queue.length() {
     let (current, dist) = queue[head]

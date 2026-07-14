@@ -78,7 +78,7 @@ fn diag_key(d : @report.Diagnostic) -> String {
 fn diag_map(
   diags : Array[@report.Diagnostic],
 ) -> Map[String, @report.Diagnostic] {
-  let result : Map[String, @report.Diagnostic] = {}
+  let result : Map[String, @report.Diagnostic] = Map([])
   for d in diags {
     result[diag_key(d)] = d
   }

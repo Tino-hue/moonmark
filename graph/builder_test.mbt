@@ -26,8 +26,8 @@ fn make_mock_fetch(
 ///|
 test "build simple dependency tree" {
   let a = make_module("a", "1.0.0", { "c": "1.0.0" })
-  let b = make_module("b", "1.0.0", {})
-  let c = make_module("c", "1.0.0", {})
+  let b = make_module("b", "1.0.0", Map([]))
+  let c = make_module("c", "1.0.0", Map([]))
   let root = make_module("root", "1.0.0", { "a": "1.0.0", "b": "1.0.0" })
 
   let registry = {
@@ -56,8 +56,8 @@ test "build with version conflict" {
   // 同一包的两个不同版本应作为独立节点存在
   let a1 = make_module("a", "1.0.0", { "b": "1.0.0" })
   let a2 = make_module("a", "2.0.0", { "b": "2.0.0" })
-  let b1 = make_module("b", "1.0.0", {})
-  let b2 = make_module("b", "2.0.0", {})
+  let b1 = make_module("b", "1.0.0", Map([]))
+  let b2 = make_module("b", "2.0.0", Map([]))
   let root = make_module("root", "1.0.0", { "a": "1.0.0", "x": "1.0.0" })
   let x = make_module("x", "1.0.0", { "a": "2.0.0" })
 
@@ -89,7 +89,7 @@ test "build respects max depth" {
   let a = make_module("a", "1.0.0", { "b": "1.0.0" })
   let b = make_module("b", "1.0.0", { "c": "1.0.0" })
   let c = make_module("c", "1.0.0", { "d": "1.0.0" })
-  let d = make_module("d", "1.0.0", {})
+  let d = make_module("d", "1.0.0", Map([]))
   let root = make_module("root", "1.0.0", { "a": "1.0.0" })
 
   let registry = {
@@ -117,7 +117,7 @@ test "build respects max depth" {
 test "cache prevents redundant fetches" {
   let a = make_module("a", "1.0.0", { "c": "1.0.0" })
   let b = make_module("b", "1.0.0", { "c": "1.0.0" })
-  let c = make_module("c", "1.0.0", {})
+  let c = make_module("c", "1.0.0", Map([]))
   let root = make_module("root", "1.0.0", { "a": "1.0.0", "b": "1.0.0" })
 
   let registry = {

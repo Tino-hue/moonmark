@@ -1,7 +1,7 @@
 ///|
 test "run analysis on empty graph" {
   let graph = @graph.DependencyGraph::new()
-  let metas : Map[String, NodeMeta] = {}
+  let metas : Map[String, NodeMeta] = Map([])
   let report = run_analysis(graph, metas)
   inspect(report.node_count, content="0")
   inspect(report.overall_score, content="100")
@@ -18,7 +18,7 @@ test "run analysis detects cycle" {
   graph.add_edge("B", "1.0.0", "C", "1.0.0")
   graph.add_edge("C", "1.0.0", "A", "1.0.0")
 
-  let metas : Map[String, NodeMeta] = {}
+  let metas : Map[String, NodeMeta] = Map([])
   let report = run_analysis(graph, metas)
   inspect(report.node_count, content="3")
   assert_true(report.diagnostics.length() > 0)
