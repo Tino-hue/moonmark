@@ -222,7 +222,7 @@ fn calculate_ecosystem_stats(
     .iter()
     .any(fn(d) { d.code == "CYCLE-001" })
 
-  EcosystemReport::{
+  {
     total_packages: license_map.length(),
     total_nodes,
     max_depth,

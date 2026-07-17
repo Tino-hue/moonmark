@@ -7,7 +7,32 @@
 [![Tests](https://img.shields.io/badge/tests-267%20passing-brightgreen.svg)](#development)
 [![GitHub stars](https://img.shields.io/github/stars/Tino-hue/moonmark?style=social)](https://github.com/Tino-hue/moonmark/stargazers)
 
-A dependency health diagnostic tool for the MoonBit ecosystem.
+A `cargo audit` for the MoonBit ecosystem — read `moon.mod`, walk the entire transitive dependency graph, and give each package a 0–100 health score with actionable diagnostics.
+
+**TL;DR** — One command to know whether your dependencies are fresh, license-compliant, deprecated-free, reasonably-sized, and actively maintained.
+
+## Quick Start (30 seconds)
+
+```bash
+# 1. Clone this repo
+git clone https://github.com/Tino-hue/moonmark.git
+cd moonmark
+
+# 2. Build the JS bundle (one-time, ~10s)
+moon build --target js
+
+# 3. Audit the included healthy example (run from project root)
+node _build/js/debug/build/depsight.js audit --target-pkg examples/healthy_project
+```
+
+You'll see terminal output like `Health Score: 94/100` plus a 5-dimension breakdown (freshness / compliance / size / deprecated / activity). Exit code 0 = pass.
+
+To audit **your own project**:
+
+```bash
+cd /path/to/your-project           # a directory containing moon.mod
+node /path/to/depsight.js audit    # or use --target-pkg /path/to/your-project from this repo
+```
 
 ## Overview
 
@@ -56,6 +81,25 @@ MoonBit Depsight analyzes your `moon.mod` and recursively inspects the entire tr
 - `[severity]`: Override default diagnostic levels per code (e.g. `LICENSE-001 = "warning"`)
 - `baseline = "auto"`: Enable automatic baseline comparison by default
 
+## Prerequisites
+
+| Tool | Version | Purpose |
+|---|---|---|
+| MoonBit CLI | `latest` (≥ 0.1.20260713) | Compile depsight and your project |
+| Node.js | ≥ 18.x | Run the built JS bundle |
+| Git | any | Clone source |
+
+**国内用户** / **CI in China** — use the Chinese mirror to avoid 403 from the international CDN:
+
+```bash
+# macOS / Linux
+MOONBIT_INSTALL_VERSION=latest curl -fsSL https://cli.moonbitlang.cn/install/unix.sh | bash
+
+# Windows (PowerShell)
+$env:MOONBIT_INSTALL_VERSION = 'latest'
+Invoke-WebRequest https://cli.moonbitlang.cn/install/win.sh -UseBasicParsing | Invoke-Expression
+```
+
 ## Installation
 
 ### 从源码构建
@@ -66,6 +110,8 @@ cd moonmark
 moon build --target js
 ```
 
+The executable is emitted at `_build/js/debug/build/depsight.js` (~466 KB single-file bundle).
+
 ### 作为 MoonBit 包依赖
 
 ```bash
@@ -73,6 +119,8 @@ moon add Tino-hue/depsight
 ```
 
 ## Usage
+
+> **All commands below assume you ran `cd moonmark && moon build --target js` first, and your working directory is the project root** (otherwise the relative `_build/...` path won't resolve). For an absolute path you can run `node /anywhere/_build/js/debug/build/depsight.js audit` directly.
 
 ### 命令概览
 
@@ -162,6 +210,25 @@ moon fmt --check
 moon check --target js
 ```
 
+## Examples
+
+The repo ships three pre-canned example projects covering typical scenarios:
+
+```bash
+# From the project root, after `moon build --target js`
+
+# 1. Healthy project — score should be 90+
+node _build/js/debug/build/depsight.js audit --target-pkg examples/healthy_project
+
+# 2. Outdated dependencies — demonstrates VERSION-001 diagnostics
+node _build/js/debug/build/depsight.js audit --target-pkg examples/outdated_project
+
+# 3. Risky project — demonstrates LICENSE-001 + DEPRECATED-001
+node _build/js/debug/build/depsight.js audit --target-pkg examples/risky_project
+```
+
+Each example ships its own `moon.mod` (and `.depsight-baseline.json`), so the audit command resolves locally with no network access.
+
 ## Project Structure
 
 ```
@@ -171,10 +238,15 @@ moon check --target js
 ├── analyze/       # Core analysis engine (semver, license, deprecated, health score, size)
 ├── report/        # Diagnostic data structure (Critical/Warning/Info)
 ├── cli/           # CLI argument parsing & command dispatch
+├── examples/      # healthy_project / outdated_project / risky_project fixtures
 └── main.mbt       # Entry point
 ```
 
 For detailed architecture design, see [docs/architecture.md](docs/architecture.md).
+
+## Compatibility
+
+Tested against MoonBit toolchain `moon 0.1.20260713` + `moonc v0.10.4+2cc641edf` (2026-07). All 267 tests pass and `moon check --deny-warn` is clean. We follow MoonBit's rolling `latest` channel; older versions may work but aren't part of the CI matrix.
 
 ## License
 

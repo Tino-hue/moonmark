@@ -4,21 +4,29 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
-### Planned
-- **MoonBit v0.10.4 升级窗口（仅备忘，未执行）**：
-  项目代码已全面兼容 v0.10.4 所有新约束（commit `5f9eb99` 已经做了 E0082 全量修复），计划在 CCF 大赛初检通过后（7月12日之后）评估升级。优先验证目标：
-  - 新 Native 后端启用（Linux x86-64 / Windows MSVC）— CI 编译加速
-  - `extend Type with Trait::{...}` 显式方法挂载（项目无自定义 trait，零迁移成本）
-  - `or pattern` 的 `with` 默认值（match 简化重构机会）
-  - `Iter` 字面量 `[| .. |]`（项目无 `[..` 隐式转 Iter 模式，零迁移成本）
-  - `lexscan` 表达式（项目无 `lexmatch` 使用，零迁移成本）
+### Changed
+- **README 重构**：`加 TL;DR + Quick Start (30s) + Prerequisites + Examples + Compatibility` 五段，明确「一句能说清 / 一眼能看懂 / 照着能复现」。Usage 段加上 “须先 cd 到项目根”的明确警示。
+- **工具链评估**：项目已在 v0.10.4 工具链下完整验证。CLI `moon 0.1.20260713 (75c7e1f)` + `moonc v0.10.4+2cc641edf (2026-07-15)`，本周下载即默认可用。
 
-### Compatibility Audit (v0.10.4, 2026-06-08)
+### Verified (v0.10.4 toolchain, 2026-07-13)
+- `moon test --target js`: 267 / 267 通过, EXIT 0
+- `moon build --target js`: 9 tasks, EXIT 0
+- `moon check --target js --deny-warn`: 0 警告, EXIT 0
+- `moon check --target js --warn-list +73`: 0 警告, EXIT 0 (发现 + 修复 W0073)
+- `moon fmt --check`: EXIT 0
+- `moon info`: EXIT 0
+
+### Fixed
+- **W0073 `unnecessary_annotation`**: `test/ecosystem_test.mbt:225` 移除冗余的 `EcosystemReport::` struct 字面量前缀，与项目其他 10 处匿名 struct 字面量保持一致。v0.10.4 新警告，由 `--warn-list +73` 抓出。
+
+### Compatibility Audit (v0.10.4)
+
+下表汇总 v0.10.4 所有重点约束以及项目代码扫描结果（CI 表格补充于 Compatibility 报表后）：
 
 | v0.10.4 新约束 | 项目代码扫描 | 影响 |
 |---|---|---|
 | `extend` 语法（隐式方法挂载 W079 废弃） | 0 处 `impl Trait for Type` | ✅ 零影响 |
-| 空 `{}` 歧义警告 E0082 | 60+ 处已全量修复为 `Map([])` | ✅ 已适配（commit `5f9eb99`） |
+| 空 `{}` 歧义警告 E0082 | 60+ 处已全量修复为 `Map([])` | ✅ 已适配 |
 | `moon.pkg.json` / `moon.mod.json` 移除 | 0 个 .json 残留 | ✅ 已迁移 |
 | `.from_array(` 弃用 | 0 处 | ✅ 零影响 |
 | Iter 字面量 `[\| .. \|]`，旧 `[..]` 隐式转 Iter 废弃 | 0 处 `[..` 模式 | ✅ 零影响 |
