@@ -2,6 +2,33 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+
+### Planned
+- **MoonBit v0.10.4 升级窗口（仅备忘，未执行）**：
+  项目代码已全面兼容 v0.10.4 所有新约束（commit `5f9eb99` 已经做了 E0082 全量修复），计划在 CCF 大赛初检通过后（7月12日之后）评估升级。优先验证目标：
+  - 新 Native 后端启用（Linux x86-64 / Windows MSVC）— CI 编译加速
+  - `extend Type with Trait::{...}` 显式方法挂载（项目无自定义 trait，零迁移成本）
+  - `or pattern` 的 `with` 默认值（match 简化重构机会）
+  - `Iter` 字面量 `[| .. |]`（项目无 `[..` 隐式转 Iter 模式，零迁移成本）
+  - `lexscan` 表达式（项目无 `lexmatch` 使用，零迁移成本）
+
+### Compatibility Audit (v0.10.4, 2026-06-08)
+
+| v0.10.4 新约束 | 项目代码扫描 | 影响 |
+|---|---|---|
+| `extend` 语法（隐式方法挂载 W079 废弃） | 0 处 `impl Trait for Type` | ✅ 零影响 |
+| 空 `{}` 歧义警告 E0082 | 60+ 处已全量修复为 `Map([])` | ✅ 已适配（commit `5f9eb99`） |
+| `moon.pkg.json` / `moon.mod.json` 移除 | 0 个 .json 残留 | ✅ 已迁移 |
+| `.from_array(` 弃用 | 0 处 | ✅ 零影响 |
+| Iter 字面量 `[\| .. \|]`，旧 `[..]` 隐式转 Iter 废弃 | 0 处 `[..` 模式 | ✅ 零影响 |
+| `lexmatch` → `lexscan` | 0 处 `lexmatch` | ✅ 零影响 |
+| prebuild / test 工作目录统一 | 项目无 prebuild | ✅ 零影响 |
+| warnings `@` 符号弃用 | CI 已用 `--deny-warn` | ✅ 已适配 |
+| `moon.pkg` `pkgtype` 声明 | 已迁移为 `pkgtype(kind: "executable")` | ✅ 已适配 |
+
+**结论**：项目代码对 v0.10.4 零迁移成本，升级风险极低，可按团队节奏推进。
+
 ## [0.5.3] - 2026-07-10
 
 ### Fixed
