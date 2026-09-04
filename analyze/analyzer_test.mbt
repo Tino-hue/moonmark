@@ -69,13 +69,24 @@ test "run analysis overall score" {
   graph.add_node("a", "1.0.0", 0)
   graph.add_node("b", "2.0.0", 1)
 
+  // 给两节点真实 self_size；若无 size，size_reasonableness 会走 None→80
+  // 而不是占位时代码误给的 Some(0)→100。用真实值时 F02 传递 size = self_size
+  //（无依赖图边），于是 size_reasonableness=100（<10KB）。
   let metas : Map[String, NodeMeta] = {
-    "a@1.0.0": NodeMeta::new(license=Some("MIT")),
-    "b@2.0.0": NodeMeta::new(license=Some("MIT")),
+    "a@1.0.0": NodeMeta::new(license=Some("MIT"), self_size=2048),
+    "b@2.0.0": NodeMeta::new(license=Some("MIT"), self_size=1024),
   }
   let report = run_analysis(graph, metas)
   inspect(report.health_scores.length(), content="2")
   inspect(report.overall_score, content="98")
+  // 两节点无依赖边，传递体积 = 自身体积；Top 5 罪犯应为 2 条
+  inspect(report.size_offenders_top5.length(), content="2")
+  // 降序：a(2048) > b(1024)
+  if report.size_offenders_top5.length() == 2 {
+    inspect(report.size_offenders_top5[0].node_id, content="a@1.0.0")
+    inspect(report.size_offenders_top5[0].transitive_size, content="2048")
+    inspect(report.size_offenders_top5[1].node_id, content="b@2.0.0")
+  }
 }
 
 ///|

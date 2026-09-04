@@ -248,7 +248,9 @@ test "ecosystem sampling builds complete graph" {
       inspect(report.node_count, content="10")
       inspect(eco.total_nodes, content="10")
       inspect(eco.total_packages, content="10")
-      inspect(eco.overall_health_score, content="98")
+      // F02 之前：meta.self_size 默认 0 被误当 <10KB → size_reasonableness=100 → 98
+      // F02 之后：没有真实体积元数据时 transitive_size=None → size_reasonableness=80 → 每节点 -4，整体 → 94
+      inspect(eco.overall_health_score, content="94")
       inspect(eco.cycle_detected, content="false")
     }
     Err(msg) => fail("Ecosystem sampling failed: " + msg)

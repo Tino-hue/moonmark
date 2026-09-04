@@ -47,6 +47,14 @@ fn calc_transitive(
     None => 0
   }
 
+  // **循环安全关键**：在向下递归子孙前，先把自己的 self_size 写入 memo。
+  // 这带来两个性质：
+  //   1) 循环依赖（A→B→A）下，回到 A 时直接命中 memo，返回 A 的 self_size，
+  //      不再死递归；循环部分体积不会被重复计超过一次（每个节点
+  //      最终以「self + Σ(children transitive)」回填）。
+  //   2) 一般 DAG 下，结果和原算法等价：子孙计算完成后覆盖预写值。
+  memo[node_id] = self_size
+
   let (name, version) = split_node_id(node_id)
   let children = graph.get_children(name, version)
   let mut total = self_size

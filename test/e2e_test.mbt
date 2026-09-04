@@ -31,11 +31,13 @@ test "e2e minimal moon.mod.json pipeline" {
   }
   assert_true(graph.size() == 1)
 
-  // Run analysis (no license => compliance=80, self_size=0 => size=100 => total=94)
+  // Run analysis（没有体积元数据的占位场景——F02 后 transitive_size=None）
+  //   分数构成：freshness=100(×25%) + compliance=80(×20%) + depden=100(×25%) + size=80(×20%) + activity=80(×10%) = 90
+  //   之前错误占位：Some(self_size=0) 被当作 <10KB → size=100 → 94（误高 4 分）
   let metas : Map[String, @analyze.NodeMeta] = Map([])
   let report = @analyze.run_analysis(graph, metas)
   assert_true(report.node_count == 1)
-  assert_true(report.overall_score == 94)
+  assert_true(report.overall_score == 90)
 
   // Verify terminal report
   let terminal = @analyze.render_terminal_report(
@@ -46,7 +48,7 @@ test "e2e minimal moon.mod.json pipeline" {
 
   // Verify JSON report
   let json = @analyze.render_audit_json(report)
-  assert_true(json.contains("\"overall_score\":94"))
+  assert_true(json.contains("\"overall_score\":90"))
   assert_true(json.contains("\"node_count\":1"))
 
   // Verify HTML report
@@ -160,8 +162,9 @@ test "e2e legacy moon.mod.json without deps field" {
   let metas : Map[String, @analyze.NodeMeta] = Map([])
   let report = @analyze.run_analysis(graph, metas)
   let json = @analyze.render_audit_json(report)
-  // No license => compliance=80, self_size=0 => size=100 => overall_score = 94
-  assert_true(json.contains("\"overall_score\":94"))
+  // F02 后：没有体积元数据 → transitive_size=None → size_reasonableness=80 → overall = 90
+  // （之前占位 Some(0) 误计为 <10KB → 100 → 94）
+  assert_true(json.contains("\"overall_score\":90"))
 }
 
 ///|

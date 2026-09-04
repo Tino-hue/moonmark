@@ -681,7 +681,9 @@ fn build_full_graph_for_dir(
           None => ()
         }
       }
-      let metas = build_node_metas(modules, commit_days)
+      // build_node_metas：modules 内的 root 包也应该能拿到真实 size/API——
+      //   它不在 .mooncakes/ 里，它的源文件就在 `dir`（项目目录）。
+      let metas = build_node_metas(modules, commit_days, dir, root_mod.name)
       (graph, root_mod.name + "@" + root_mod.version, metas)
     }
     Err(e) => {
@@ -693,7 +695,7 @@ fn build_full_graph_for_dir(
         g.add_node(dep_name, dep_constraint, 1)
         g.add_edge(root_mod.name, root_mod.version, dep_name, dep_constraint)
       }
-      let metas = build_node_metas_from_single(root_mod)
+      let metas = build_node_metas_from_single(root_mod, dir)
       (g, root_mod.name + "@" + root_mod.version, metas)
     }
   }
@@ -710,6 +712,8 @@ fn build_full_graph(
 fn build_node_metas(
   modules : Map[String, @parse.Module],
   commit_days : Map[String, Int],
+  root_dir : String,
+  root_name : String,
 ) -> Map[String, @analyze.NodeMeta] {
   let metas : Map[String, @analyze.NodeMeta] = Map([])
   let fs = @cache.FileSystem::node_js()
@@ -720,15 +724,20 @@ fn build_node_metas(
       Some(d) => Some(d)
       None => None
     }
-    // 尝试读取本地缓存 .mooncakes 以做实际扫描
     let (name, _) = split_node_id(id)
-    let pkg_dir = @analyze.locate_package_dir(cache_root, name)
-    let has_local_cache = match (fs.readdir)(pkg_dir) {
+    // root 包的源文件目录是项目目录（root_dir），不是 .mooncakes 缓存子目录。
+    // 其它包先尝试 .mooncakes cache；命中 → 真实扫描，否则降级。
+    let pkg_dir = if name == root_name {
+      root_dir
+    } else {
+      @analyze.locate_package_dir(cache_root, name)
+    }
+    let has_pkg_dir = match (fs.readdir)(pkg_dir) {
       Some(_) => true
       None => false
     }
-    let meta = if has_local_cache {
-      // 真实扫描：LICENSE 文件 + 实际体积 + 废弃 API
+    let meta = if has_pkg_dir {
+      // 真实扫描：LICENSE 文件 + 实际体积 + 废弃 API + public API 数（F01）
       @analyze.build_realistic_node_meta(pkg_dir, mod.license, fs, None, days)
     } else {
       // 降级：仅用 moon.mod 声明
@@ -748,15 +757,33 @@ fn build_node_metas(
 ///|
 fn build_node_metas_from_single(
   root_mod : @parse.Module,
+  root_dir : String,
 ) -> Map[String, @analyze.NodeMeta] {
   let metas : Map[String, @analyze.NodeMeta] = Map([])
   let root_id = root_mod.name + "@" + root_mod.version
-  metas[root_id] = @analyze.NodeMeta::new(
-    license=root_mod.license,
-    deprecated_apis=[],
-    latest_version=None,
-    self_size=0,
-  )
+  let fs = @cache.FileSystem::node_js()
+  // F02 真实体积（项目目录下 .mbt 源文件字节数总和）
+  // F01 真实 public API 总数 & 真实废弃 API & LICENSE
+  let has_pkg_dir = match (fs.readdir)(root_dir) {
+    Some(_) => true
+    None => false
+  }
+  if has_pkg_dir {
+    metas[root_id] = @analyze.build_realistic_node_meta(
+      root_dir,
+      root_mod.license,
+      fs,
+      None,
+      None,
+    )
+  } else {
+    metas[root_id] = @analyze.NodeMeta::new(
+      license=root_mod.license,
+      deprecated_apis=[],
+      latest_version=None,
+      self_size=0,
+    )
+  }
   metas
 }
 
@@ -949,6 +976,7 @@ fn run_audit(opts : CliOptions) -> Int {
     health_scores=report.get_health_scores(),
     overall_score=report.get_overall_score(),
     node_count=report.get_node_count(),
+    size_offenders_top5=report.get_size_offenders(),
   )
 
   let output_text = if opts.format == "json" {
@@ -1012,6 +1040,7 @@ fn run_report(opts : CliOptions) -> Int {
     health_scores=report.get_health_scores(),
     overall_score=report.get_overall_score(),
     node_count=report.get_node_count(),
+    size_offenders_top5=report.get_size_offenders(),
   )
 
   let output_text = if opts.format == "html" {
@@ -1293,6 +1322,8 @@ fn aggregate_reports(
 ) -> @analyze.AnalysisReport {
   let all_diags : Array[@report.Diagnostic] = []
   let all_scores : Array[@analyze.HealthScore] = []
+  // F02：聚合多 project 的 Size offenders（跨 project 合并后按 transitive 降序取前 5）
+  let all_offenders : Array[@analyze.SizeInfo] = []
   let mut total_score = 0
   let mut total_nodes = 0
   for r in reports {
@@ -1302,6 +1333,9 @@ fn aggregate_reports(
     for s in r.get_health_scores() {
       all_scores.push(s)
     }
+    for o in r.get_size_offenders() {
+      all_offenders.push(o)
+    }
     total_score = total_score + r.get_overall_score()
     total_nodes = total_nodes + r.get_node_count()
   }
@@ -1310,11 +1344,34 @@ fn aggregate_reports(
   } else {
     100
   }
+  // 简单 O(n²) 冒泡按 transitive 降序取 top5（n<=5N，N 是 workspace 子项目数，够用）
+  let n = all_offenders.length()
+  let mut i = 0
+  while i < n {
+    let mut j = 0
+    while j < n - i - 1 {
+      if all_offenders[j].transitive_size < all_offenders[j + 1].transitive_size {
+        let tmp = all_offenders[j]
+        all_offenders[j] = all_offenders[j + 1]
+        all_offenders[j + 1] = tmp
+      }
+      j = j + 1
+    }
+    i = i + 1
+  }
+  let top5 : Array[@analyze.SizeInfo] = []
+  let limit = if 5 < n { 5 } else { n }
+  let mut k = 0
+  while k < limit {
+    top5.push(all_offenders[k])
+    k = k + 1
+  }
   @analyze.AnalysisReport::new(
     diagnostics=all_diags,
     health_scores=all_scores,
     overall_score=avg_score,
     node_count=total_nodes,
+    size_offenders_top5=top5,
   )
 }
 

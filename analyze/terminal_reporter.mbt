@@ -6,7 +6,7 @@
 // ========== 公共入口 ==========
 
 ///|
-/// 渲染完整的终端报告：概览 + 健康分表 + 诊断列表 + 依赖树
+/// 渲染完整的终端报告：概览 + 健康分表 + 诊断列表 + 依赖树 + Top 5 体积罪犯
 pub fn render_terminal_report(
   report : AnalysisReport,
   graph : @graph.DependencyGraph,
@@ -50,6 +50,12 @@ pub fn render_terminal_report(
   buf <+ "\n"
   let tree = graph.render_tree(root_id, 99)
   buf.write_string(tree)
+
+  // Top 5 体积罪犯（F02：基于传递体积排序）
+  if report.size_offenders_top5.length() > 0 {
+    buf <+ "\n"
+    render_top_size_offenders(report.size_offenders_top5, buf)
+  }
 
   buf.to_string()
 }
@@ -241,4 +247,81 @@ fn render_diagnostics_table(
   buf <+ " warnings, "
   buf.write_string(green(info.to_string()))
   buf <+ " info\n"
+}
+
+// ========== Top 5 体积罪犯（F02） ==========
+
+///|
+/// 把体积罪犯按三列表格渲染：Rank / Node / Self Size / Transitive Size
+fn render_top_size_offenders(
+  offenders : Array[SizeInfo],
+  buf : StringBuilder,
+) -> Unit {
+  let col_rank = 6
+  let col_node = 34
+  let col_self = 14
+  let col_trans = 14
+
+  buf.write_string(
+    bold("─── Top 5 Size Offenders (Transitive) ───"),
+  )
+  buf <+ "\n"
+
+  buf <+ "┌"
+  buf.write_string(repeat_char("─", col_rank))
+  buf <+ "┬"
+  buf.write_string(repeat_char("─", col_node))
+  buf <+ "┬"
+  buf.write_string(repeat_char("─", col_self))
+  buf <+ "┬"
+  buf.write_string(repeat_char("─", col_trans))
+  buf <+ "┐\n"
+
+  buf <+ "│"
+  buf.write_string(bold(pad_center("Rank", col_rank)))
+  buf <+ "│"
+  buf.write_string(bold(pad_center("Node", col_node)))
+  buf <+ "│"
+  buf.write_string(bold(pad_center("Self", col_self)))
+  buf <+ "│"
+  buf.write_string(bold(pad_center("Transitive", col_trans)))
+  buf <+ "│\n"
+
+  buf <+ "├"
+  buf.write_string(repeat_char("─", col_rank))
+  buf <+ "┼"
+  buf.write_string(repeat_char("─", col_node))
+  buf <+ "┼"
+  buf.write_string(repeat_char("─", col_self))
+  buf <+ "┼"
+  buf.write_string(repeat_char("─", col_trans))
+  buf <+ "┤\n"
+
+  let mut i = 0
+  for info in offenders {
+    let rank = (i + 1).to_string()
+    let node_display = truncate(info.node_id, col_node - 2)
+    let self_s = format_size(info.self_size)
+    let trans_s = format_size(info.transitive_size)
+    buf <+ "│"
+    buf.write_string(pad_left(rank, col_rank))
+    buf <+ "│"
+    buf.write_string(pad_left(node_display, col_node))
+    buf <+ "│"
+    buf.write_string(pad_left(self_s, col_self))
+    buf <+ "│"
+    buf.write_string(pad_left(trans_s, col_trans))
+    buf <+ "│\n"
+    i = i + 1
+  }
+
+  buf <+ "└"
+  buf.write_string(repeat_char("─", col_rank))
+  buf <+ "┴"
+  buf.write_string(repeat_char("─", col_node))
+  buf <+ "┴"
+  buf.write_string(repeat_char("─", col_self))
+  buf <+ "┴"
+  buf.write_string(repeat_char("─", col_trans))
+  buf <+ "┘\n"
 }

@@ -21,13 +21,21 @@ test "empty deps graph has only root node" {
 test "empty deps analysis has perfect score" {
   let graph = @graph.DependencyGraph::new()
   graph.add_node("root", "1.0.0", 0)
+  // F02 真实体积语义：给出 self_size（<10KB）→ size_reasonableness=100；
+  // 不传则 transitive_size=None→80。用真实值保持满分验证。
   let metas : Map[String, @analyze.NodeMeta] = {
-    "root@1.0.0": @analyze.NodeMeta::new(license=Some("MIT")),
+    "root@1.0.0": @analyze.NodeMeta::new(license=Some("MIT"), self_size=1024),
   }
   let report = @analyze.run_analysis(graph, metas)
   inspect(report.node_count, content="1")
   inspect(report.overall_score, content="98")
   inspect(report.diagnostics.length(), content="0")
+  // 传递 size = self_size = 1024（无子孙），Top 5 有 1 条
+  inspect(report.size_offenders_top5.length(), content="1")
+  if report.size_offenders_top5.length() == 1 {
+    inspect(report.size_offenders_top5[0].node_id, content="root@1.0.0")
+    inspect(report.size_offenders_top5[0].transitive_size, content="1024")
+  }
 }
 
 // ---------- 自依赖 ----------
