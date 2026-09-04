@@ -1,6 +1,6 @@
 name = "Tino-hue/depsight"
 
-version = "0.5.3"
+version = "0.6.0"
 
 readme = "README.md"
 

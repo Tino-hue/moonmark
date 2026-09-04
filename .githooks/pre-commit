@@ -1,0 +1,73 @@
+#!/usr/bin/env bash
+# =============================================================================
+# MoonBit Depsight — Pre-commit Hook
+# =============================================================================
+# 启用方法（仓库根目录执行一次）：
+#   git config core.hooksPath .githooks
+#   chmod +x .githooks/pre-commit      # macOS / Linux
+#
+# Windows Git Bash / WSL 用户：chmod +x 同样有效。
+# 纯 Windows CMD/PowerShell：在 Git Bash 下执行或手动确保 .sh 可执行。
+#
+# 跳过钩子（紧急情况，不推荐）：
+#   git commit --no-verify
+# =============================================================================
+
+set -e  # 任何命令失败立即终止
+
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+echo -e "${BLUE}▶ Depsight Pre-commit Checks${NC}"
+echo "=========================================="
+
+# 1. 格式检查
+echo ""
+echo -e "${BLUE}[1/3]${NC} moon fmt --check"
+if moon fmt --check 2>&1; then
+    echo -e "  ${GREEN}✓${NC} 格式合规"
+else
+    echo ""
+    echo -e "  ${RED}✗ 格式检查失败${NC}"
+    echo "  请运行：${YELLOW}moon fmt${NC} 自动修复，然后重新 add + commit"
+    exit 1
+fi
+
+# 2. 类型检查（警告当错误）
+echo ""
+echo -e "${BLUE}[2/3]${NC} moon check --target js --deny-warn"
+if moon check --target js --deny-warn 2>&1; then
+    echo -e "  ${GREEN}✓${NC} 类型检查通过，零警告"
+else
+    echo ""
+    echo -e "  ${RED}✗ 类型检查失败（含警告）${NC}"
+    echo "  请修复上方错误 / 警告后再提交。"
+    exit 1
+fi
+
+# 3. 快速测试（仅跑 JS 目标默认测试，跳过性能基准）
+echo ""
+echo -e "${BLUE}[3/3]${NC} moon test --target js"
+TEST_OUTPUT=$(moon test --target js 2>&1)
+TEST_EXIT=$?
+# 打印最后 8 行（通常是统计汇总）
+echo "$TEST_OUTPUT" | tail -8
+
+if [ $TEST_EXIT -eq 0 ]; then
+    echo -e "  ${GREEN}✓${NC} 全部测试通过"
+else
+    echo ""
+    echo -e "  ${RED}✗ 存在失败的测试用例${NC}"
+    echo "  请修复失败用例后再提交。"
+    exit 1
+fi
+
+# 全部通过
+echo ""
+echo "=========================================="
+echo -e "${GREEN}✅ Depsight Pre-commit All Passed${NC}"
+echo "   Ready to commit. Happy hacking!"
+exit 0
