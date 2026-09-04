@@ -512,6 +512,7 @@ fn execute_command(opts : CliOptions) -> Int {
       } else {
         run_report(opts)
       }
+    "stats" => run_stats(opts)
     "outdated" => run_outdated(opts)
     "why" => run_why(opts)
     "check" => run_check(opts)
@@ -1522,6 +1523,7 @@ pub fn help_text() -> String {
   lines.push("  tree [package]    Show dependency tree")
   lines.push("  audit             Run dependency audit")
   lines.push("  report            Generate full report")
+  lines.push("  stats             Show dependency panorama (18+ metrics)")
   lines.push("  outdated          Check for outdated dependencies")
   lines.push("  why <package>     Trace who depends on a package")
   lines.push("  check             Quick health check (CI-friendly)")
@@ -1541,6 +1543,8 @@ pub fn help_text() -> String {
   )
   lines.push("  depsight audit             # Run full dependency audit")
   lines.push("  depsight audit --json      # Output audit results as JSON")
+  lines.push("  depsight stats             # Show panorama stats (21 metrics)")
+  lines.push("  depsight stats --json      # Stats as machine-readable JSON")
   lines.push("  depsight report --html     # Generate HTML report")
   lines.push("  depsight outdated          # Check for outdated packages")
   lines.push("  depsight why moonbitlang/core  # Who depends on core?")
@@ -1877,4 +1881,20 @@ fn run_check(opts : CliOptions) -> Int {
   } else {
     0
   }
+}
+
+///|
+/// 全景生态统计（F05）：21 项指标 → 终端 ASCII 表或 JSON
+fn run_stats(opts : CliOptions) -> Int {
+  let (graph, root_id, metas) = build_full_graph(opts)
+  let report = @analyze.run_analysis(graph, metas)
+  let stats = @analyze.calculate_ecosystem_stats(graph, report, metas, root_id)
+
+  let output_text = if opts.format == "json" {
+    @analyze.render_ecosystem_stats_json(stats)
+  } else {
+    @analyze.render_ecosystem_stats_terminal(stats)
+  }
+  write_output_or_print(opts, output_text)
+  0
 }

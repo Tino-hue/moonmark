@@ -96,7 +96,7 @@ fn make_mock_fetch(
 // ---------- 生态统计 ----------
 
 ///|
-/// 生态采样报告
+/// 生态采样报告（沿用旧字段名以兼容现有 6 个测试；内部复用新公共 F05 API）
 struct EcosystemReport {
   total_packages : Int
   total_nodes : Int
@@ -149,90 +149,22 @@ fn run_ecosystem_sampling(
 
   let report = @analyze.run_analysis(graph, metas)
 
-  // 生态统计
-  let eco = calculate_ecosystem_stats(graph, report, license_map)
+  // 生态统计（复用 F05 公共 API，然后把字段名适配回旧 EcosystemReport）
+  let root_id = root_name + "@" + root_version
+  let stats = @analyze.calculate_ecosystem_stats(graph, report, metas, root_id)
+  let eco = {
+    total_packages: stats.total_unique_packages,
+    total_nodes: stats.total_nodes,
+    max_depth: stats.max_depth,
+    avg_depth: stats.avg_depth,
+    cycle_detected: stats.cycle_detected,
+    most_depended: stats.most_depended_package,
+    most_depended_count: stats.most_depended_count,
+    license_distribution: stats.license_distribution,
+    overall_health_score: stats.overall_health_score,
+  }
 
   Ok((graph, report, eco))
-}
-
-///|
-fn calculate_ecosystem_stats(
-  graph : @graph.DependencyGraph,
-  report : @analyze.AnalysisReport,
-  license_map : Map[String, String],
-) -> EcosystemReport {
-  let ids = graph.get_all_node_ids()
-  let total_nodes = ids.length()
-
-  // 计算深度统计
-  let mut max_depth = 0
-  let mut total_depth = 0
-  for id in ids {
-    match graph.get_node_by_id(id) {
-      Some(node) => {
-        if node.depth > max_depth {
-          max_depth = node.depth
-        }
-        total_depth = total_depth + node.depth
-      }
-      None => ()
-    }
-  }
-  let avg_depth = if total_nodes > 0 {
-    total_depth.to_double() / total_nodes.to_double()
-  } else {
-    0.0
-  }
-
-  // 计算被依赖次数
-  let dep_count : Map[String, Int] = Map([])
-  for id in ids {
-    match graph.get_node_by_id(id) {
-      Some(node) =>
-        dep_count[node.name] = (match dep_count.get(node.name) {
-            Some(c) => c
-            None => 0
-          }) +
-          node.parents.length()
-      None => ()
-    }
-  }
-
-  let mut most_depended = ""
-  let mut most_depended_count = 0
-  for pair in dep_count {
-    let (name, count) = pair
-    if count > most_depended_count {
-      most_depended = name
-      most_depended_count = count
-    }
-  }
-
-  // 许可证分布
-  let license_dist : Map[String, Int] = Map([])
-  for pair in license_map {
-    let (_, spdx) = pair
-    license_dist[spdx] = match license_dist.get(spdx) {
-      Some(c) => c + 1
-      None => 1
-    }
-  }
-
-  let cycle_detected = report.diagnostics
-    .iter()
-    .any(fn(d) { d.code == "CYCLE-001" })
-
-  {
-    total_packages: license_map.length(),
-    total_nodes,
-    max_depth,
-    avg_depth,
-    cycle_detected,
-    most_depended,
-    most_depended_count,
-    license_distribution: license_dist,
-    overall_health_score: report.overall_score,
-  }
 }
 
 // ---------- 测试 ----------
