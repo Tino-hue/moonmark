@@ -36,15 +36,19 @@ else
     exit 1
 fi
 
-# 2. 类型检查（警告当错误）
+# 2. 类型检查
+#    说明：历史上使用 --deny-warn，但 MoonBit rolling toolchain 可能新增
+#          弃用警告（如 W0020 - JS FFI Array -> FixedArray），此时本地仍
+#          要允许开发者提交，否则整个开发流中断。改成常规 check，发布前
+#          在 release-check 阶段会人工审核 warnings。
 echo ""
-echo -e "${BLUE}[2/3]${NC} moon check --target js --deny-warn"
-if moon check --target js --deny-warn 2>&1; then
-    echo -e "  ${GREEN}✓${NC} 类型检查通过，零警告"
+echo -e "${BLUE}[2/3]${NC} moon check --target js"
+if moon check --target js 2>&1; then
+    echo -e "  ${GREEN}✓${NC} 类型检查通过"
 else
     echo ""
-    echo -e "  ${RED}✗ 类型检查失败（含警告）${NC}"
-    echo "  请修复上方错误 / 警告后再提交。"
+    echo -e "  ${RED}✗ 类型检查失败${NC}"
+    echo "  请修复上方错误后再提交。"
     exit 1
 fi
 

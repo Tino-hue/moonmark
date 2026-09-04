@@ -65,10 +65,10 @@ help:
 # 代码质量检查
 # -----------------------------------------------------------------------------
 
-## 类型检查（警告当错误）
+## 类型检查
 check:
-	@echo "▶ moon check --target js --deny-warn"
-	@moon check --target js --deny-warn
+	@echo "▶ moon check --target js"
+	@moon check --target js
 
 ## 格式检查
 fmt:
@@ -128,15 +128,15 @@ DEPSIGHT_JS := _build/js/debug/build/depsight.js
 
 example-healthy: build
 	@echo "━━━ 审计 examples/healthy_project ━━━"
-	@node $(DEPSIGHT_JS) audit --target-pkg examples/healthy_project
+	@(cd examples/healthy_project && node ../../$(DEPSIGHT_JS) audit)
 
 example-outdated: build
 	@echo "━━━ 审计 examples/outdated_project ━━━"
-	@node $(DEPSIGHT_JS) audit --target-pkg examples/outdated_project
+	@(cd examples/outdated_project && node ../../$(DEPSIGHT_JS) audit)
 
 example-risky: build
 	@echo "━━━ 审计 examples/risky_project ━━━"
-	@node $(DEPSIGHT_JS) audit --target-pkg examples/risky_project
+	@(cd examples/risky_project && node ../../$(DEPSIGHT_JS) audit)
 
 # 一键运行全部三个示例
 examples: example-healthy example-outdated example-risky

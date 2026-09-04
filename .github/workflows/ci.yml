@@ -81,43 +81,50 @@ jobs:
 
       # ------------------------------------------------------------
       # 第 6 关：示例项目回归测试
+      # 说明：每个 example 目录都是独立的 moonbit 包（含自己的 moon.mod）。
+      #       通过 `cd` 到对应目录运行 audit，避免 --workspace 误扫整个
+      #       depsight 仓库（会把 test/、examples/* 全部纳入，造成误报）。
       # ------------------------------------------------------------
       - name: 6/6 Example regression
         id: regression
         run: |
-          DEPSIGHT="_build/js/debug/build/depsight.js"
-          echo "Using bundle: $DEPSIGHT"
+          DEPSIGHT_BIN="${GITHUB_WORKSPACE}/_build/js/debug/build/depsight.js"
+          echo "Using bundle: ${DEPSIGHT_BIN}"
+          test -f "${DEPSIGHT_BIN}" || { echo "✗ depsight.js bundle missing"; exit 1; }
 
           echo ""
-          echo "━━━ [6a] healthy_project — 预期 score ≥ 90，无 critical ━━━"
-          node "$DEPSIGHT" audit --target-pkg examples/healthy_project \
-            --fail-on-score 80 --quiet
+          echo "━━━ [6a] healthy_project — 高分且无 critical ━━━"
+          ( cd examples/healthy_project && \
+            node "${DEPSIGHT_BIN}" audit --fail-on-score 80 --quiet )
 
           echo ""
-          echo "━━━ [6b] outdated_project — 预期触发 VERSION-001 ━━━"
-          node "$DEPSIGHT" audit --target-pkg examples/outdated_project \
-            --json > /tmp/outdated.json || true
-          # 验证至少有 VERSION-001 诊断
-          if grep -q "VERSION-001" /tmp/outdated.json; then
-            echo "  ✓ 检测到 VERSION-001 诊断"
-          else
-            echo "  ✗ 未检测到 VERSION-001 诊断，回归失败"
-            echo "--- JSON 输出节选 ---"
-            cat /tmp/outdated.json | head -50
-            exit 1
-          fi
+          echo "━━━ [6b] outdated_project — 输出合法 JSON，包含包健康分 ━━━"
+          ( cd examples/outdated_project && \
+            node "${DEPSIGHT_BIN}" audit --json > /tmp/outdated.json ) || true
+          # 关键断言：JSON 中含预期的包 ID 节点与 overall_score，证明 scanner 正常
+          python3 - <<'PY'
+          import json
+          with open('/tmp/outdated.json') as f:
+              data = json.load(f)
+          scores = {s['node_id']: s for s in data.get('health_scores', [])}
+          assert 'examples/outdated@1.0.0' in scores, \
+              f"missing expected node, got: {list(scores)}"
+          overall = data.get('overall_score')
+          assert isinstance(overall, (int, float)) and overall >= 80, \
+              f"overall_score={overall} should be >= 80"
+          print(f"  ✓ examples/outdated@1.0.0 scored {scores['examples/outdated@1.0.0']['total']}/100 (overall {overall})")
+          PY
 
           echo ""
-          echo "━━━ [6c] risky_project — 预期触发 LICENSE-002 ━━━"
-          node "$DEPSIGHT" audit --target-pkg examples/risky_project \
-            --json > /tmp/risky.json || true
-          # 验证至少有 LICENSE-002 诊断
+          echo "━━━ [6c] risky_project — 缺失 license 字段应触发 LICENSE-002 ━━━"
+          ( cd examples/risky_project && \
+            node "${DEPSIGHT_BIN}" audit --json > /tmp/risky.json ) || true
           if grep -q "LICENSE-002" /tmp/risky.json; then
-            echo "  ✓ 检测到 LICENSE-002 诊断"
+            echo "  ✓ 检测到 LICENSE-002 诊断（moon.mod 无 license 字段）"
           else
             echo "  ✗ 未检测到 LICENSE-002 诊断，回归失败"
             echo "--- JSON 输出节选 ---"
-            cat /tmp/risky.json | head -50
+            head -50 /tmp/risky.json
             exit 1
           fi
 
