@@ -59,7 +59,7 @@ pub fn parse_version(s : String) -> Result[Version, String] {
     None => return Err("Invalid patch version: " + parts[2])
   }
 
-  Ok({ major, minor, patch, prerelease: pre_part })
+  Ok({ major, minor, patch, prerelease: pre_part, })
 }
 
 ///|

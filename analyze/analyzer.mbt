@@ -17,7 +17,7 @@ pub fn NodeMeta::new(
   self_size? : Int = 0,
   last_commit_days_ago? : Int? = None,
 ) -> NodeMeta {
-  { license, deprecated_apis, latest_version, self_size, last_commit_days_ago }
+  { license, deprecated_apis, latest_version, self_size, last_commit_days_ago, }
 }
 
 ///|
@@ -37,7 +37,7 @@ pub fn AnalysisReport::new(
   overall_score? : Int = 100,
   node_count? : Int = 0,
 ) -> AnalysisReport {
-  { diagnostics, health_scores, overall_score, node_count }
+  { diagnostics, health_scores, overall_score, node_count, }
 }
 
 ///|

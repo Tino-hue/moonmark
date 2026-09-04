@@ -8,7 +8,7 @@ pub struct Registry {
 ///|
 /// 创建空注册表
 pub fn Registry::new() -> Registry {
-  { packages: Map([]), cache: None }
+  { packages: Map([]), cache: None, }
 }
 
 ///|

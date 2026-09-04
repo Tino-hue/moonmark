@@ -15,7 +15,7 @@ pub fn DeprecatedPropagation::new(
   api_name : String,
   level : String,
 ) -> DeprecatedPropagation {
-  { node_id, source_node_id, api_name, level }
+  { node_id, source_node_id, api_name, level, }
 }
 
 ///|

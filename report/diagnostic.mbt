@@ -39,7 +39,7 @@ pub fn Diagnostic::new(
   path : Array[String],
   suggestions : Array[String],
 ) -> Diagnostic {
-  { level, code, message, path, suggestions }
+  { level, code, message, path, suggestions, }
 }
 
 ///|
@@ -49,7 +49,7 @@ pub fn Diagnostic::critical(
   message : String,
   path : Array[String],
 ) -> Diagnostic {
-  { level: level_critical(), code, message, path, suggestions: [] }
+  { level: level_critical(), code, message, path, suggestions: [], }
 }
 
 ///|
@@ -59,7 +59,7 @@ pub fn Diagnostic::warning(
   message : String,
   path : Array[String],
 ) -> Diagnostic {
-  { level: level_warning(), code, message, path, suggestions: [] }
+  { level: level_warning(), code, message, path, suggestions: [], }
 }
 
 ///|
@@ -69,7 +69,7 @@ pub fn Diagnostic::info(
   message : String,
   path : Array[String],
 ) -> Diagnostic {
-  { level: level_info(), code, message, path, suggestions: [] }
+  { level: level_info(), code, message, path, suggestions: [], }
 }
 
 ///|

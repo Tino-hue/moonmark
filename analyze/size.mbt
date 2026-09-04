@@ -13,7 +13,7 @@ pub fn SizeInfo::new(
   self_size : Int,
   transitive_size : Int,
 ) -> SizeInfo {
-  { node_id, self_size, transitive_size }
+  { node_id, self_size, transitive_size, }
 }
 
 ///|
@@ -79,7 +79,7 @@ pub fn find_size_offenders(
       Some(s) => s
       None => 0
     }
-    infos.push({ node_id: id, self_size, transitive_size: trans_size })
+    infos.push({ node_id: id, self_size, transitive_size: trans_size, })
   }
 
   sort_by_transitive_size_desc(infos)

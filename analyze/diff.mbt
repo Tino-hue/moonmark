@@ -17,7 +17,7 @@ pub fn ReportDiff::new(
   score_delta? : Int = 0,
   node_count_delta? : Int = 0,
 ) -> ReportDiff {
-  { added, removed, unchanged, score_delta, node_count_delta }
+  { added, removed, unchanged, score_delta, node_count_delta, }
 }
 
 ///|
@@ -54,7 +54,7 @@ pub fn diff_reports(
   let score_delta = current.get_overall_score() - baseline.get_overall_score()
   let node_count_delta = current.get_node_count() - baseline.get_node_count()
 
-  { added, removed, unchanged, score_delta, node_count_delta }
+  { added, removed, unchanged, score_delta, node_count_delta, }
 }
 
 ///|

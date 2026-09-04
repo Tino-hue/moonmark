@@ -30,7 +30,7 @@ pub fn CacheManager::new(
   fs : FileSystem,
   ttl_ms? : Double = default_ttl_ms,
 ) -> CacheManager {
-  { dir, ttl_ms, fs }
+  { dir, ttl_ms, fs, }
 }
 
 ///|

@@ -34,7 +34,7 @@ pub fn array_contains(arr : Array[String], item : String) -> Bool {
 ///|
 /// 创建空依赖图
 pub fn DependencyGraph::new() -> DependencyGraph {
-  { nodes: Map([]) }
+  { nodes: Map([]), }
 }
 
 ///|
@@ -47,7 +47,7 @@ pub fn DependencyGraph::add_node(
 ) -> Unit {
   let id = node_id(name, version)
   if self.nodes.get(id) is None {
-    self.nodes[id] = { name, version, depth, parents: [], children: [] }
+    self.nodes[id] = { name, version, depth, parents: [], children: [], }
   }
 }
 
@@ -309,7 +309,7 @@ priv struct CycleDetector {
 
 ///|
 fn CycleDetector::new() -> CycleDetector {
-  { grey: Map([]), black: Map([]) }
+  { grey: Map([]), black: Map([]), }
 }
 
 ///|

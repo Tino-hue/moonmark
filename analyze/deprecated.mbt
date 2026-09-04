@@ -13,7 +13,7 @@ pub fn DeprecatedApi::new(
   since? : String? = None,
   message? : String? = None,
 ) -> DeprecatedApi {
-  { name, since, message }
+  { name, since, message, }
 }
 
 ///|
@@ -57,7 +57,11 @@ pub fn scan_deprecated_apis(source : String) -> Array[DeprecatedApi] {
         let def_line = trim(lines[i])
         match extract_definition_name(def_line) {
           Some(name) =>
-            apis.push({ name, since: deprecated_since, message: deprecated_msg })
+            apis.push({
+              name,
+              since: deprecated_since,
+              message: deprecated_msg,
+            })
           None => ()
         }
       }

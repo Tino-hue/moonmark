@@ -106,7 +106,13 @@ pub fn ScoreWeights::new(
     size_reasonableness +
     activity
   if total == 100 {
-    { freshness, compliance, deprecated_density, size_reasonableness, activity }
+    {
+      freshness,
+      compliance,
+      deprecated_density,
+      size_reasonableness,
+      activity,
+    }
   } else {
     default_weights()
   }
