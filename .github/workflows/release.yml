@@ -43,7 +43,7 @@ jobs:
           MOONBIT_INSTALL_VERSION: "latest"
         run: |
           curl -fsSL https://cli.moonbitlang.cn/install/unix.sh | bash
-          echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
+          echo "$HOME/.moon/bin" >> $GITHUB_PATH
 
       - name: Verify MoonBit + Node
         run: |

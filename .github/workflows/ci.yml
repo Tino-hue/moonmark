@@ -29,27 +29,22 @@ jobs:
         uses: actions/checkout@v6
 
       # ------------------------------------------------------------
-      # 环境安装
+      # 环境安装 — 与 depsight.yml 完全一致，避免 PATH 写入不一致
       # ------------------------------------------------------------
       - name: Install MoonBit CLI (CN mirror)
         env:
           MOONBIT_INSTALL_VERSION: "latest"
         run: |
           curl -fsSL https://cli.moonbitlang.cn/install/unix.sh | bash
-          echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
+          echo "$HOME/.moon/bin" >> $GITHUB_PATH
 
       - name: Verify MoonBit + Node
         run: |
-          export PATH="$HOME/.moon/bin:$PATH"
-          echo "--- MoonBit toolchain ---"
           moon version --all
-          echo "--- Node.js ---"
           node --version
 
       - name: Update MoonBit registry
-        run: |
-          export PATH="$HOME/.moon/bin:$PATH"
-          moon update
+        run: moon update
 
       # ------------------------------------------------------------
       # 第 1 关：类型检查
@@ -58,41 +53,31 @@ jobs:
       #       工具链支持抑制或提供更稳定替代方案后才能消除。当前策略：允许少数已知
       #       告警通过，阻塞 errors；发布前在 release-check 中审计告警数量。
       - name: 1/6 Type check (JS)
-        run: |
-          export PATH="$HOME/.moon/bin:$PATH"
-          moon check --target js
+        run: moon check --target js
 
       # ------------------------------------------------------------
       # 第 2 关：格式检查
       # ------------------------------------------------------------
       - name: 2/6 Format check
-        run: |
-          export PATH="$HOME/.moon/bin:$PATH"
-          moon fmt --check
+        run: moon fmt --check
 
       # ------------------------------------------------------------
       # 第 3 关：接口文件一致性
       # ------------------------------------------------------------
       - name: 3/6 Generate interface
-        run: |
-          export PATH="$HOME/.moon/bin:$PATH"
-          moon info
+        run: moon info
 
       # ------------------------------------------------------------
       # 第 4 关：测试（267+ 用例）
       # ------------------------------------------------------------
       - name: 4/6 Run tests
-        run: |
-          export PATH="$HOME/.moon/bin:$PATH"
-          moon test --target js
+        run: moon test --target js
 
       # ------------------------------------------------------------
       # 第 5 关：构建 JS bundle
       # ------------------------------------------------------------
       - name: 5/6 Build JS bundle
-        run: |
-          export PATH="$HOME/.moon/bin:$PATH"
-          moon build --target js
+        run: moon build --target js
 
       # ------------------------------------------------------------
       # 第 6 关：示例项目回归测试
@@ -100,7 +85,6 @@ jobs:
       - name: 6/6 Example regression
         id: regression
         run: |
-          export PATH="$HOME/.moon/bin:$PATH"
           DEPSIGHT="_build/js/debug/build/depsight.js"
           echo "Using bundle: $DEPSIGHT"
 
@@ -158,11 +142,10 @@ jobs:
           MOONBIT_INSTALL_VERSION: "latest"
         run: |
           curl -fsSL https://cli.moonbitlang.cn/install/unix.sh | bash
-          echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
+          echo "$HOME/.moon/bin" >> $GITHUB_PATH
 
       - name: Build depsight
         run: |
-          export PATH="$HOME/.moon/bin:$PATH"
           moon update
           moon build --target js
 
