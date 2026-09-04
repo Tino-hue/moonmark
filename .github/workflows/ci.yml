@@ -84,6 +84,8 @@ jobs:
       # 说明：每个 example 目录都是独立的 moonbit 包（含自己的 moon.mod）。
       #       通过 `cd` 到对应目录运行 audit，避免 --workspace 误扫整个
       #       depsight 仓库（会把 test/、examples/* 全部纳入，造成误报）。
+      #       用 -o <file> 写 JSON 报告（而非 stdout 重定向），因为 audit 在
+      #       --json stdout 中仍会附加 "Tip: ..." 提示行，会污染 JSON 解析。
       # ------------------------------------------------------------
       - name: 6/6 Example regression
         id: regression
@@ -100,7 +102,7 @@ jobs:
           echo ""
           echo "━━━ [6b] outdated_project — 输出合法 JSON，包含包健康分 ━━━"
           ( cd examples/outdated_project && \
-            node "${DEPSIGHT_BIN}" audit --json > /tmp/outdated.json ) || true
+            node "${DEPSIGHT_BIN}" audit --json -o /tmp/outdated.json ) || true
           # 关键断言：JSON 中含预期的包 ID 节点与 overall_score，证明 scanner 正常
           python3 - <<'PY'
           import json
@@ -118,13 +120,13 @@ jobs:
           echo ""
           echo "━━━ [6c] risky_project — 缺失 license 字段应触发 LICENSE-002 ━━━"
           ( cd examples/risky_project && \
-            node "${DEPSIGHT_BIN}" audit --json > /tmp/risky.json ) || true
+            node "${DEPSIGHT_BIN}" audit --json -o /tmp/risky.json ) || true
           if grep -q "LICENSE-002" /tmp/risky.json; then
             echo "  ✓ 检测到 LICENSE-002 诊断（moon.mod 无 license 字段）"
           else
             echo "  ✗ 未检测到 LICENSE-002 诊断，回归失败"
-            echo "--- JSON 输出节选 ---"
-            head -50 /tmp/risky.json
+            echo "--- JSON 节选 (first 40 lines) ---"
+            head -40 /tmp/risky.json
             exit 1
           fi
 
