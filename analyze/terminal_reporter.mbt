@@ -213,7 +213,17 @@ fn render_diagnostics_table(
   let mut info = 0
 
   for d in diagnostics {
-    let level_label = color_level(d.level)
+    // F04：两种废弃诊断的视觉差异化
+    //   DEPRECATED-001（直接废弃）：黄底暗橙徽章「DIR-API」
+    //   DEPRECATED-002（传递暴露）：红底暗玫徽章「PROP」
+    let base_level = color_level(d.level)
+    let level_label = if d.code == "DEPRECATED-001" {
+      yellow("DIR-API")
+    } else if d.code == "DEPRECATED-002" {
+      red("PROP")
+    } else {
+      base_level
+    }
     let msg_text = truncate(d.message, col_msg - 2)
     buf <+ "│"
     buf.write_string(pad_left(level_label, col_level))
@@ -222,6 +232,23 @@ fn render_diagnostics_table(
     buf <+ "│"
     buf.write_string(pad_left(msg_text, col_msg))
     buf <+ "│\n"
+
+    // F04：DEPRECATED-002 路径链单独在下一行展示，可一眼看出源头
+    if d.code == "DEPRECATED-002" && d.path.length() > 0 {
+      let chain = join_strings_with_arrow(d.path)
+      buf <+ "│"
+      buf.write_string(repeat_char(" ", col_level))
+      buf <+ "│"
+      buf.write_string(repeat_char(" ", col_code))
+      buf <+ "│"
+      buf.write_string(dim("  path: " + chain))
+      // 尾部补齐宽度（含 "  path: " + chain）
+      let padding_len = col_msg - 2 - ("  path: " + chain).length()
+      if padding_len > 0 {
+        buf.write_string(repeat_char(" ", padding_len))
+      }
+      buf <+ "│\n"
+    }
 
     if d.is_critical() {
       critical = critical + 1
@@ -324,4 +351,21 @@ fn render_top_size_offenders(
   buf <+ "┴"
   buf.write_string(repeat_char("─", col_trans))
   buf <+ "┘\n"
+}
+
+// ========== 辅助：字符串链拼接 ==========
+
+///|
+/// F04：把 [S, B, A] 拼成 "S ⇒ B ⇒ A"，用于废弃传播链展示
+fn join_strings_with_arrow(arr : Array[String]) -> String {
+  if arr.length() == 0 {
+    return ""
+  }
+  let mut s = arr[0]
+  let mut i = 1
+  while i < arr.length() {
+    s = s + " ⇒ " + arr[i]
+    i = i + 1
+  }
+  s
 }

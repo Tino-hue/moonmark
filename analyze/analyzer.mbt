@@ -177,7 +177,7 @@ pub fn run_analysis(
         )
     }
 
-    // 废弃 API 诊断
+    // 废弃 API 诊断：DEPRECATED-001 直接废弃
     if meta.deprecated_apis.length() > 0 {
       let mut diag = @report.Diagnostic::warning(
         "DEPRECATED-001",
@@ -198,6 +198,62 @@ pub fn run_analysis(
     }
   }
 
+  // ---------- 3. 跨包废弃 API 传播检测（F04 首创功能）----------
+  // 汇总每个节点的废弃 API 列表（源），逆向 BFS 找出所有祖先的暴露路径。
+  let deprecated_by_node : Map[String, Array[DeprecatedApi]] = Map([])
+  for id2 in all_ids {
+    let meta2 = match node_metas.get(id2) {
+      Some(m) => m
+      None => NodeMeta::new()
+    }
+    if meta2.deprecated_apis.length() > 0 {
+      deprecated_by_node[id2] = meta2.deprecated_apis
+    }
+  }
+  if deprecated_by_node.length() > 0 {
+    let propagations = find_deprecated_propagation(graph, deprecated_by_node)
+    for p in propagations {
+      // PRD F04 要求：DEPRECATED-002 标记「间接废弃」，消息包含深度，
+      // Diagnostic.path 字段放完整传播链 [source, ..., node_id]（suggestion 里也会自动拼展示）。
+      let depth_label = if p.depth == 1 {
+        "direct dependency"
+      } else {
+        p.depth.to_string() + "-hop transitive dependency"
+      }
+      let message = "\"" +
+        p.api_name +
+        "\" is exposed here via a " +
+        depth_label +
+        " of " +
+        p.source_node_id +
+        " (total " +
+        p.depth.to_string() +
+        " hop" +
+        (if p.depth == 1 { "" } else { "s" }) +
+        ")"
+      let diag0 = @report.Diagnostic::warning(
+        "DEPRECATED-002",
+        message,
+        // 注意：Diagnostic.path[] 直接就是传播链，
+        // Diagnostic.to_string() 会拼成 "path: S -> B -> A"。
+        p.path,
+      )
+      // 建议：把路径上除自己外的所有包都建议升级（源头最优先）。
+      let chain_str = join_deprecated_chain(p.path)
+      let suggestion = "Upgrade deprecated source package " +
+        p.source_node_id +
+        " to remove this API, or replace direct dependencies in the chain:" +
+        "\n  " +
+        chain_str +
+        "\nIf safe, pin a newer version of " +
+        p.source_node_id +
+        " that no longer exposes " +
+        p.api_name +
+        "."
+      diagnostics.push(diag0.with_suggestion(suggestion))
+    }
+  }
+
   let overall = calculate_overall_score(scores)
   let top_offenders = if has_any_real_size {
     find_size_offenders(graph, self_sizes, 5)
@@ -211,4 +267,21 @@ pub fn run_analysis(
     node_count: all_ids.length(),
     size_offenders_top5: top_offenders,
   }
+}
+
+// ---------- F04 helpers（file-local，同包可复用）----------
+
+///|
+/// 把传播链节点 ID 数组用「 ⇒ 」箭头连接成一条可读字符串
+fn join_deprecated_chain(chain : Array[String]) -> String {
+  if chain.length() == 0 {
+    return ""
+  }
+  let mut s = chain[0]
+  let mut i = 1
+  while i < chain.length() {
+    s = s + " ⇒ " + chain[i]
+    i = i + 1
+  }
+  s
 }

@@ -157,8 +157,19 @@ fn html_diagnostics(diagnostics : Array[@report.Diagnostic]) -> String {
     } else {
       "diag-info"
     }
+    // F04 首创功能：DEPRECATED-002 传递废弃卡片用 <details> 折叠/展开，
+    //   默认展开让用户第一眼看到，用户可以折叠节省空间。
+    let is_propagate = d.code == "DEPRECATED-002"
+    if is_propagate {
+      buf <+ "<details class=\"diag-details\" open>\n"
+      buf <+ "<summary class=\"diag-summary\">\n"
+    }
+
     buf <+ "<div class=\"diag-card "
     buf.write_string(level_class)
+    if is_propagate {
+      buf <+ " diag-propagate"
+    }
     buf <+ "\">\n"
     buf <+ "<div class=\"diag-header\">\n"
     buf <+ "<span class=\"diag-level\">"
@@ -166,6 +177,9 @@ fn html_diagnostics(diagnostics : Array[@report.Diagnostic]) -> String {
     buf <+ "</span>\n"
     buf <+ "<span class=\"diag-code\">"
     buf.write_string(d.code)
+    if is_propagate {
+      buf <+ " <small>(propagated)</small>"
+    }
     buf <+ "</span>\n"
     buf <+ "</div>\n"
     buf <+ "<div class=\"diag-msg\">"
@@ -173,9 +187,44 @@ fn html_diagnostics(diagnostics : Array[@report.Diagnostic]) -> String {
     buf <+ "</div>\n"
 
     if d.path.length() > 0 {
-      buf <+ "<div class=\"diag-path\">Path: "
-      buf.write_string(escape_html(join_html_path(d.path)))
-      buf <+ "</div>\n"
+      if is_propagate {
+        // F04：传播链用有序列表缩进展示，可一眼追溯源头
+        buf <+ "<div class=\"diag-path-label\">Propagation chain ("
+        buf.write_string((d.path.length() - 1).to_string())
+        buf <+ " hops):</div>\n"
+        buf <+ "<ol class=\"diag-chain\">\n"
+        let n = d.path.length()
+        let mut i = 0
+        while i < n {
+          let node = d.path[i]
+          buf <+ "<li class=\""
+          if i == 0 {
+            buf <+ "chain-source"
+          } else if i + 1 == n {
+            buf <+ "chain-exposed"
+          } else {
+            buf <+ "chain-mid"
+          }
+          buf <+ "\">"
+          buf.write_string(escape_html(node))
+          if i + 1 < n {
+            buf <+ " <span class=\"chain-arrow\">\u{2192}</span>"
+          } else {
+            buf <+ " <span class=\"chain-tag\">(exposed here)</span>"
+          }
+          if i == 0 {
+            buf <+
+              " <span class=\"chain-tag source-tag\">(deprecated source)</span>"
+          }
+          buf <+ "</li>\n"
+          i = i + 1
+        }
+        buf <+ "</ol>\n"
+      } else {
+        buf <+ "<div class=\"diag-path\">Path: "
+        buf.write_string(escape_html(join_html_path(d.path)))
+        buf <+ "</div>\n"
+      }
     }
 
     if d.suggestions.length() > 0 {
@@ -189,6 +238,11 @@ fn html_diagnostics(diagnostics : Array[@report.Diagnostic]) -> String {
     }
 
     buf <+ "</div>\n"
+
+    if is_propagate {
+      buf <+ "</summary>\n"
+      buf <+ "</details>\n"
+    }
   }
 
   buf <+ "</section>"
@@ -352,6 +406,25 @@ fn html_css() -> String {
     ".diag-path{font-size:13px;color:#8b949e;}.diag-suggestions{margin-top:8px;}"
   buf <+
     ".suggestion{font-size:13px;color:var(--blue);margin-top:2px;}.no-issues{color:var(--green);}"
+  // F04：DEPRECATED-002 传播可视化 CSS
+  buf <+ ".diag-details{margin-bottom:12px;}"
+  buf <+
+    ".diag-details .diag-summary{list-style:none;cursor:pointer;}.diag-details .diag-summary::-webkit-details-marker{display:none;}"
+  buf <+
+    ".diag-card.diag-propagate{border-left:4px solid #a371f7;background:linear-gradient(90deg,rgba(163,113,247,.08),var(--card));}"
+  buf <+ ".diag-propagate .diag-code small{color:#a371f7;font-weight:500;}"
+  buf <+
+    ".diag-path-label{font-size:12px;color:#a371f7;font-weight:600;margin-top:10px;margin-bottom:6px;text-transform:uppercase;letter-spacing:.4px;}"
+  buf <+ "ol.diag-chain{margin:4px 0 6px 0;padding-left:22px;}"
+  buf <+ "ol.diag-chain li{font-family:monospace;font-size:13px;padding:3px 0;}"
+  buf <+ "ol.diag-chain li.chain-source{color:#ff7b72;font-weight:600;}"
+  buf <+ "ol.diag-chain li.chain-mid{color:#f0883e;}"
+  buf <+ "ol.diag-chain li.chain-exposed{color:#a371f7;font-weight:700;}"
+  buf <+ "ol.diag-chain .chain-arrow{color:#30363d;margin:0 6px;}"
+  buf <+
+    "ol.diag-chain .chain-tag{font-weight:500;font-size:11px;margin-left:6px;padding:1px 6px;border-radius:4px;background:var(--border);}"
+  buf <+
+    "ol.diag-chain .source-tag{color:#ff7b72;border:1px solid rgba(255,123,114,.4);background:rgba(255,123,114,.08);}"
   buf <+ ".dep-tree{margin-top:24px;}"
   buf <+
     ".tree-root{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px;}"

@@ -31,16 +31,23 @@ test "three-level propagation" {
     Some(p) => p
     None => panic()
   }
-  inspect(b_prop.level, content="direct")
+  inspect(b_prop.depth, content="1") // 直接依赖 A，1 hop
   inspect(b_prop.api_name, content="old_fn")
   inspect(b_prop.source_node_id, content="A@1.0.0")
+  inspect(b_prop.path.length(), content="2")
+  inspect(b_prop.path[0], content="A@1.0.0")
+  inspect(b_prop.path[1], content="B@1.0.0")
 
   let c_prop = match find_prop_by_node(props, "C@1.0.0") {
     Some(p) => p
     None => panic()
   }
-  inspect(c_prop.level, content="indirect")
+  inspect(c_prop.depth, content="2") // C → B → A：两跳，间接
   inspect(c_prop.api_name, content="old_fn")
+  inspect(c_prop.path.length(), content="3")
+  inspect(c_prop.path[0], content="A@1.0.0")
+  inspect(c_prop.path[1], content="B@1.0.0")
+  inspect(c_prop.path[2], content="C@1.0.0")
 }
 
 ///|
@@ -62,13 +69,20 @@ test "direct and indirect mixed" {
   inspect(props.length(), content="3")
 
   let b = find_prop_by_node(props, "B@1.0.0").unwrap()
-  inspect(b.level, content="direct")
+  inspect(b.depth, content="1")
+  inspect(b.path[0], content="A@1.0.0")
+  inspect(b.path[1], content="B@1.0.0")
 
   let c = find_prop_by_node(props, "C@1.0.0").unwrap()
-  inspect(c.level, content="direct")
+  inspect(c.depth, content="1")
+  inspect(c.path[1], content="C@1.0.0")
 
   let d = find_prop_by_node(props, "D@1.0.0").unwrap()
-  inspect(d.level, content="indirect")
+  inspect(d.depth, content="2") // D → B → A：2 hops
+  // 传播路径必须正好 3 个节点，源/头/尾正确
+  inspect(d.path.length(), content="3")
+  inspect(d.path[0], content="A@1.0.0")
+  inspect(d.path[2], content="D@1.0.0")
 }
 
 ///|
