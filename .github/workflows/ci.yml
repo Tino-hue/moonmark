@@ -160,17 +160,27 @@ jobs:
           PY
 
           echo ""
-          echo "━━━ [6c] risky_project — 缺失 license 字段应触发 LICENSE-002 ━━━"
+          echo "━━━ [6c] risky_project — 离线演示应触发 5+ 种诊断码 ━━━"
           ( cd examples/risky_project && \
-            node "${DEPSIGHT_BIN}" audit --json -o /tmp/risky.json ) || true
-          if grep -q "LICENSE-002" /tmp/risky.json; then
-            echo "  ✓ 检测到 LICENSE-002 诊断（moon.mod 无 license 字段）"
-          else
-            echo "  ✗ 未检测到 LICENSE-002 诊断，回归失败"
-            echo "--- JSON 节选 (first 40 lines) ---"
-            head -40 /tmp/risky.json
+            node "${DEPSIGHT_BIN}" audit --offline --json -o /tmp/risky.json )
+          # 逐一验证 5 种诊断码（F06 增强）
+          all_ok=true
+          for code in "LICENSE-002" "LICENSE-001" "DEPRECATED-001" "DEPRECATED-002" "CYCLE-001"; do
+            if grep -q "\"code\":\"${code}\"" /tmp/risky.json; then
+              echo "  ✓ 检测到 ${code} 诊断码"
+            else
+              echo "  ✗ 未检测到 ${code} 诊断码，回归失败"
+              all_ok=false
+            fi
+          done
+          if [ "$all_ok" = false ]; then
+            echo "--- JSON 节选 (first 60 lines) ---"
+            head -60 /tmp/risky.json
             exit 1
           fi
+          # 验证 node 数（root + 6 mock 包 = 7）
+          node_count=$(python3 -c "import json,sys; d=json.load(open('/tmp/risky.json')); print(d['node_count'])")
+          echo "  ✓ 共 ${node_count} 个节点，诊断码 5 种全部触发"
 
           echo ""
           echo "✅ 三个示例项目回归测试全部通过"

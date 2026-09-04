@@ -597,6 +597,10 @@ fn build_full_graph_for_dir(
 
   let builder = @graph.GraphBuilder::new_with_max_depth(opts.depth)
   let modules : Map[String, @parse.Module] = Map([])
+  let fs = @cache.FileSystem::node_js()
+  // F06：离线模式下，本地 `.mooncakes/<name>@<version>/moon.mod` 作为本地 mock 注册表源，
+  // 命中则直接返回 Module，完全不走网络，支持示例项目离线演示。
+  let local_mooncakes_dir = ".mooncakes"
 
   fn fetch_cb(
     name : String,
@@ -612,6 +616,85 @@ fn build_full_graph_for_dir(
     }
     if opts.verbose {
       println("[fetch] " + name + "@" + version + " ...")
+    }
+    // 1. 离线模式下先尝试本地 .mooncakes 目录（F06：本地 mock 注册表）
+    //    先找 moon.mod.json（JSON 含完整 deps），再回退到 moon.mod（TOML）
+    if opts.offline {
+      let pkg_dir = local_mooncakes_dir + "/" + name
+      let json_path = pkg_dir + "/moon.mod.json"
+      let toml_path = pkg_dir + "/moon.mod"
+      let local_content = match (fs.read_file)(json_path) {
+        Some(c) => Some(("json", c))
+        None =>
+          match (fs.read_file)(toml_path) {
+            Some(c) => Some(("toml", c))
+            None => None
+          }
+      }
+      match local_content {
+        Some(("json", content)) =>
+          match @parse.parse_mod_json(content) {
+            Ok(m) => {
+              let id = name + "@" + m.version
+              modules[id] = m
+              if opts.verbose {
+                println(
+                  @analyze.green(
+                    "  -> [offline] " + id + " from .mooncakes (JSON)",
+                  ),
+                )
+              }
+              return Ok(m)
+            }
+            Err(e) =>
+              if opts.verbose {
+                println(
+                  @analyze.yellow(
+                    "  -> [offline] JSON parse fail for " + name + ": " + e,
+                  ),
+                )
+              }
+          }
+        Some(("toml", content)) =>
+          match @parse.parse_mod_toml(content) {
+            Ok(m) => {
+              let id = name + "@" + m.version
+              modules[id] = m
+              if opts.verbose {
+                println(
+                  @analyze.green(
+                    "  -> [offline] " + id + " from .mooncakes (TOML)",
+                  ),
+                )
+              }
+              return Ok(m)
+            }
+            Err(e) =>
+              if opts.verbose {
+                println(
+                  @analyze.yellow(
+                    "  -> [offline] TOML parse fail for " + name + ": " + e,
+                  ),
+                )
+              }
+          }
+        _ => ()
+      }
+      if opts.verbose {
+        match (fs.read_file)(json_path) {
+          Some(_) => ()
+          None =>
+            match (fs.read_file)(toml_path) {
+              Some(_) => ()
+              None =>
+                println(
+                  @analyze.dim(
+                    "  -> [offline] no " + name + " in .mooncakes, skip",
+                  ),
+                )
+            }
+        }
+      }
     }
     match registry.fetch(@fetch.http_get, name, version, opts.offline) {
       Ok(content) => {

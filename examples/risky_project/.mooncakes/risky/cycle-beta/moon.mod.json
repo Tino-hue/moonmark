@@ -1,0 +1,9 @@
+{
+  "name": "risky/cycle-beta",
+  "version": "1.0.0",
+  "license": "Apache-2.0",
+  "description": "Part of a circular dependency pair (beta <-> alpha)",
+  "deps": {
+    "risky/cycle-alpha": "1.0.0"
+  }
+}

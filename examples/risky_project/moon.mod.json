@@ -1,0 +1,11 @@
+{
+  "name": "examples/risky",
+  "version": "1.0.0",
+  "description": "A project with various risky dependencies for demo purposes",
+  "deps": {
+    "risky/gpl-lib": "1.0.0",
+    "risky/mid-layer": "1.0.0",
+    "risky/cycle-alpha": "1.0.0",
+    "risky/tiny-dep": "1.0.0"
+  }
+}

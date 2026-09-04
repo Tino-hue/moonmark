@@ -1,0 +1,9 @@
+{
+  "name": "risky/mid-layer",
+  "version": "1.0.0",
+  "license": "MIT",
+  "description": "A middle-layer library that depends on deprecated-lib",
+  "deps": {
+    "risky/deprecated-lib": "1.0.0"
+  }
+}

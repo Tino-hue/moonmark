@@ -1,0 +1,7 @@
+{
+  "name": "risky/deprecated-lib",
+  "version": "1.0.0",
+  "license": "MIT",
+  "description": "A library with deprecated public APIs",
+  "deps": {}
+}

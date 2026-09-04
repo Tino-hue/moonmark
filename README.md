@@ -223,11 +223,12 @@ node _build/js/debug/build/depsight.js audit --target-pkg examples/healthy_proje
 # 2. Outdated dependencies — demonstrates VERSION-001 diagnostics
 node _build/js/debug/build/depsight.js audit --target-pkg examples/outdated_project
 
-# 3. Risky project — demonstrates LICENSE-001 + DEPRECATED-001
-node _build/js/debug/build/depsight.js audit --target-pkg examples/risky_project
+# 3. Risky project — 5+ diagnostic codes, fully offline (F06)
+# Triggers: CYCLE-001, LICENSE-001, LICENSE-002, DEPRECATED-001, DEPRECATED-002
+node _build/js/debug/build/depsight.js audit --offline --target-pkg examples/risky_project
 ```
 
-Each example ships its own `moon.mod` (and `.depsight-baseline.json`), so the audit command resolves locally with no network access.
+Each example ships its own `moon.mod` (and `.depsight-baseline.json`); the risky project also bundles a local `.mooncakes/` mock registry so it runs with zero network access (`--offline`).
 
 ## Project Structure
 

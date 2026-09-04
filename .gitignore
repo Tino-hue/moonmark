@@ -14,7 +14,10 @@ Thumbs.db
 # MoonBit build artifacts
 target/
 *.wasm
-.mooncakes/
+**/.mooncakes/*
+!.mooncakes/.gitkeep
+!examples/risky_project/.mooncakes/
+!examples/risky_project/.mooncakes/**
 _build/
 core/
 trace.json
@@ -39,6 +42,7 @@ __pycache__/
 # Depsight generated files
 .depsight-baseline.json
 **/.depsight-baseline.json
+!examples/**/.depsight-baseline.json
 report.html
 demo_report.html
 report.json

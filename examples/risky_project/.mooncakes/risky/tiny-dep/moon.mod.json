@@ -1,0 +1,7 @@
+{
+  "name": "risky/tiny-dep",
+  "version": "1.0.0",
+  "license": "MIT",
+  "description": "A tiny well-maintained dependency with no issues",
+  "deps": {}
+}
