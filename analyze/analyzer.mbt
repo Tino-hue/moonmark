@@ -6,6 +6,7 @@ pub struct NodeMeta {
   latest_version : String?
   self_size : Int
   last_commit_days_ago : Int?
+  total_api_count : Int
 }
 
 ///|
@@ -16,8 +17,16 @@ pub fn NodeMeta::new(
   latest_version? : String? = None,
   self_size? : Int = 0,
   last_commit_days_ago? : Int? = None,
+  total_api_count? : Int = 0,
 ) -> NodeMeta {
-  { license, deprecated_apis, latest_version, self_size, last_commit_days_ago, }
+  {
+    license,
+    deprecated_apis,
+    latest_version,
+    self_size,
+    last_commit_days_ago,
+    total_api_count,
+  }
 }
 
 ///|
@@ -95,7 +104,7 @@ pub fn run_analysis(
       latest_version=meta.latest_version,
       license_spdx=meta.license,
       deprecated_count=meta.deprecated_apis.length(),
-      total_api_count=10,
+      total_api_count=meta.total_api_count,
       transitive_size=Some(meta.self_size),
       last_commit_days_ago=meta.last_commit_days_ago,
     )
