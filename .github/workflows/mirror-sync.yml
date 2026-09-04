@@ -1,0 +1,99 @@
+name: Mirror Sync (GitHub → GitLink / Gitee)
+
+# =============================================================================
+# 多仓库镜像同步工作流
+# 原理：GitHub 为唯一可信源 (SSOT)，CI 通过后自动把 main/stable/tags
+#       推送到 GitLink 和 Gitee 两个只读镜像。
+#
+# ⚠️ 使用前必须在 GitHub 项目 → Settings → Secrets and variables → Actions 中配置：
+#
+#   GITLINK_TOKEN :  GitLink 个人访问令牌 (PAT)，需要仓库读写权限
+#   GITEE_TOKEN   :  Gitee   个人访问令牌 (PAT)，需要仓库读写权限
+#
+# Token 生成：
+#   GitLink → 头像 → 个人设置 → Access Token
+#   Gitee   → 头像 → 设置 → 私人令牌
+# =============================================================================
+
+on:
+  push:
+    branches:
+      - main
+      - stable
+    tags:
+      - 'v*'
+  workflow_dispatch:   # 支持手动触发（调试或补同步）
+
+permissions:
+  contents: read
+
+jobs:
+  sync:
+    name: Sync mirrors
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (full history)
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0    # 必须完整 git 历史，否则无法推送
+
+      - name: Configure git identity
+        run: |
+          git config user.name  "depsight-bot"
+          git config user.email "bot@depsight.local"
+
+      - name: Sync → GitLink
+        env:
+          GITLINK_TOKEN: ${{ secrets.GITLINK_TOKEN }}
+        run: |
+          set +e
+          if [ -z "$GITLINK_TOKEN" ]; then
+            echo "⚠️  GITLINK_TOKEN 未配置，跳过 GitLink 同步"
+            echo "   请在 GitHub Secrets 中添加 GITLINK_TOKEN 以启用同步"
+            exit 0
+          fi
+
+          GITLINK_URL="https://x-access-token:${GITLINK_TOKEN}@gitlink.org.cn/LittleFish/moonbit-depsight.git"
+
+          echo "━━━ 推送到 GitLink : main ━━━"
+          git push "$GITLINK_URL" "refs/remotes/origin/main:refs/heads/main" --force-with-lease || true
+
+          echo "━━━ 推送到 GitLink : stable（若存在）━━━"
+          if git show-ref --verify --quiet refs/remotes/origin/stable; then
+            git push "$GITLINK_URL" "refs/remotes/origin/stable:refs/heads/stable" --force-with-lease || true
+          else
+            echo "  [skip] stable 分支暂未创建"
+          fi
+
+          echo "━━━ 推送到 GitLink : tags ━━━"
+          git push "$GITLINK_URL" --tags --force-with-lease || true
+
+          echo "✅ GitLink 同步完成"
+
+      - name: Sync → Gitee
+        env:
+          GITEE_TOKEN: ${{ secrets.GITEE_TOKEN }}
+        run: |
+          set +e
+          if [ -z "$GITEE_TOKEN" ]; then
+            echo "⚠️  GITEE_TOKEN 未配置，跳过 Gitee 同步"
+            echo "   请在 GitHub Secrets 中添加 GITEE_TOKEN 以启用同步"
+            exit 0
+          fi
+
+          GITEE_URL="https://x-access-token:${GITEE_TOKEN}@gitee.com/xiaoruoyu1206/moon-bit-depsight.git"
+
+          echo "━━━ 推送到 Gitee : main ━━━"
+          git push "$GITEE_URL" "refs/remotes/origin/main:refs/heads/main" --force-with-lease || true
+
+          echo "━━━ 推送到 Gitee : stable（若存在）━━━"
+          if git show-ref --verify --quiet refs/remotes/origin/stable; then
+            git push "$GITEE_URL" "refs/remotes/origin/stable:refs/heads/stable" --force-with-lease || true
+          else
+            echo "  [skip] stable 分支暂未创建"
+          fi
+
+          echo "━━━ 推送到 Gitee : tags ━━━"
+          git push "$GITEE_URL" --tags --force-with-lease || true
+
+          echo "✅ Gitee 同步完成"

@@ -1,10 +1,22 @@
 name: CI
 
+# =============================================================================
+# 主 CI — 所有 push 到 main / release / hotfix 和 PR 的质量门禁
+# 相比原版本，增强了：
+#   - 示例项目回归测试（3 个示例健康分阈值验证）
+#   - 自审计（depsight audit --fail-on-score 80）
+#   - SARIF 上传（GitHub Security 标签下可查看）
+# =============================================================================
+
 on:
   push:
-    branches: [main]
+    branches: [main, 'release/*', 'hotfix/*']
   pull_request:
     branches: [main]
+
+permissions:
+  contents: read
+  security-events: write   # 上传 SARIF 需要
 
 jobs:
   build-and-test:
@@ -13,55 +25,169 @@ jobs:
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     steps:
-      - uses: actions/checkout@v6
+      - name: Checkout
+        uses: actions/checkout@v6
 
-      # International mirror cli.moonbitlang.com returns 403 on GitHub Actions,
-      # use CN mirror cli.moonbitlang.cn to fix the download issue;
-      # pinned version 0.1.20260529 has been removed from both mirrors, use latest.
-      - name: Install MoonBit CLI
+      # ------------------------------------------------------------
+      # 环境安装
+      # ------------------------------------------------------------
+      - name: Install MoonBit CLI (CN mirror)
         env:
           MOONBIT_INSTALL_VERSION: "latest"
         run: |
           curl -fsSL https://cli.moonbitlang.cn/install/unix.sh | bash
+          echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
 
-      - name: Verify MoonBit installation
+      - name: Verify MoonBit + Node
         run: |
           export PATH="$HOME/.moon/bin:$PATH"
+          echo "--- MoonBit toolchain ---"
           moon version --all
+          echo "--- Node.js ---"
+          node --version
 
       - name: Update MoonBit registry
         run: |
           export PATH="$HOME/.moon/bin:$PATH"
           moon update
 
-      # 1. moon check - static type check (--deny-warn treats warning as error)
-      - name: Check (type) - moon check --deny-warn
+      # ------------------------------------------------------------
+      # 第 1 关：类型检查（警告当错误）
+      # ------------------------------------------------------------
+      - name: 1/6 Type check (--deny-warn)
         run: |
           export PATH="$HOME/.moon/bin:$PATH"
           moon check --target js --deny-warn
 
-      # 2. moon fmt --check - format check
-      # Note: MoonBit latest toolchain does not support --deny-warn on moon fmt;
-      #       moon fmt --check returns non-zero on format violation.
-      - name: Format check - moon fmt --check
+      # ------------------------------------------------------------
+      # 第 2 关：格式检查
+      # ------------------------------------------------------------
+      - name: 2/6 Format check
         run: |
           export PATH="$HOME/.moon/bin:$PATH"
           moon fmt --check
 
-      # 3. moon info - generate .mbti interface files
-      # Note: moon info does not support --deny-warn; the interface file must remain consistent with source.
-      - name: Generate interface - moon info
+      # ------------------------------------------------------------
+      # 第 3 关：接口文件一致性
+      # ------------------------------------------------------------
+      - name: 3/6 Generate interface
         run: |
           export PATH="$HOME/.moon/bin:$PATH"
           moon info
 
-      # 4. moon test - run 267 test cases
-      - name: Run tests - moon test
+      # ------------------------------------------------------------
+      # 第 4 关：测试（267+ 用例）
+      # ------------------------------------------------------------
+      - name: 4/6 Run tests
         run: |
           export PATH="$HOME/.moon/bin:$PATH"
           moon test --target js
 
-      - name: Build for JS target
+      # ------------------------------------------------------------
+      # 第 5 关：构建 JS bundle
+      # ------------------------------------------------------------
+      - name: 5/6 Build JS bundle
         run: |
           export PATH="$HOME/.moon/bin:$PATH"
           moon build --target js
+
+      # ------------------------------------------------------------
+      # 第 6 关：示例项目回归测试
+      # ------------------------------------------------------------
+      - name: 6/6 Example regression
+        id: regression
+        run: |
+          export PATH="$HOME/.moon/bin:$PATH"
+          DEPSIGHT="_build/js/debug/build/depsight.js"
+          echo "Using bundle: $DEPSIGHT"
+
+          echo ""
+          echo "━━━ [6a] healthy_project — 预期 score ≥ 90，无 critical ━━━"
+          node "$DEPSIGHT" audit --target-pkg examples/healthy_project \
+            --fail-on-score 80 --quiet
+
+          echo ""
+          echo "━━━ [6b] outdated_project — 预期触发 VERSION-001 ━━━"
+          node "$DEPSIGHT" audit --target-pkg examples/outdated_project \
+            --json > /tmp/outdated.json || true
+          # 验证至少有 VERSION-001 诊断
+          if grep -q "VERSION-001" /tmp/outdated.json; then
+            echo "  ✓ 检测到 VERSION-001 诊断"
+          else
+            echo "  ✗ 未检测到 VERSION-001 诊断，回归失败"
+            echo "--- JSON 输出节选 ---"
+            cat /tmp/outdated.json | head -50
+            exit 1
+          fi
+
+          echo ""
+          echo "━━━ [6c] risky_project — 预期触发 LICENSE-002 ━━━"
+          node "$DEPSIGHT" audit --target-pkg examples/risky_project \
+            --json > /tmp/risky.json || true
+          # 验证至少有 LICENSE-002 诊断
+          if grep -q "LICENSE-002" /tmp/risky.json; then
+            echo "  ✓ 检测到 LICENSE-002 诊断"
+          else
+            echo "  ✗ 未检测到 LICENSE-002 诊断，回归失败"
+            echo "--- JSON 输出节选 ---"
+            cat /tmp/risky.json | head -50
+            exit 1
+          fi
+
+          echo ""
+          echo "✅ 三个示例项目回归测试全部通过"
+
+  # =====================================================================
+  # Self-audit job — 依赖 build-and-test 通过后运行
+  # =====================================================================
+  self-audit:
+    name: Self Audit (Depsight audits itself)
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Install MoonBit
+        env:
+          MOONBIT_INSTALL_VERSION: "latest"
+        run: |
+          curl -fsSL https://cli.moonbitlang.cn/install/unix.sh | bash
+          echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
+
+      - name: Build depsight
+        run: |
+          export PATH="$HOME/.moon/bin:$PATH"
+          moon update
+          moon build --target js
+
+      - name: Run self audit (Terminal + SARIF + HTML)
+        run: |
+          DEPSIGHT="_build/js/debug/build/depsight.js"
+          echo "--- Self audit: terminal ---"
+          node "$DEPSIGHT" audit --fail-on-score 80 --fail-on-critical
+
+          echo ""
+          echo "--- Self audit: SARIF output ---"
+          node "$DEPSIGHT" audit --sarif -o depsight-self.sarif || true
+
+          echo ""
+          echo "--- Self audit: HTML report ---"
+          node "$DEPSIGHT" audit --html  -o depsight-report.html || true
+
+      - name: Upload SARIF to GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: depsight-self.sarif
+          category: depsight-self-audit
+        continue-on-error: true
+
+      - name: Upload HTML report artifact
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: depsight-self-audit-report
+          path: depsight-report.html
+          retention-days: 14

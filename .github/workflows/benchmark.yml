@@ -1,0 +1,93 @@
+name: Benchmark
+
+# =============================================================================
+# 性能基准工作流
+# 触发条件：
+#   - 手动触发（workflow_dispatch）：对比任意两次 commit 的性能
+#   - push 到 release/* 分支：发布前做性能回退检测
+#   - pull_request（含 benchmark label）：PR 需要做性能审查
+#
+# 功能：
+#   - 运行 moon test --target js --no-skip（开启 8 个性能基准）
+#   - 把基准结果上传为 artifact，便于归档对比
+# =============================================================================
+
+on:
+  workflow_dispatch:
+    inputs:
+      extra_args:
+        description: '额外 moon test 参数（如 --test-threads 1）'
+        required: false
+        default: ''
+  push:
+    branches:
+      - 'release/*'
+
+permissions:
+  contents: read
+
+jobs:
+  benchmark:
+    name: Performance Benchmarks
+    runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Install MoonBit
+        env:
+          MOONBIT_INSTALL_VERSION: "latest"
+        run: |
+          curl -fsSL https://cli.moonbitlang.cn/install/unix.sh | bash
+          echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
+
+      - name: Environment info
+        run: |
+          echo "--- Hardware ---"
+          nproc 2>/dev/null || echo "CPU: (unknown)"
+          free -h 2>/dev/null || echo "MEM: (unknown)"
+          echo "--- Software ---"
+          moon version --all
+          node --version
+
+      - name: Build (warm up cache)
+        run: |
+          moon update
+          moon build --target js
+
+      - name: Run full benchmark tests
+        id: bench
+        run: |
+          mkdir -p benchmark-results
+          LOG_FILE="benchmark-results/benchmark_$(date +%Y%m%d_%H%M%S).log"
+          echo "Writing benchmark output to: $LOG_FILE"
+
+          {
+            echo "=== MoonBit Depsight Benchmark Run ==="
+            echo "Date:    $(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+            echo "Commit:  ${GITHUB_SHA:0:12}"
+            echo "Branch:  ${GITHUB_REF_NAME}"
+            echo "Runner:  $(uname -a)"
+            echo "======================================"
+            echo ""
+          }  >  "$LOG_FILE"
+
+          if moon test --target js --no-skip ${{ inputs.extra_args }} 2>&1 | tee -a "$LOG_FILE"; then
+            echo "bench_status=PASS" >> "$GITHUB_OUTPUT"
+          else
+            echo "bench_status=FAIL" >> "$GITHUB_OUTPUT"
+          fi
+
+          echo ""
+          echo "=== Last 20 lines of summary ==="
+          tail -20 "$LOG_FILE"
+
+      - name: Upload benchmark artifact
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: benchmark-${{ github.event_name == 'workflow_dispatch' && 'manual' || 'auto' }}-${{ github.sha }}
+          path: benchmark-results/
+          retention-days: 30

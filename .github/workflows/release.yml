@@ -1,0 +1,142 @@
+name: Release
+
+# =============================================================================
+# 自动化发布工作流
+# 触发条件：创建形如 v* 的 tag（如 v0.6.0）
+#
+# 步骤：
+#   1. 完整质量门禁（check / fmt / test-all / build-release）
+#   2. 构建 release 版 depsight.js 并打包 zip
+#   3. 生成基于 CHANGELOG.md 的发布说明
+#   4. 创建 GitHub Release 并上传构建产物
+#
+# 手动触发 (workflow_dispatch) 仅用于调试。
+# =============================================================================
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'            # v0.6.0
+      - 'v[0-9]+.[0-9]+.[0-9]+-*'          # v0.6.0-rc1 (预发布)
+  workflow_dispatch:
+
+permissions:
+  contents: write   # 需要写内容以创建 Release 和上传资产
+
+jobs:
+  release:
+    name: Build & Release
+    runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0   # 完整历史，用于生成 changelog
+
+      # ----------------------------------------------------------
+      # 阶段 1：安装 MoonBit 工具链
+      # ----------------------------------------------------------
+      - name: Install MoonBit CLI (CN mirror for CI stability)
+        env:
+          MOONBIT_INSTALL_VERSION: "latest"
+        run: |
+          curl -fsSL https://cli.moonbitlang.cn/install/unix.sh | bash
+          echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
+
+      - name: Verify MoonBit + Node
+        run: |
+          moon version --all
+          node --version
+
+      - name: Update registry
+        run: moon update
+
+      # ----------------------------------------------------------
+      # 阶段 2：质量门禁（与 release-check 同标准）
+      # ----------------------------------------------------------
+      - name: Type check (--deny-warn)
+        run: moon check --target js --deny-warn
+
+      - name: Format check
+        run: moon fmt --check
+
+      - name: Generate interface
+        run: moon info
+
+      - name: Full tests (including benchmarks)
+        run: moon test --target js --no-skip
+
+      # ----------------------------------------------------------
+      # 阶段 3：构建生产版 bundle + 打包
+      # ----------------------------------------------------------
+      - name: Build release bundle
+        run: moon build --target js --release
+
+      - name: Package artifacts
+        id: pkg
+        run: |
+          VERSION="${GITHUB_REF_NAME}"     # 形如 v0.6.0
+          BUNDLE="_build/js/release/build/depsight.js"
+
+          if [ ! -f "$BUNDLE" ]; then
+            # 部分 toolchain 用 debug 路径
+            BUNDLE="_build/js/debug/build/depsight.js"
+          fi
+
+          echo "Using bundle: $BUNDLE"
+          ls -lh "$BUNDLE"
+
+          OUTPUT_DIR="depsight-${VERSION}"
+          mkdir -p "$OUTPUT_DIR"
+          cp "$BUNDLE" "$OUTPUT_DIR/depsight.js"
+          cp README.md "$OUTPUT_DIR/"
+          cp LICENSE "$OUTPUT_DIR/"
+          echo "v${VERSION}" > "$OUTPUT_DIR/VERSION"
+
+          ZIP_NAME="depsight-${VERSION}-js.zip"
+          zip -r "$ZIP_NAME" "$OUTPUT_DIR/"
+
+          echo "artifact_name=$ZIP_NAME" >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION"     >> "$GITHUB_OUTPUT"
+
+      # ----------------------------------------------------------
+      # 阶段 4：提取 CHANGELOG 对应版本的发布说明
+      # ----------------------------------------------------------
+      - name: Extract release notes from CHANGELOG.md
+        id: notes
+        run: |
+          VERSION="${GITHUB_REF_NAME}"
+          # CHANGELOG 中寻找 ## [vX.Y.Z] 或 ## vX.Y.Z 直到下一个 ## 版本标题
+          awk -v ver="## ${VERSION}" '
+            $0 ~ ver { found=1; next }
+            found && /^## / { exit }
+            found { print }
+          ' CHANGELOG.md > release_notes.md || true
+
+          if [ ! -s release_notes.md ]; then
+            echo "⚠️  CHANGELOG 中未找到 ${VERSION} 章节，使用默认文本"
+            {
+              echo "# MoonBit Depsight ${VERSION}"
+              echo ""
+              echo "Release ${VERSION}. See CHANGELOG.md for details."
+            } > release_notes.md
+          fi
+
+          echo "--- 预览发布说明 ---"
+          cat release_notes.md
+          echo "--------------------"
+
+      # ----------------------------------------------------------
+      # 阶段 5：创建 GitHub Release
+      # ----------------------------------------------------------
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: MoonBit Depsight ${{ steps.pkg.outputs.version }}
+          body_path: release_notes.md
+          files: ${{ steps.pkg.outputs.artifact_name }}
+          prerelease: ${{ contains(steps.pkg.outputs.version, '-') }}  # v0.6.0-rc1 标为预发布
+          generate_release_notes: false
+          fail_on_unmatched_files: true
