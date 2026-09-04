@@ -37,12 +37,38 @@ jobs:
 
       # ----------------------------------------------------------
       # 阶段 1：安装 MoonBit 工具链
+      # 双镜像链 + curl 超时重试。GitHub 美国 runner 访问国内镜像
+      # cli.moonbitlang.cn 可能 5min curl 28 超时，自动回退到国际镜像。
       # ----------------------------------------------------------
-      - name: Install MoonBit CLI (CN mirror for CI stability)
-        env:
-          MOONBIT_INSTALL_VERSION: "latest"
+      - name: Install MoonBit CLI (mirror chain CN → INT)
         run: |
-          curl -fsSL https://cli.moonbitlang.cn/install/unix.sh | bash
+          INSTALL_OK=0
+          MIRRORS=(
+            "cli.moonbitlang.cn"
+            "cli.moonbitlang.com"
+          )
+          for MIRROR in "${MIRRORS[@]}"; do
+            echo "━━━ Installing MoonBit via: https://$MIRROR ━━━"
+            if curl \
+                --connect-timeout 10 \
+                --max-time 180 \
+                --retry 3 \
+                --retry-delay 3 \
+                --retry-connrefused \
+                -fsSL "https://$MIRROR/install/unix.sh" | bash; then
+              INSTALL_OK=1
+              break
+            else
+              echo "  ✗ mirror $MIRROR install failed, trying next mirror (if any)"
+              rm -rf "$HOME/.moon" 2>/dev/null || true
+            fi
+          done
+
+          if [ "$INSTALL_OK" -ne 1 ]; then
+            echo "✗ MoonBit CLI 安装失败：所有镜像都不可用"
+            exit 1
+          fi
+
           echo "$HOME/.moon/bin" >> $GITHUB_PATH
 
       - name: Verify MoonBit + Node
@@ -51,7 +77,18 @@ jobs:
           node --version
 
       - name: Update registry
-        run: moon update
+        run: |
+          n=0
+          until [ $n -ge 3 ]; do
+            if moon update; then
+              exit 0
+            fi
+            n=$((n+1))
+            echo "  ⚠ moon update 尝试 $n/3 失败，5s 后重试..."
+            sleep 5
+          done
+          echo "✗ moon update 连续失败 3 次"
+          exit 1
 
       # ----------------------------------------------------------
       # 阶段 2：质量门禁（与 release-check 同标准）

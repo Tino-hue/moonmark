@@ -16,12 +16,12 @@ on:
   workflow_dispatch:
     inputs:
       extra_args:
-        description: '额外 moon test 参数（如 --test-threads 1）'
+        description: "额外 moon test 参数（如 --test-threads 1）"
         required: false
-        default: ''
+        default: ""
   push:
     branches:
-      - 'release/*'
+      - "release/*"
 
 permissions:
   contents: read
@@ -36,12 +36,36 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Install MoonBit
-        env:
-          MOONBIT_INSTALL_VERSION: "latest"
+      - name: Install MoonBit (mirror chain CN → INT)
         run: |
-          curl -fsSL https://cli.moonbitlang.cn/install/unix.sh | bash
-          echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
+          INSTALL_OK=0
+          MIRRORS=(
+            "cli.moonbitlang.cn"
+            "cli.moonbitlang.com"
+          )
+          for MIRROR in "${MIRRORS[@]}"; do
+            echo "━━━ Installing MoonBit via: https://$MIRROR ━━━"
+            if curl \
+                --connect-timeout 10 \
+                --max-time 180 \
+                --retry 3 \
+                --retry-delay 3 \
+                --retry-connrefused \
+                -fsSL "https://$MIRROR/install/unix.sh" | bash; then
+              INSTALL_OK=1
+              break
+            else
+              echo "  ✗ mirror $MIRROR install failed, trying next mirror (if any)"
+              rm -rf "$HOME/.moon" 2>/dev/null || true
+            fi
+          done
+
+          if [ "$INSTALL_OK" -ne 1 ]; then
+            echo "✗ MoonBit CLI 安装失败：所有镜像都不可用"
+            exit 1
+          fi
+
+          echo "$HOME/.moon/bin" >> $GITHUB_PATH
 
       - name: Environment info
         run: |
@@ -54,7 +78,16 @@ jobs:
 
       - name: Build (warm up cache)
         run: |
-          moon update
+          n=0
+          until [ $n -ge 3 ]; do
+            if moon update; then
+              break
+            fi
+            n=$((n+1))
+            echo "  ⚠ moon update 尝试 $n/3 失败，5s 后重试..."
+            sleep 5
+          done
+          [ $n -ge 3 ] && { echo "✗ moon update 连续失败 3 次"; exit 1; }
           moon build --target js
 
       - name: Run full benchmark tests
