@@ -258,7 +258,10 @@ jobs:
             echo "  ⚠ moon update 尝试 $n/5 失败，10s 后重试..."
             sleep 10
           done
-          [ $n -ge 5 ] && { echo "✗ moon update 连续失败 5 次"; exit 1; }
+          if [ $n -ge 5 ]; then
+            echo "✗ moon update 连续失败 5 次"
+            exit 1
+          fi
           # moon build 同样加重试（依赖下载可能偶发失败）
           m=0
           until [ $m -ge 3 ]; do
@@ -269,7 +272,10 @@ jobs:
             echo "  ⚠ moon build 尝试 $m/3 失败，10s 后重试..."
             sleep 10
           done
-          [ $m -ge 3 ] && { echo "✗ moon build 连续失败 3 次"; exit 1; }
+          if [ $m -ge 3 ]; then
+            echo "✗ moon build 连续失败 3 次"
+            exit 1
+          fi
 
       - name: Run self audit (Terminal + SARIF + HTML)
         run: |
