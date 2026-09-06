@@ -38,6 +38,9 @@ jobs:
       # ------------------------------------------------------------
       - name: Install MoonBit CLI (mirror chain CN → INT)
         run: |
+          # 关键修复：`curl ... | bash` 退出码是 bash 的，curl 失败时
+          # bash 读空输入仍返回 0。用 pipefail + 硬校验 moon 二进制存在。
+          set -o pipefail
           INSTALL_OK=0
           MIRRORS=(
             "cli.moonbitlang.cn"
@@ -52,13 +55,16 @@ jobs:
                 --retry-delay 3 \
                 --retry-connrefused \
                 -fsSL "https://$MIRROR/install/unix.sh" | bash; then
-              INSTALL_OK=1
-              break
+              if [ -x "$HOME/.moon/bin/moon" ]; then
+                INSTALL_OK=1
+                break
+              else
+                echo "  ✗ mirror $MIRROR: 脚本执行成功但 moon 二进制不存在，继续尝试下一镜像"
+              fi
             else
               echo "  ✗ mirror $MIRROR install failed, trying next mirror (if any)"
-              # 清理可能半安装的 ~/.moon，避免下一个镜像污染
-              rm -rf "$HOME/.moon" 2>/dev/null || true
             fi
+            rm -rf "$HOME/.moon" 2>/dev/null || true
           done
 
           if [ "$INSTALL_OK" -ne 1 ]; then
@@ -67,6 +73,7 @@ jobs:
           fi
 
           echo "$HOME/.moon/bin" >> $GITHUB_PATH
+          echo "✓ moon installed: $($HOME/.moon/bin/moon version)"
 
       - name: Verify MoonBit + Node
         run: |
@@ -200,6 +207,10 @@ jobs:
 
       - name: Install MoonBit (mirror chain CN → INT)
         run: |
+          # 关键修复：`curl ... | bash` 的退出码是 bash 的，curl 失败时
+          # bash 读空输入仍返回 0，导致误认为安装成功。用 pipefail 让
+          # 管道返回 curl 的退出码，并在循环后硬校验 moon 二进制是否存在。
+          set -o pipefail
           INSTALL_OK=0
           MIRRORS=(
             "cli.moonbitlang.cn"
@@ -214,12 +225,17 @@ jobs:
                 --retry-delay 3 \
                 --retry-connrefused \
                 -fsSL "https://$MIRROR/install/unix.sh" | bash; then
-              INSTALL_OK=1
-              break
+              # 硬校验：moon 二进制必须真实存在，否则视为本次安装失败
+              if [ -x "$HOME/.moon/bin/moon" ]; then
+                INSTALL_OK=1
+                break
+              else
+                echo "  ✗ mirror $MIRROR: 脚本执行成功但 moon 二进制不存在，继续尝试下一镜像"
+              fi
             else
               echo "  ✗ mirror $MIRROR install failed, trying next mirror (if any)"
-              rm -rf "$HOME/.moon" 2>/dev/null || true
             fi
+            rm -rf "$HOME/.moon" 2>/dev/null || true
           done
 
           if [ "$INSTALL_OK" -ne 1 ]; then
@@ -228,6 +244,7 @@ jobs:
           fi
 
           echo "$HOME/.moon/bin" >> $GITHUB_PATH
+          echo "✓ moon installed: $($HOME/.moon/bin/moon version)"
 
       - name: Build depsight
         run: |
