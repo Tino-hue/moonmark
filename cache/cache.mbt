@@ -4,7 +4,8 @@ pub struct FileSystem {
   read_file : (String) -> String?
   write_file : (String, String) -> Unit
   exists : (String) -> Bool
-  readdir : (String) -> Array[String]?
+  /// F06: 用 FixedArray 消除 W0020 弃用警告；外部消费者用 .iter() + Array::from_iter 转 Array
+  readdir : (String) -> FixedArray[String]?
   stat_mtime : (String) -> Double?
   unlink : (String) -> Unit
   rmdir : (String) -> Unit
@@ -258,13 +259,13 @@ extern "js" fn fs_exists_sync(path : String) -> Bool =
   #| }
 
 ///|
-extern "js" fn fs_readdir_sync(path : String) -> Array[String]? =
+extern "js" fn fs_readdir_sync(path : String) -> FixedArray[String]? =
   #| (path) => {
   #|   try {
   #|     const fs = require('fs');
-  #|     return { $tag: 1, _0: fs.readdirSync(path) };
+  #|     return fs.readdirSync(path);
   #|   } catch (e) {
-  #|     return { $tag: 0 };
+  #|     return undefined;
   #|   }
   #| }
 
