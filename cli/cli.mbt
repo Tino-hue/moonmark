@@ -620,9 +620,9 @@ fn build_full_graph_for_dir(
     // 1. 离线模式下先尝试本地 .mooncakes 目录（F06：本地 mock 注册表）
     //    先找 moon.mod.json（JSON 含完整 deps），再回退到 moon.mod（TOML）
     if opts.offline {
-      let pkg_dir = local_mooncakes_dir + "/" + name
-      let json_path = pkg_dir + "/moon.mod.json"
-      let toml_path = pkg_dir + "/moon.mod"
+      let pkg_dir = (fs.path_join)(local_mooncakes_dir, name)
+      let json_path = (fs.path_join)(pkg_dir, "moon.mod.json")
+      let toml_path = (fs.path_join)(pkg_dir, "moon.mod")
       let local_content = match (fs.read_file)(json_path) {
         Some(c) => Some(("json", c))
         None =>
@@ -814,7 +814,7 @@ fn build_node_metas(
     let pkg_dir = if name == root_name {
       root_dir
     } else {
-      @analyze.locate_package_dir(cache_root, name)
+      @analyze.locate_package_dir(cache_root, name, fs)
     }
     let has_pkg_dir = match (fs.readdir)(pkg_dir) {
       Some(_) => true

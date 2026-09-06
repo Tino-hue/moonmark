@@ -19,7 +19,7 @@ pub fn scan_license_from_dir(
     "LICENSE", "LICENSE.md", "LICENSE.txt", "license", "license.md", "COPYING", "COPYING.md",
   ]
   for name in candidates {
-    let path = package_dir + "/" + name
+    let path = (fs.path_join)(package_dir, name)
     match (fs.read_file)(path) {
       Some(content) =>
         match detect_license(content) {
@@ -42,7 +42,7 @@ pub fn compute_self_size_from_dir(
       let mut total = 0
       for entry in entries {
         if ends_with_string(entry, ".mbt") {
-          let path = package_dir + "/" + entry
+          let path = (fs.path_join)(package_dir, entry)
           match (fs.read_file)(path) {
             Some(content) => total = total + content.length()
             None => ()
@@ -135,7 +135,7 @@ pub fn count_public_apis_from_dir(
           !ends_with_string(entry, "_wbtest.mbt") &&
           !ends_with_string(entry, "_test.mbt") &&
           !ends_with_string(entry, "_bench_test.mbt") {
-          let path = package_dir + "/" + entry
+          let path = (fs.path_join)(package_dir, entry)
           match (fs.read_file)(path) {
             Some(content) =>
               total = total + count_public_apis_from_source(content)
@@ -162,7 +162,7 @@ pub fn scan_deprecated_from_dir(
           !ends_with_string(entry, "_wbtest.mbt") &&
           !ends_with_string(entry, "_test.mbt") &&
           !ends_with_string(entry, "_bench_test.mbt") {
-          let path = package_dir + "/" + entry
+          let path = (fs.path_join)(package_dir, entry)
           match (fs.read_file)(path) {
             Some(content) => {
               let apis = scan_deprecated_apis(content)
@@ -202,14 +202,21 @@ pub fn build_realistic_node_meta(
 }
 
 ///|
-pub fn locate_package_dir(cache_root : String, package_name : String) -> String {
+pub fn locate_package_dir(
+  cache_root : String,
+  package_name : String,
+  fs : @cache.FileSystem,
+) -> String {
   // 包名格式：owner/name（如 moonbitlang/core）
   // 用 split 后通过 collect 转为数组访问
   let parts = package_name.split("/").collect()
   if parts.length() == 2 {
-    cache_root + "/" + parts[0].to_owned() + "/" + parts[1].to_owned()
+    (fs.path_join)(
+      (fs.path_join)(cache_root, parts[0].to_owned()),
+      parts[1].to_owned(),
+    )
   } else {
-    cache_root + "/" + package_name
+    (fs.path_join)(cache_root, package_name)
   }
 }
 

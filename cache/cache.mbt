@@ -11,6 +11,8 @@ pub struct FileSystem {
   rmdir : (String) -> Unit
   mkdir : (String) -> Unit
   timestamp_ms : () -> Double
+  /// F07: 跨平台路径拼接（Node.js 使用 path.join，mock 可自定义）
+  path_join : (String, String) -> String
 }
 
 ///|
@@ -78,7 +80,7 @@ pub fn CacheManager::purge_expired(self : CacheManager) -> Unit {
     Some(files) => {
       let now = (self.fs.timestamp_ms)()
       for file in files {
-        let path = join_path(self.dir, file)
+        let path = (self.fs.path_join)(self.dir, file)
         match (self.fs.stat_mtime)(path) {
           Some(mtime) => if now - mtime > self.ttl_ms { (self.fs.unlink)(path) }
           None => ()
@@ -95,7 +97,7 @@ pub fn CacheManager::clear(self : CacheManager) -> Unit {
   match (self.fs.readdir)(self.dir) {
     Some(files) => {
       for file in files {
-        (self.fs.unlink)(join_path(self.dir, file))
+        (self.fs.unlink)((self.fs.path_join)(self.dir, file))
       }
       (self.fs.rmdir)(self.dir)
     }
@@ -107,7 +109,7 @@ pub fn CacheManager::clear(self : CacheManager) -> Unit {
 
 ///|
 fn CacheManager::cache_file_path(self : CacheManager, key : String) -> String {
-  join_path(self.dir, sanitize_key(key) + ".json")
+  (self.fs.path_join)(self.dir, sanitize_key(key) + ".json")
 }
 
 ///|
@@ -348,6 +350,7 @@ pub fn FileSystem::node_js() -> FileSystem {
     rmdir: fs_rmdir_sync,
     mkdir: fs_mkdir_sync,
     timestamp_ms: get_timestamp_ms,
+    path_join,
   }
 }
 
