@@ -231,31 +231,42 @@ jobs:
 
       - name: Build depsight
         run: |
+          # moon update 可能因网络抖动失败，增加重试次数与间隔
           n=0
-          until [ $n -ge 3 ]; do
+          until [ $n -ge 5 ]; do
             if moon update; then
               break
             fi
             n=$((n+1))
-            echo "  ⚠ moon update 尝试 $n/3 失败，5s 后重试..."
-            sleep 5
+            echo "  ⚠ moon update 尝试 $n/5 失败，10s 后重试..."
+            sleep 10
           done
-          [ $n -ge 3 ] && { echo "✗ moon update 连续失败 3 次"; exit 1; }
-          moon build --target js
+          [ $n -ge 5 ] && { echo "✗ moon update 连续失败 5 次"; exit 1; }
+          # moon build 同样加重试（依赖下载可能偶发失败）
+          m=0
+          until [ $m -ge 3 ]; do
+            if moon build --target js; then
+              break
+            fi
+            m=$((m+1))
+            echo "  ⚠ moon build 尝试 $m/3 失败，10s 后重试..."
+            sleep 10
+          done
+          [ $m -ge 3 ] && { echo "✗ moon build 连续失败 3 次"; exit 1; }
 
       - name: Run self audit (Terminal + SARIF + HTML)
         run: |
           DEPSIGHT="_build/js/debug/build/depsight.js"
           echo "--- Self audit: terminal ---"
-          node "$DEPSIGHT" audit --fail-on-score 80 --fail-on-critical
+          node "$DEPSIGHT" audit --offline --fail-on-score 80 --fail-on-critical
 
           echo ""
           echo "--- Self audit: SARIF output ---"
-          node "$DEPSIGHT" audit --sarif -o depsight-self.sarif || true
+          node "$DEPSIGHT" audit --offline --sarif -o depsight-self.sarif || true
 
           echo ""
           echo "--- Self audit: HTML report ---"
-          node "$DEPSIGHT" audit --html  -o depsight-report.html || true
+          node "$DEPSIGHT" audit --offline --html  -o depsight-report.html || true
 
       - name: Upload SARIF to GitHub Security
         uses: github/codeql-action/upload-sarif@v3
