@@ -822,7 +822,15 @@ fn build_node_metas(
     }
     let meta = if has_pkg_dir {
       // 真实扫描：LICENSE 文件 + 实际体积 + 废弃 API + public API 数（F01）
-      @analyze.build_realistic_node_meta(pkg_dir, mod.license, fs, None, days)
+      // F06: mod.latest_version 来自 moon.mod.json 的 _latest_version 扩展字段
+      // （仅离线 mock 注册表使用，用于模拟过时依赖）
+      @analyze.build_realistic_node_meta(
+        pkg_dir,
+        mod.license,
+        fs,
+        mod.latest_version,
+        days,
+      )
     } else {
       // 降级：仅用 moon.mod 声明
       @analyze.NodeMeta::new(

@@ -1,0 +1,8 @@
+{
+  "name": "risky/outdated-lib",
+  "version": "1.0.0",
+  "license": "MIT",
+  "description": "An outdated dependency: current 1.0.0 but latest is 2.0.0 (simulated)",
+  "_latest_version": "2.0.0",
+  "deps": {}
+}

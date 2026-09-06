@@ -178,9 +178,9 @@ jobs:
             head -60 /tmp/risky.json
             exit 1
           fi
-          # 验证 node 数（root + 6 mock 包 = 7）
+          # 验证 node 数（root + 7 mock 包 = 8）
           node_count=$(python3 -c "import json,sys; d=json.load(open('/tmp/risky.json')); print(d['node_count'])")
-          echo "  ✓ 共 ${node_count} 个节点，诊断码 5 种全部触发"
+          echo "  ✓ 共 ${node_count} 个节点，诊断码 5 种全部触发（含过时依赖 freshness 降级）"
 
           echo ""
           echo "✅ 三个示例项目回归测试全部通过"

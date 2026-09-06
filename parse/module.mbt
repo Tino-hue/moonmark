@@ -10,6 +10,9 @@ pub struct Module {
   description : String?
   source : String?
   deps : Map[String, String]
+  /// F06: 可选字段，仅用于离线 mock 注册表声明"最新版本"以模拟过时依赖。
+  /// 真实 moon.mod.json 不含此字段，故用下划线前缀 _latest_version 避免与官方字段冲突。
+  latest_version : String?
 } derive(Debug)
 
 ///|
@@ -29,6 +32,7 @@ pub fn Module::new(
     description: None,
     source: None,
     deps,
+    latest_version: None,
   }
 }
 
@@ -72,6 +76,12 @@ pub fn parse_mod_json(content : String) -> Result[Module, String] {
     _ => None
   }
 
+  // F06: 离线 mock 注册表扩展字段，声明最新版本以模拟过时依赖
+  let latest_version = match obj.get("_latest_version") {
+    Some(String(s)) => Some(s)
+    _ => None
+  }
+
   // Parse keywords array
   let keywords = match obj.get("keywords") {
     Some(Array(arr)) => {
@@ -109,6 +119,7 @@ pub fn parse_mod_json(content : String) -> Result[Module, String] {
     description,
     source,
     deps,
+    latest_version,
   })
 }
 
@@ -175,6 +186,7 @@ pub fn parse_mod_toml(content : String) -> Result[Module, String] {
     description,
     source,
     deps,
+    latest_version: None,
   })
 }
 
