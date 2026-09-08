@@ -86,19 +86,20 @@ jobs:
       # Windows 安装 — 与 Unix 镜像链等价：CN → INT、单镜像 60s 超时、
       # 3 次重试、硬校验 moon.exe 存在。PATH 写入 $GITHUB_PATH 后
       # 后续 bash 步骤同样生效（GitHub bash shell 走 C:\Program Files\Git\bin\bash）。
+      # 安装脚本文件名是 powershell.ps1（官方下载页 irm ... | iex 同款），
+      # 注意不是 windows.ps1（该路径 404）。
       # ------------------------------------------------------------
       - name: Install MoonBit CLI (Windows, mirror chain CN → INT)
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          $ErrorActionPreference = 'Stop'
           $installed = $false
           foreach ($mirror in @('cli.moonbitlang.cn', 'cli.moonbitlang.com')) {
             Write-Host "━━━ Installing MoonBit via: https://$mirror ━━━"
             for ($attempt = 1; $attempt -le 3; $attempt++) {
               try {
                 Set-ExecutionPolicy RemoteSigned -Scope CurrentUser -Force | Out-Null
-                & ([ScriptBlock]::Create((Invoke-WebRequest -Uri "https://$mirror/install/windows.ps1" -TimeoutSec 60 -UseBasicParsing).Content))
+                Invoke-RestMethod -Uri "https://$mirror/install/powershell.ps1" -TimeoutSec 60 | Invoke-Expression
                 if (Test-Path "$env:USERPROFILE\.moon\bin\moon.exe") {
                   $installed = $true
                   break
