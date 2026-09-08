@@ -320,7 +320,7 @@ jobs:
           node $DEPSIGHT_BIN audit --json -o $outdatedJson
           Pop-Location
           # 与 Unix 版一致：audit 本身允许非零退出，断言落在 JSON 内容上
-          python -c "import json; d=json.load(open(r'$outdatedJson')); scores={s['node_id']:s for s in d.get('health_scores',[])}; assert 'examples/outdated@1.0.0' in scores, 'missing expected node'; overall=d.get('overall_score'); assert isinstance(overall,(int,float)) and overall>=80, 'overall_score below 80'; print('  ✓ examples/outdated@1.0.0 scored', scores['examples/outdated@1.0.0']['total'], '/100 (overall', overall, ')')"
+          python -c "import json; d=json.load(open(r'$outdatedJson')); scores={s['node_id']:s for s in d.get('health_scores',[])}; assert 'examples/outdated@1.0.0' in scores, 'missing expected node'; overall=d.get('overall_score'); assert isinstance(overall,(int,float)) and overall>=80, 'overall_score below 80'; print('  [OK] examples/outdated@1.0.0 scored', scores['examples/outdated@1.0.0']['total'], '/100 (overall', overall, ')')"
           if ($LASTEXITCODE -ne 0) { exit 1 }
 
           Write-Host ""
