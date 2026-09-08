@@ -20,8 +20,12 @@ permissions:
 
 jobs:
   build-and-test:
-    name: Build & Test
-    runs-on: ubuntu-latest
+    name: Build & Test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     steps:
@@ -35,8 +39,11 @@ jobs:
       #       整体变红。采用「CN → 国际」的镜像链：每镜像 connect-timeout 10s、
       #       总传输 180s、最多 3 次重试；任一成功即可。安装后 PATH 写入
       #       $GITHUB_PATH，后续步骤直接调用 moon/node/python3/grep/head。
+      # 平台矩阵：ubuntu-latest / windows-latest / macos-latest，
+      #       Unix 变体（bash）同时覆盖 Linux 与 macOS，Windows 走 pwsh 变体。
       # ------------------------------------------------------------
-      - name: Install MoonBit CLI (mirror chain CN → INT)
+      - name: Install MoonBit CLI (Unix, mirror chain CN → INT)
+        if: runner.os != 'Windows'
         run: |
           # 关键修复：`curl ... | bash` 退出码是 bash 的，curl 失败时
           # bash 读空输入仍返回 0。用 pipefail + 硬校验 moon 二进制存在。
@@ -75,12 +82,57 @@ jobs:
           echo "$HOME/.moon/bin" >> $GITHUB_PATH
           echo "✓ moon installed: $($HOME/.moon/bin/moon version)"
 
-      - name: Verify MoonBit + Node
+      # ------------------------------------------------------------
+      # Windows 安装 — 与 Unix 镜像链等价：CN → INT、单镜像 60s 超时、
+      # 3 次重试、硬校验 moon.exe 存在。PATH 写入 $GITHUB_PATH 后
+      # 后续 bash 步骤同样生效（GitHub bash shell 走 C:\Program Files\Git\bin\bash）。
+      # ------------------------------------------------------------
+      - name: Install MoonBit CLI (Windows, mirror chain CN → INT)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $installed = $false
+          foreach ($mirror in @('cli.moonbitlang.cn', 'cli.moonbitlang.com')) {
+            Write-Host "━━━ Installing MoonBit via: https://$mirror ━━━"
+            for ($attempt = 1; $attempt -le 3; $attempt++) {
+              try {
+                Set-ExecutionPolicy RemoteSigned -Scope CurrentUser -Force | Out-Null
+                & ([ScriptBlock]::Create((Invoke-WebRequest -Uri "https://$mirror/install/windows.ps1" -TimeoutSec 60 -UseBasicParsing).Content))
+                if (Test-Path "$env:USERPROFILE\.moon\bin\moon.exe") {
+                  $installed = $true
+                  break
+                }
+                Write-Host "  ✗ mirror ${mirror}: 脚本执行成功但 moon.exe 不存在（尝试 $attempt/3）"
+              } catch {
+                Write-Host "  ✗ mirror $mirror 尝试 $attempt/3 失败: $($_.Exception.Message)"
+                Remove-Item -Recurse -Force "$env:USERPROFILE\.moon" -ErrorAction SilentlyContinue
+              }
+            }
+            if ($installed) { break }
+          }
+          if (-not $installed) {
+            Write-Host "✗ MoonBit CLI 安装失败：所有镜像都不可用"
+            exit 1
+          }
+          echo "$env:USERPROFILE\.moon\bin" >> $env:GITHUB_PATH
+          echo "✓ moon installed: $(& "$env:USERPROFILE\.moon\bin\moon.exe" version)"
+
+      - name: Verify MoonBit + Node (Unix)
+        if: runner.os != 'Windows'
         run: |
           moon version --all
           node --version
 
-      - name: Update MoonBit registry
+      - name: Verify MoonBit + Node (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          moon version --all
+          node --version
+
+      - name: Update MoonBit registry (Unix)
+        if: runner.os != 'Windows'
         run: |
           # moon update 自己也要重试：它会连接工具链对应镜像的 registry / core 下载
           n=0
@@ -95,37 +147,83 @@ jobs:
           echo "✗ moon update 连续失败 3 次"
           exit 1
 
+      - name: Update MoonBit registry (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $updated = $false
+          foreach ($n in 1..3) {
+            & moon update
+            if ($LASTEXITCODE -eq 0) { $updated = $true; break }
+            Write-Host "  ⚠ moon update 尝试 $n/3 失败，5s 后重试..."
+            Start-Sleep -Seconds 5
+          }
+          if (-not $updated) {
+            Write-Host "✗ moon update 连续失败 3 次"
+            exit 1
+          }
+
       # ------------------------------------------------------------
       # 第 1 关：类型检查
       # 说明：历史上使用 --deny-warn 将警告视为错误，但随着 MoonBit 工具链滚动演进会
       #       新增告警（如 W0020: JS FFI Array 返回弃用为 FixedArray），这类告警需要
       #       工具链支持抑制或提供更稳定替代方案后才能消除。当前策略：允许少数已知
       #       告警通过，阻塞 errors；发布前在 release-check 中审计告警数量。
-      - name: 1/6 Type check (JS)
+      - name: 1/6 Type check (JS, Unix)
+        if: runner.os != 'Windows'
+        run: moon check --target js
+
+      - name: 1/6 Type check (JS, Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
         run: moon check --target js
 
       # ------------------------------------------------------------
       # 第 2 关：格式检查
       # ------------------------------------------------------------
-      - name: 2/6 Format check
+      - name: 2/6 Format check (Unix)
+        if: runner.os != 'Windows'
+        run: moon fmt --check
+
+      - name: 2/6 Format check (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
         run: moon fmt --check
 
       # ------------------------------------------------------------
       # 第 3 关：接口文件一致性
       # ------------------------------------------------------------
-      - name: 3/6 Generate interface
+      - name: 3/6 Generate interface (Unix)
+        if: runner.os != 'Windows'
+        run: moon info
+
+      - name: 3/6 Generate interface (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
         run: moon info
 
       # ------------------------------------------------------------
-      # 第 4 关：测试（267+ 用例）
+      # 第 4 关：测试（282+ 用例，含 QuickCheck 属性测试）
       # ------------------------------------------------------------
-      - name: 4/6 Run tests
+      - name: 4/6 Run tests (Unix)
+        if: runner.os != 'Windows'
+        run: moon test --target js
+
+      - name: 4/6 Run tests (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
         run: moon test --target js
 
       # ------------------------------------------------------------
       # 第 5 关：构建 JS bundle
       # ------------------------------------------------------------
-      - name: 5/6 Build JS bundle
+      - name: 5/6 Build JS bundle (Unix)
+        if: runner.os != 'Windows'
+        run: moon build --target js
+
+      - name: 5/6 Build JS bundle (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
         run: moon build --target js
 
       # ------------------------------------------------------------
@@ -136,7 +234,8 @@ jobs:
       #       用 -o <file> 写 JSON 报告（而非 stdout 重定向），因为 audit 在
       #       --json stdout 中仍会附加 "Tip: ..." 提示行，会污染 JSON 解析。
       # ------------------------------------------------------------
-      - name: 6/6 Example regression
+      - name: 6/6 Example regression (Unix)
+        if: runner.os != 'Windows'
         id: regression
         run: |
           DEPSIGHT_BIN="${GITHUB_WORKSPACE}/_build/js/debug/build/depsight.js"
@@ -191,6 +290,65 @@ jobs:
 
           echo ""
           echo "✅ 三个示例项目回归测试全部通过"
+
+      # ------------------------------------------------------------
+      # Windows 版示例回归 — 断言与 Unix 版逐一等价，差异仅 shell 语法：
+      # 临时目录 %TEMP% 替代 /tmp，PowerShell Select-String -SimpleMatch
+      # 做字面量子串匹配（等价 grep -qF），python 内联断言逻辑相同。
+      # 任一诊断码缺失即 exit 1，与 Unix 版行为一致。
+      # ------------------------------------------------------------
+      - name: 6/6 Example regression (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $DEPSIGHT_BIN = Join-Path $env:GITHUB_WORKSPACE "_build\js\debug\build\depsight.js"
+          Write-Host "Using bundle: $DEPSIGHT_BIN"
+          if (-not (Test-Path $DEPSIGHT_BIN)) { Write-Host "✗ depsight.js bundle missing"; exit 1 }
+
+          Write-Host ""
+          Write-Host "━━━ [6a] healthy_project — 高分且无 critical ━━━"
+          Push-Location examples/healthy_project
+          node $DEPSIGHT_BIN audit --fail-on-score 80 --quiet
+          if ($LASTEXITCODE -ne 0) { Pop-Location; exit 1 }
+          Pop-Location
+
+          Write-Host ""
+          Write-Host "━━━ [6b] outdated_project — 输出合法 JSON，包含包健康分 ━━━"
+          $outdatedJson = Join-Path $env:TEMP "outdated.json"
+          Push-Location examples/outdated_project
+          node $DEPSIGHT_BIN audit --json -o $outdatedJson
+          Pop-Location
+          # 与 Unix 版一致：audit 本身允许非零退出，断言落在 JSON 内容上
+          python -c "import json; d=json.load(open(r'$outdatedJson')); scores={s['node_id']:s for s in d.get('health_scores',[])}; assert 'examples/outdated@1.0.0' in scores, 'missing expected node'; overall=d.get('overall_score'); assert isinstance(overall,(int,float)) and overall>=80, 'overall_score below 80'; print('  ✓ examples/outdated@1.0.0 scored', scores['examples/outdated@1.0.0']['total'], '/100 (overall', overall, ')')"
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+
+          Write-Host ""
+          Write-Host "━━━ [6c] risky_project — 离线演示应触发 5+ 种诊断码 ━━━"
+          $riskyJson = Join-Path $env:TEMP "risky.json"
+          Push-Location examples/risky_project
+          node $DEPSIGHT_BIN audit --offline --json -o $riskyJson
+          if ($LASTEXITCODE -ne 0) { Pop-Location; exit 1 }
+          Pop-Location
+          $allOk = $true
+          foreach ($code in @('LICENSE-002','LICENSE-001','DEPRECATED-001','DEPRECATED-002','CYCLE-001')) {
+            if (Select-String -Path $riskyJson -SimpleMatch "`"code`":`"$code`"" -Quiet) {
+              Write-Host "  ✓ 检测到 $code 诊断码"
+            } else {
+              Write-Host "  ✗ 未检测到 $code 诊断码，回归失败"
+              $allOk = $false
+            }
+          }
+          if (-not $allOk) {
+            Write-Host "--- JSON 节选 (first 60 lines) ---"
+            Get-Content $riskyJson -TotalCount 60
+            exit 1
+          }
+          python -c "import json; d=json.load(open(r'$riskyJson')); print(d['node_count'])" | ForEach-Object {
+            Write-Host "  ✓ 共 $_ 个节点，诊断码 5 种全部触发（含过时依赖 freshness 降级）"
+          }
+
+          Write-Host ""
+          Write-Host "✅ 三个示例项目回归测试全部通过"
 
   # =====================================================================
   # Self-audit job — 依赖 build-and-test 通过后运行
