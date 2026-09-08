@@ -4,3 +4,8 @@ import {
   "Tino-hue/depsight/cache",
   "moonbitlang/core/json",
 }
+
+// 属性测试（QuickCheck）仅测试期依赖，不进生产构建依赖图
+import {
+  "moonbitlang/core/quickcheck" @qc,
+} for "test"
