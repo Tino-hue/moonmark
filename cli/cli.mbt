@@ -551,8 +551,7 @@ fn resolve_cache_manager(opts : CliOptions) -> @cache.CacheManager? {
 ///|
 fn read_module_in_directory(dir : String) -> @parse.Module? {
   let fs = @cache.FileSystem::node_js()
-  let sep = @cache.platform_path_sep()
-  match (fs.read_file)(dir + sep + "moon.mod") {
+  match (fs.read_file)((fs.path_join)(dir, "moon.mod")) {
     Some(content) =>
       match @parse.parse_mod_toml(content) {
         Ok(m) => return Some(m)
@@ -560,7 +559,7 @@ fn read_module_in_directory(dir : String) -> @parse.Module? {
       }
     None => ()
   }
-  match (fs.read_file)(dir + sep + "moon.mod.json") {
+  match (fs.read_file)((fs.path_join)(dir, "moon.mod.json")) {
     Some(content) =>
       match @parse.parse_mod_json(content) {
         Ok(m) => return Some(m)
@@ -1198,7 +1197,7 @@ fn scan_workspace(fs : @cache.FileSystem, root_dir : String) -> Array[String] {
   while dirs_to_visit.length() > 0 {
     let dir = dirs_to_visit.remove(dirs_to_visit.length() - 1)
     // 检查当前目录是否有 moon.mod
-    let moon_mod_path = dir + @cache.platform_path_sep() + "moon.mod"
+    let moon_mod_path = (fs.path_join)(dir, "moon.mod")
     if (fs.exists)(moon_mod_path) {
       results.push(dir)
     }
@@ -1206,7 +1205,7 @@ fn scan_workspace(fs : @cache.FileSystem, root_dir : String) -> Array[String] {
     match (fs.readdir)(dir) {
       Some(entries) =>
         for entry in entries {
-          let full = dir + @cache.platform_path_sep() + entry
+          let full = (fs.path_join)(dir, entry)
           // 简单判断：跳过已知目录名和点文件
           let should_skip = entry.has_prefix(".") ||
             str_array_contains(skip_dirs, entry)
