@@ -187,16 +187,34 @@ fn strip_prefix_loop(
 
 ///|
 /// 通过 Node.js https 模块发起同步 GET 请求。
-/// 内部使用 child_process.execSync 调用内联 node 脚本，完全跨平台。
+/// 使用 spawnSync 以独立 argv 传递 URL，避免命令注入风险。
 extern "js" fn http_get_raw(url : String) -> String =
   #| (url) => {
-  #|   const { execSync } = require('child_process');
-  #|   const safeUrl = url.replace(/'/g, "\\'");
-  #|   const script = "const https=require('https');https.get('" + safeUrl + "',(r)=>{let d='';r.on('data',(c)=>d+=c);r.on('end',()=>process.stdout.write(d));}).on('error',(e)=>process.stdout.write('__HTTP_ERROR__'+e.message));";
+  #|   const { spawnSync } = require('child_process');
+  #|   // 脚本是固定常量，URL 作为独立 argv 参数传入，不参与字符串拼接
+  #|   const script = [
+  #|     "const https = require('https');",
+  #|     "const url = process.argv[2];",
+  #|     "https.get(url, (r) => {",
+  #|     "  let d = '';",
+  #|     "  r.on('data', (c) => d += c);",
+  #|     "  r.on('end', () => process.stdout.write(d));",
+  #|     "}).on('error', (e) => {",
+  #|     "  process.stdout.write('__HTTP_ERROR__' + e.message);",
+  #|     "});",
+  #|   ].join('\n');
   #|   try {
-  #|     return execSync('node -e "' + script.replace(/"/g, '\\"') + '"', { encoding: 'utf8', timeout: 12000, maxBuffer: 1024 * 1024 });
+  #|     const result = spawnSync(process.execPath, ['-e', script, '--', url], {
+  #|       encoding: 'utf8',
+  #|       timeout: 12000,
+  #|       maxBuffer: 1024 * 1024,
+  #|     });
+  #|     if (result.error) {
+  #|       return '__HTTP_ERROR__' + result.error.message;
+  #|     }
+  #|     return result.stdout || '';
   #|   } catch (e) {
-  #|     return '__HTTP_ERROR__' + (e.message || 'exec failed');
+  #|     return '__HTTP_ERROR__' + (e.message || 'spawn failed');
   #|   }
   #| }
 
