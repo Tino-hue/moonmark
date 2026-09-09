@@ -1,10 +1,12 @@
 # MoonBit Depsight
- 
+
 [![CI](https://github.com/Tino-hue/moonmark/actions/workflows/ci.yml/badge.svg)](https://github.com/Tino-hue/moonmark/actions/workflows/ci.yml)
 [![Depsight Audit](https://github.com/Tino-hue/moonmark/actions/workflows/depsight.yml/badge.svg)](https://github.com/Tino-hue/moonmark/actions/workflows/depsight.yml)
+[![Version](https://img.shields.io/badge/version-0.6.0-brightgreen.svg)](#changelog)
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![MoonBit](https://img.shields.io/badge/MoonBit-latest-blue.svg)](https://www.moonbitlang.cn/)
-[![Tests](https://img.shields.io/badge/tests-267%20passing-brightgreen.svg)](#development)
+[![Tests](https://img.shields.io/badge/tests-282%20passing-brightgreen.svg)](#development)
+[![Platforms](https://img.shields.io/badge/platforms-Ubuntu%20%7C%20Windows%20%7C%20macOS-orange.svg)](#compatibility)
 [![GitHub stars](https://img.shields.io/github/stars/Tino-hue/moonmark?style=social)](https://github.com/Tino-hue/moonmark/stargazers)
 
 A `cargo audit` for the MoonBit ecosystem — read `moon.mod`, walk the entire transitive dependency graph, and give each package a 0–100 health score with actionable diagnostics.
@@ -41,12 +43,14 @@ MoonBit Depsight analyzes your `moon.mod` and recursively inspects the entire tr
 ## Features
 
 ### Dependency Resolution & Visualization
+
 - **Dependency Tree**: Recursive resolution of transitive dependencies with ASCII tree rendering (`depsight tree`)
 - **Cycle Detection**: DFS-based circular dependency detection with structured diagnostics (`CYCLE-001`)
 - **Topological Sort**: Kahn's algorithm for dependency ordering
 - **Smart Package Inference**: Multi-source fallback for unknown packages (GitHub owner/repo, moonbitlang/, moonbit-community/ namespaces)
 
 ### Diagnostic Engine
+
 - **SemVer Analysis**: Full semantic version parsing, comparison, and constraint matching (`^`, `~`, `~>`, `>=`, `>`, `<=`, `<`, `=`, bare version)
 - **License Compliance**: Automatic SPDX license identification for 12+ common licenses (MIT, Apache-2.0, BSD-2/3-Clause, GPL-3.0, AGPL-3.0, LGPL-3.0, MPL-2.0, ISC, SSPL-1.0, Unlicense, CC0-1.0) with high-risk copyleft flagging
 - **Deprecated API Scanner**: Extracts `@deprecated` annotations from doc comments on `fn`/`let`/`const`/`struct`/`enum`/`trait`
@@ -56,6 +60,7 @@ MoonBit Depsight analyzes your `moon.mod` and recursively inspects the entire tr
 - **Custom Scoring Weights**: Configurable via `.depsight.toml [scoring]` section
 
 ### Report Output
+
 - **Terminal Report** (`depsight audit`): Color-coded audit output grouped by Critical/Warning/Info, similar to `npm audit`
 - **HTML Report** (`depsight report --html`): Interactive single-file report with collapsible dependency tree, dashboard, and diagnostics
 - **JSON Output** (`depsight audit --json`): Structured data for CI/CD integration
@@ -64,6 +69,7 @@ MoonBit Depsight analyzes your `moon.mod` and recursively inspects the entire tr
 - **Dependency Tree** (`depsight tree`): ASCII tree with `--depth` control and inline diagnostic badges
 
 ### CI/CD Integration
+
 - `--fail-on-score <n>`: Exit with error when health score is below threshold
 - `--fail-on-critical`: Exit with error when critical issues found
 - `--baseline auto`: Diff against previous run (auto-saved to `.depsight-baseline.json`)
@@ -72,22 +78,24 @@ MoonBit Depsight analyzes your `moon.mod` and recursively inspects the entire tr
 - `--quiet`: Suppress non-essential output (CI-friendly)
 
 ### Quick Commands
+
 - **`depsight outdated`**: Check for outdated dependencies with breaking change detection
 - **`depsight why <package>`**: Trace who depends on a specific package
 - **`depsight check`**: One-line health check output (PASS/WARN/FAIL) for CI pipelines
 
 ### Configuration (`.depsight.toml`)
+
 - `ignore`: Comma-separated list of diagnostic codes to suppress
 - `[severity]`: Override default diagnostic levels per code (e.g. `LICENSE-001 = "warning"`)
 - `baseline = "auto"`: Enable automatic baseline comparison by default
 
 ## Prerequisites
 
-| Tool | Version | Purpose |
-|---|---|---|
-| MoonBit CLI | `latest` (≥ 0.1.20260713) | Compile depsight and your project |
-| Node.js | ≥ 18.x | Run the built JS bundle |
-| Git | any | Clone source |
+| Tool        | Version                   | Purpose                           |
+| ----------- | ------------------------- | --------------------------------- |
+| MoonBit CLI | `latest` (≥ 0.1.20260827) | Compile depsight and your project |
+| Node.js     | ≥ 18.x                    | Run the built JS bundle           |
+| Git         | any                       | Clone source                      |
 
 **国内用户** / **CI in China** — use the Chinese mirror to avoid 403 from the international CDN:
 
@@ -97,7 +105,7 @@ MOONBIT_INSTALL_VERSION=latest curl -fsSL https://cli.moonbitlang.cn/install/uni
 
 # Windows (PowerShell)
 $env:MOONBIT_INSTALL_VERSION = 'latest'
-Invoke-WebRequest https://cli.moonbitlang.cn/install/win.sh -UseBasicParsing | Invoke-Expression
+irm https://cli.moonbitlang.cn/install/powershell.ps1 | iex
 ```
 
 ## Installation
@@ -179,13 +187,13 @@ node _build/js/debug/build/depsight.js audit --offline --cache-dir ./cache
 
 ## Performance
 
-| Scale | Nodes | Graph Build | Analysis | Report Render | End-to-End |
-|-------|-------|-------------|----------|---------------|------------|
-| Small | 5 | < 50 ms | < 20 ms | < 100 ms | < 200 ms |
-| Medium | 50 | < 200 ms | < 100 ms | < 500 ms | < 1 s |
-| Large | 200 | < 1 s | < 500 ms | < 2 s | < 5 s |
+| Scale  | Nodes | Graph Build | Analysis | Report Render | End-to-End |
+| ------ | ----- | ----------- | -------- | ------------- | ---------- |
+| Small  | 5     | < 50 ms     | < 20 ms  | < 100 ms      | < 200 ms   |
+| Medium | 50    | < 200 ms    | < 100 ms | < 500 ms      | < 1 s      |
+| Large  | 200   | < 1 s       | < 500 ms | < 2 s         | < 5 s      |
 
-*Tested on Windows 11, Node.js v22.x, MoonBit JS debug mode*
+_Tested on Windows 11, Node.js v22.x, MoonBit JS debug mode_
 
 For detailed usage guide, see [docs/USAGE.md](docs/USAGE.md).
 
@@ -248,7 +256,7 @@ For detailed architecture design, see [docs/architecture.md](docs/architecture.m
 
 ## Compatibility
 
-Tested against MoonBit toolchain `moon 0.1.20260713` + `moonc v0.10.4+2cc641edf` (2026-07). All 267 tests pass and `moon check --deny-warn` is clean. We follow MoonBit's rolling `latest` channel; older versions may work but aren't part of the CI matrix.
+Tested against MoonBit toolchain `moon 0.1.20260827` + `moonc v0.10.11` (2026-08). All **282 tests pass** across three platforms (Ubuntu / Windows / macOS) and `moon check --target js` is clean (0 errors, 0 warnings). We follow MoonBit's rolling `latest` channel; older versions may work but aren't part of the CI matrix.
 
 ## License
 
