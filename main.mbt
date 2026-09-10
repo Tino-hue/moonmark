@@ -13,9 +13,12 @@ fn main {
   } else {
     @cli.run_cli_with_args(args)
   }
-  process_exit(code)
+  set_exit_code(code)
 }
 
 ///|
-extern "js" fn process_exit(code : Int) -> Unit =
-  #| (code) => process.exit(code)
+/// 设置进程退出码，让进程自然结束。
+/// 相比 process.exit() 硬退出，这种方式允许事件循环中的
+/// 待处理任务（如异步 I/O、定时器）正常完成后再退出。
+extern "js" fn set_exit_code(code : Int) -> Unit =
+  #| (code) => { process.exitCode = code; }
