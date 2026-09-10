@@ -1070,16 +1070,14 @@ fn run_audit(opts : CliOptions) -> Int {
     size_offenders_top5=report.get_size_offenders(),
   )
 
-  let output_text = if opts.format == "json" {
-    @analyze.render_audit_json(display_report)
-  } else if opts.format == "html" {
-    @analyze.render_html_report(display_report, graph, root_id)
-  } else if opts.format == "sarif" {
-    @analyze.render_sarif_report(display_report, graph, root_id)
-  } else if opts.format == "markdown" {
-    @analyze.render_markdown_report(display_report, graph, root_id)
-  } else {
-    @analyze.render_audit_report(display_report)
+  let format = if opts.format == "" { "audit" } else { opts.format }
+  let output_text = match
+    @analyze.render_with_format(format, display_report, graph, root_id) {
+    Ok(text) => text
+    Err(msg) => {
+      println(@analyze.red("Error: " + msg))
+      return 1
+    }
   }
 
   write_output_or_print(opts, output_text)
@@ -1134,16 +1132,14 @@ fn run_report(opts : CliOptions) -> Int {
     size_offenders_top5=report.get_size_offenders(),
   )
 
-  let output_text = if opts.format == "html" {
-    @analyze.render_html_report(display_report, graph, root_id)
-  } else if opts.format == "json" {
-    @analyze.render_audit_json(display_report)
-  } else if opts.format == "sarif" {
-    @analyze.render_sarif_report(display_report, graph, root_id)
-  } else if opts.format == "markdown" {
-    @analyze.render_markdown_report(display_report, graph, root_id)
-  } else {
-    @analyze.render_terminal_report(display_report, graph, root_id)
+  let format = if opts.format == "" { "terminal" } else { opts.format }
+  let output_text = match
+    @analyze.render_with_format(format, display_report, graph, root_id) {
+    Ok(text) => text
+    Err(msg) => {
+      println(@analyze.red("Error: " + msg))
+      return 1
+    }
   }
 
   write_output_or_print(opts, output_text)
@@ -1364,18 +1360,15 @@ fn run_workspace_report(opts : CliOptions) -> Int {
     node_count=aggregated.get_node_count(),
   )
 
-  let output_text = if opts.format == "html" {
-    let (g, rid) = all_graphs[0]
-    @analyze.render_html_report(display_report, g, rid)
-  } else if opts.format == "json" {
-    @analyze.render_audit_json(display_report)
-  } else if opts.format == "sarif" {
-    let (g, rid) = all_graphs[0]
-    @analyze.render_sarif_report(display_report, g, rid)
-  } else {
-    // workspace report 用 terminal report 渲染（含 health score 表格）
-    let (g, rid) = all_graphs[0]
-    @analyze.render_terminal_report(display_report, g, rid)
+  let (g, rid) = all_graphs[0]
+  let format = if opts.format == "" { "terminal" } else { opts.format }
+  let output_text = match
+    @analyze.render_with_format(format, display_report, g, rid) {
+    Ok(text) => text
+    Err(msg) => {
+      println(@analyze.red("Error: " + msg))
+      return 1
+    }
   }
 
   write_output_or_print(opts, output_text)
