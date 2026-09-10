@@ -11,6 +11,7 @@ fn make_empty_report() -> AnalysisReport {
 
 // ---------- 1. 空图零值 ----------
 
+///|
 test "ecosystem_stats empty graph yields all zeros" {
   let graph = @graph.DependencyGraph::new()
   let metas : Map[String, NodeMeta] = Map([])
@@ -34,6 +35,7 @@ test "ecosystem_stats empty graph yields all zeros" {
 
 // ---------- 2. 链式图 root -> a -> b ----------
 
+///|
 test "ecosystem_stats chain graph 3 nodes depth 2" {
   let graph = @graph.DependencyGraph::new()
   graph.add_node("root", "1.0.0", 0)
@@ -61,6 +63,7 @@ test "ecosystem_stats chain graph 3 nodes depth 2" {
 
 // ---------- 3. 菱形图：root -> a, root -> b, a -> c, b -> c ----------
 
+///|
 test "ecosystem_stats diamond graph most-depended by in-degree" {
   let graph = @graph.DependencyGraph::new()
   graph.add_node("root", "1.0.0", 0)
@@ -87,6 +90,7 @@ test "ecosystem_stats diamond graph most-depended by in-degree" {
 
 // ---------- 4. 同名不同版本的去重 ----------
 
+///|
 test "ecosystem_stats same name different versions dedup" {
   let graph = @graph.DependencyGraph::new()
   graph.add_node("root", "1.0.0", 0)
@@ -99,12 +103,13 @@ test "ecosystem_stats same name different versions dedup" {
   let report = make_empty_report()
   let stats = calculate_ecosystem_stats(graph, report, metas, "root@1.0.0")
 
-  inspect(stats.total_nodes, content="3")       // 3 个 name@version 节点
+  inspect(stats.total_nodes, content="3") // 3 个 name@version 节点
   inspect(stats.total_unique_packages, content="2") // root + lib
 }
 
 // ---------- 5. 健康分分段计数 ----------
 
+///|
 test "ecosystem_stats health score buckets" {
   let graph = @graph.DependencyGraph::new()
   graph.add_node("a", "1.0.0", 0)
@@ -114,11 +119,11 @@ test "ecosystem_stats health score buckets" {
   graph.add_node("e", "1.0.0", 0)
 
   let scores : Array[HealthScore] = [
-    HealthScore::new("a@1.0.0", 95),  // ≥85 安全
-    HealthScore::new("b@1.0.0", 84),  // 70-84 警戒
-    HealthScore::new("c@1.0.0", 70),  // 70-84 警戒（边界）
-    HealthScore::new("d@1.0.0", 69),  // <70 风险（边界）
-    HealthScore::new("e@1.0.0", 50),  // <70 风险
+    HealthScore::new("a@1.0.0", 95), // ≥85 安全
+    HealthScore::new("b@1.0.0", 84), // 70-84 警戒
+    HealthScore::new("c@1.0.0", 70), // 70-84 警戒（边界）
+    HealthScore::new("d@1.0.0", 69), // <70 风险（边界）
+    HealthScore::new("e@1.0.0", 50), // <70 风险
   ]
   let report = AnalysisReport::new(health_scores=scores, overall_score=80)
 
@@ -129,11 +134,12 @@ test "ecosystem_stats health score buckets" {
   // avg = (95+84+70+69+50)/5 = 368/5 = 73
   inspect(stats.average_node_score, content="73")
   inspect(stats.nodes_at_risk_below_70, content="2") // d + e
-  inspect(stats.nodes_warning_70_85, content="2")    // b + c
+  inspect(stats.nodes_warning_70_85, content="2") // b + c
 }
 
 // ---------- 6. 许可证分布 ----------
 
+///|
 test "ecosystem_stats license distribution and unknown" {
   let graph = @graph.DependencyGraph::new()
   graph.add_node("mit-pkg", "1.0.0", 0)
@@ -165,6 +171,7 @@ test "ecosystem_stats license distribution and unknown" {
 
 // ---------- 7. 诊断分级计数 ----------
 
+///|
 test "ecosystem_stats diagnostic level counting" {
   let graph = @graph.DependencyGraph::new()
   graph.add_node("root", "1.0.0", 0)
@@ -175,7 +182,7 @@ test "ecosystem_stats diagnostic level counting" {
     @report.Diagnostic::warning("DEPRECATED-001", "root@1.0.0", ["old"]),
     @report.Diagnostic::info("LICENSE-002", "root@1.0.0", ["missing"]),
   ]
-  let report = AnalysisReport::new(diagnostics=diagnostics)
+  let report = AnalysisReport::new(diagnostics~)
 
   let metas : Map[String, NodeMeta] = Map([])
   let stats = calculate_ecosystem_stats(graph, report, metas, "root@1.0.0")
@@ -188,6 +195,7 @@ test "ecosystem_stats diagnostic level counting" {
 
 // ---------- 8. JSON 渲染包含所有关键字段 ----------
 
+///|
 test "ecosystem_stats json render has key fields" {
   let stats = EcosystemStats::new(
     total_nodes=5,
@@ -217,6 +225,8 @@ test "ecosystem_stats json render has key fields" {
 // ---------- 9. format_double_1 边界值 ----------
 
 // 私有函数通过集成方式间接测：构造 avg_depth 场景
+
+///|
 test "ecosystem_stats avg_depth rounding half up" {
   let graph = @graph.DependencyGraph::new()
   // 5 个节点，深度和 = 7 → 7/5 = 1.4
@@ -239,6 +249,7 @@ test "ecosystem_stats avg_depth rounding half up" {
 
 // ---------- 10. json_escape 特殊字符 ----------
 
+///|
 test "ecosystem_stats json escapes special chars in root_id" {
   let stats = EcosystemStats::new(
     root_id="test\"quote\\backslash\nnewline\ttab",
@@ -253,6 +264,7 @@ test "ecosystem_stats json escapes special chars in root_id" {
 
 // ---------- 11. 终端渲染包含表头和表尾 ----------
 
+///|
 test "ecosystem_stats terminal render has table frame" {
   let stats = EcosystemStats::new(
     total_nodes=1,
