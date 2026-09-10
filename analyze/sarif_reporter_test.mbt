@@ -14,6 +14,7 @@ test "render_sarif_report basic structure" {
   let sarif = @analyze.render_sarif_report(report, graph, "pkg@1.0.0")
   assert_true(sarif.contains("\"version\":\"2.1.0\""))
   assert_true(sarif.contains("MoonBit Depsight"))
+  assert_true(sarif.contains("\"version\":\"0.6.0\""))
   assert_true(sarif.contains("LICENSE-001"))
   assert_true(sarif.contains("\"level\":\"warning\""))
   assert_true(sarif.contains("\"overall_score\":85"))

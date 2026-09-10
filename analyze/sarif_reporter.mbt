@@ -24,7 +24,7 @@ pub fn render_sarif_report(
   // tool.driver
   buf <+ "\"tool\":{\"driver\":{"
   buf <+ "\"name\":\"MoonBit Depsight\","
-  buf <+ "\"version\":\"0.5.0\","
+  buf <+ "\"version\":\"0.6.0\","
   buf <+ "\"informationUri\":\"https://github.com/Tino-hue/moonmark\","
 
   // rules
