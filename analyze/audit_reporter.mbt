@@ -276,3 +276,57 @@ pub fn parse_audit_json(content : String) -> Result[AnalysisReport, String] {
 
   Ok(AnalysisReport::new(diagnostics~, overall_score~, node_count~))
 }
+
+// ========== ReportRenderer trait impls ==========
+
+///|
+/// 终端审计风格渲染器（npm audit 风格，ANSI 彩色）
+pub struct AuditRenderer {}
+
+///|
+extend AuditRenderer with ReportRenderer::{render, file_ext}
+
+///|
+impl ReportRenderer for AuditRenderer with fn render(
+  self,
+  report,
+  graph,
+  root_id,
+) {
+  let _ = self
+  let _ = graph
+  let _ = root_id
+  render_audit_report(report)
+}
+
+///|
+impl ReportRenderer for AuditRenderer with fn file_ext(self) {
+  let _ = self
+  "txt"
+}
+
+///|
+/// JSON 渲染器
+pub struct JsonRenderer {}
+
+///|
+extend JsonRenderer with ReportRenderer::{render, file_ext}
+
+///|
+impl ReportRenderer for JsonRenderer with fn render(
+  self,
+  report,
+  graph,
+  root_id,
+) {
+  let _ = self
+  let _ = graph
+  let _ = root_id
+  render_audit_json(report)
+}
+
+///|
+impl ReportRenderer for JsonRenderer with fn file_ext(self) {
+  let _ = self
+  "json"
+}

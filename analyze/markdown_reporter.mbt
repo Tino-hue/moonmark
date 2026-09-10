@@ -165,3 +165,29 @@ fn md_str_find_last(s : String, ch : UInt16) -> Int {
   }
   -1
 }
+
+// ========== ReportRenderer trait impl ==========
+
+///|
+/// Markdown 报告渲染器
+pub struct MarkdownRenderer {}
+
+///|
+extend MarkdownRenderer with ReportRenderer::{render, file_ext}
+
+///|
+impl ReportRenderer for MarkdownRenderer with fn render(
+  self,
+  report,
+  graph,
+  root_id,
+) {
+  let _ = self
+  render_markdown_report(report, graph, root_id)
+}
+
+///|
+impl ReportRenderer for MarkdownRenderer with fn file_ext(self) {
+  let _ = self
+  "md"
+}

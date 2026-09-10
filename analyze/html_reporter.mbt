@@ -512,3 +512,29 @@ fn join_html_path(path : Array[String]) -> String {
   }
   buf.to_string()
 }
+
+// ========== ReportRenderer trait impl ==========
+
+///|
+/// HTML 报告渲染器
+pub struct HtmlRenderer {}
+
+///|
+extend HtmlRenderer with ReportRenderer::{render, file_ext}
+
+///|
+impl ReportRenderer for HtmlRenderer with fn render(
+  self,
+  report,
+  graph,
+  root_id,
+) {
+  let _ = self
+  render_html_report(report, graph, root_id)
+}
+
+///|
+impl ReportRenderer for HtmlRenderer with fn file_ext(self) {
+  let _ = self
+  "html"
+}

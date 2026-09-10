@@ -369,3 +369,29 @@ fn join_strings_with_arrow(arr : Array[String]) -> String {
   }
   s
 }
+
+// ========== ReportRenderer trait impl ==========
+
+///|
+/// 完整终端报告渲染器（表格 + 依赖树 + Top 5）
+pub struct TerminalRenderer {}
+
+///|
+extend TerminalRenderer with ReportRenderer::{render, file_ext}
+
+///|
+impl ReportRenderer for TerminalRenderer with fn render(
+  self,
+  report,
+  graph,
+  root_id,
+) {
+  let _ = self
+  render_terminal_report(report, graph, root_id)
+}
+
+///|
+impl ReportRenderer for TerminalRenderer with fn file_ext(self) {
+  let _ = self
+  "txt"
+}
