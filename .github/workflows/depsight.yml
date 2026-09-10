@@ -94,13 +94,36 @@ jobs:
         run: |
           moon build --target js
 
-      - name: Run depsight audit
+      - name: Run depsight audit (generate report)
+        id: audit
         run: |
+          set +e
           node _build/js/debug/build/depsight.js audit --html -o depsight-report.html --fail-on-score 70 --fail-on-critical
+          EXIT_CODE=$?
+          set -e
+          echo "exit_code=$EXIT_CODE" >> $GITHUB_OUTPUT
+          if [ -f depsight-report.html ]; then
+            echo "report_size=$(wc -c < depsight-report.html)" >> $GITHUB_OUTPUT
+          else
+            echo "report_size=0" >> $GITHUB_OUTPUT
+          fi
+          # Don't fail this step — always generate the artifact
+          exit 0
 
       - name: Upload audit report
-        if: always()
+        if: always() && steps.audit.outcome != 'skipped'
         uses: actions/upload-artifact@v6
         with:
           name: depsight-report
           path: depsight-report.html
+          retention-days: 14
+
+      - name: Verify audit passed
+        if: steps.audit.outcome != 'skipped'
+        run: |
+          if [ "${{ steps.audit.outputs.exit_code }}" != "0" ]; then
+            echo "✗ Audit failed with exit code ${{ steps.audit.outputs.exit_code }}"
+            echo "   (score below threshold or critical issues found)"
+            exit 1
+          fi
+          echo "✓ Audit passed (exit code 0, report size ${{ steps.audit.outputs.report_size }} bytes)"
