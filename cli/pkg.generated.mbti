@@ -8,11 +8,25 @@ import {
 // Values
 pub fn audit_help_text() -> String
 
+pub let exit_args_error : Int
+
+pub let exit_audit_fail : Int
+
+pub let exit_internal_error : Int
+
+pub let exit_io_error : Int
+
+pub let exit_ok : Int
+
 pub fn help_text() -> String
 
 pub fn is_major_update(String, String) -> Bool
 
 pub fn parse_args(Array[String]) -> Result[CliOptions, String]
+
+pub fn parse_int(String) -> Int?
+
+pub let release_date : String
 
 pub fn report_help_text() -> String
 
@@ -20,7 +34,13 @@ pub fn run_cli() -> Int
 
 pub fn run_cli_with_args(Array[String]) -> Int
 
+pub fn split_comma_list(String) -> Array[String]
+
 pub fn tree_help_text() -> String
+
+pub let version : String
+
+pub fn version_full() -> String
 
 // Errors
 
@@ -52,4 +72,3 @@ pub fn CliOptions::new(command? : String, target_pkg? : String, depth? : Int, ou
 // Type aliases
 
 // Traits
-

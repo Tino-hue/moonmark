@@ -25,10 +25,10 @@ pub struct Module {
   description : String?
   source : String?
   deps : Map[String, String]
+  latest_version : String?
 } derive(@debug.Debug)
 pub fn Module::new(String, String, Map[String, String]) -> Self
 
 // Type aliases
 
 // Traits
-

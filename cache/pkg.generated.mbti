@@ -28,16 +28,16 @@ pub struct FileSystem {
   read_file : (String) -> String?
   write_file : (String, String) -> Unit
   exists : (String) -> Bool
-  readdir : (String) -> Array[String]?
+  readdir : (String) -> FixedArray[String]?
   stat_mtime : (String) -> Double?
   unlink : (String) -> Unit
   rmdir : (String) -> Unit
   mkdir : (String) -> Unit
   timestamp_ms : () -> Double
+  path_join : (String, String) -> String
 }
 pub fn FileSystem::node_js() -> Self
 
 // Type aliases
 
 // Traits
-

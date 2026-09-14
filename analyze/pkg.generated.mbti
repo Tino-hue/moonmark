@@ -13,6 +13,8 @@ pub fn bold(String) -> String
 
 pub fn build_realistic_node_meta(String, String?, @cache.FileSystem, String?, Int?) -> NodeMeta
 
+pub fn calculate_ecosystem_stats(@graph.DependencyGraph, AnalysisReport, Map[String, NodeMeta], String) -> EcosystemStats
+
 pub fn calculate_health_score(NodeScoreInput) -> HealthScore
 
 pub fn calculate_health_score_with_weights(NodeScoreInput, ScoreWeights) -> HealthScore
@@ -29,7 +31,13 @@ pub fn compare(Version, Version) -> Int
 
 pub fn compute_self_size_from_dir(String, @cache.FileSystem) -> Int
 
+pub fn count_public_apis_from_dir(String, @cache.FileSystem) -> Int
+
+pub fn count_public_apis_from_source(String) -> Int
+
 pub fn default_weights() -> ScoreWeights
+
+pub let depsight_version : String
 
 pub fn detect_license(String) -> String?
 
@@ -43,9 +51,13 @@ pub fn find_deprecated_propagation(@graph.DependencyGraph, Map[String, Array[Dep
 
 pub fn find_size_offenders(@graph.DependencyGraph, Map[String, Int], Int) -> Array[SizeInfo]
 
+pub fn format_extension(String) -> String
+
 pub fn format_size(Int) -> String
 
 pub fn green(String) -> String
+
+pub fn infer_format_from_extension(String) -> String?
 
 pub fn is_high_risk_license(String) -> Bool
 
@@ -53,7 +65,7 @@ pub fn is_outdated(Version, Version) -> Bool
 
 pub fn license_name(String) -> String
 
-pub fn locate_package_dir(String, String) -> String
+pub fn locate_package_dir(String, String, @cache.FileSystem) -> String
 
 pub fn pad_center(String, Int) -> String
 
@@ -73,6 +85,10 @@ pub fn render_audit_report(AnalysisReport) -> String
 
 pub fn render_diff_terminal(ReportDiff) -> String
 
+pub fn render_ecosystem_stats_json(EcosystemStats) -> String
+
+pub fn render_ecosystem_stats_terminal(EcosystemStats) -> String
+
 pub fn render_html_report(AnalysisReport, @graph.DependencyGraph, String) -> String
 
 pub fn render_markdown_report(AnalysisReport, @graph.DependencyGraph, String) -> String
@@ -84,6 +100,8 @@ pub fn render_sarif_report(AnalysisReport, @graph.DependencyGraph, String) -> St
 pub fn render_size_report(Array[SizeInfo]) -> String
 
 pub fn render_terminal_report(AnalysisReport, @graph.DependencyGraph, String) -> String
+
+pub fn render_with_format(String, AnalysisReport, @graph.DependencyGraph, String) -> Result[String, String]
 
 pub fn repeat_char(String, Int) -> String
 
@@ -99,6 +117,8 @@ pub fn scan_license_from_dir(String, @cache.FileSystem, String?) -> String?
 
 pub fn substring(String, Int, Int) -> String
 
+pub fn unused_dep_diagnostics(String, Map[String, String], Array[String]) -> Array[@report.Diagnostic]
+
 pub fn yellow(String) -> String
 
 // Errors
@@ -109,12 +129,17 @@ pub struct AnalysisReport {
   health_scores : Array[HealthScore]
   overall_score : Int
   node_count : Int
+  size_offenders_top5 : Array[SizeInfo]
 } derive(@debug.Debug)
 pub fn AnalysisReport::get_diagnostics(Self) -> Array[@report.Diagnostic]
 pub fn AnalysisReport::get_health_scores(Self) -> Array[HealthScore]
 pub fn AnalysisReport::get_node_count(Self) -> Int
 pub fn AnalysisReport::get_overall_score(Self) -> Int
-pub fn AnalysisReport::new(diagnostics? : Array[@report.Diagnostic], health_scores? : Array[HealthScore], overall_score? : Int, node_count? : Int) -> Self
+pub fn AnalysisReport::get_size_offenders(Self) -> Array[SizeInfo]
+pub fn AnalysisReport::new(diagnostics? : Array[@report.Diagnostic], health_scores? : Array[HealthScore], overall_score? : Int, node_count? : Int, size_offenders_top5? : Array[SizeInfo]) -> Self
+
+pub struct AuditRenderer {
+}
 
 pub struct DeprecatedApi {
   name : String
@@ -127,9 +152,35 @@ pub struct DeprecatedPropagation {
   node_id : String
   source_node_id : String
   api_name : String
-  level : String
+  depth : Int
+  path : Array[String]
 } derive(@debug.Debug)
-pub fn DeprecatedPropagation::new(String, String, String, String) -> Self
+pub fn DeprecatedPropagation::new(String, String, String, Int, Array[String]) -> Self
+
+pub struct EcosystemStats {
+  total_nodes : Int
+  total_unique_packages : Int
+  total_edges : Int
+  max_depth : Int
+  avg_depth : Double
+  cycle_detected : Bool
+  root_id : String
+  leaf_package_count : Int
+  most_depended_package : String
+  most_depended_count : Int
+  overall_health_score : Int
+  average_node_score : Int
+  nodes_at_risk_below_70 : Int
+  nodes_warning_70_85 : Int
+  diagnostics_critical : Int
+  diagnostics_warning : Int
+  diagnostics_info : Int
+  deprecated_source_packages : Int
+  total_transitive_size_bytes : Int
+  license_distribution : Map[String, Int]
+  license_species : Int
+} derive(@debug.Debug)
+pub fn EcosystemStats::new(total_nodes? : Int, total_unique_packages? : Int, total_edges? : Int, max_depth? : Int, avg_depth? : Double, cycle_detected? : Bool, root_id? : String, leaf_package_count? : Int, most_depended_package? : String, most_depended_count? : Int, overall_health_score? : Int, average_node_score? : Int, nodes_at_risk_below_70? : Int, nodes_warning_70_85? : Int, diagnostics_critical? : Int, diagnostics_warning? : Int, diagnostics_info? : Int, deprecated_source_packages? : Int, total_transitive_size_bytes? : Int, license_distribution? : Map[String, Int], license_species? : Int) -> Self
 
 pub struct HealthScore {
   node_id : String
@@ -142,14 +193,24 @@ pub struct HealthScore {
 } derive(@debug.Debug)
 pub fn HealthScore::new(String, Int, freshness? : Int, compliance? : Int, deprecated_density? : Int, size_reasonableness? : Int, activity? : Int) -> Self
 
+pub struct HtmlRenderer {
+}
+
+pub struct JsonRenderer {
+}
+
+pub struct MarkdownRenderer {
+}
+
 pub struct NodeMeta {
   license : String?
   deprecated_apis : Array[DeprecatedApi]
   latest_version : String?
   self_size : Int
   last_commit_days_ago : Int?
+  total_api_count : Int
 }
-pub fn NodeMeta::new(license? : String?, deprecated_apis? : Array[DeprecatedApi], latest_version? : String?, self_size? : Int, last_commit_days_ago? : Int?) -> Self
+pub fn NodeMeta::new(license? : String?, deprecated_apis? : Array[DeprecatedApi], latest_version? : String?, self_size? : Int, last_commit_days_ago? : Int?, total_api_count? : Int) -> Self
 
 pub struct NodeScoreInput {
   node_id : String
@@ -172,6 +233,9 @@ pub struct ReportDiff {
 }
 pub fn ReportDiff::new(added? : Array[@report.Diagnostic], removed? : Array[@report.Diagnostic], unchanged? : Array[@report.Diagnostic], score_delta? : Int, node_count_delta? : Int) -> Self
 
+pub struct SarifRenderer {
+}
+
 pub struct ScoreWeights {
   freshness : Int
   compliance : Int
@@ -181,12 +245,20 @@ pub struct ScoreWeights {
 } derive(@debug.Debug)
 pub fn ScoreWeights::new(freshness? : Int, compliance? : Int, deprecated_density? : Int, size_reasonableness? : Int, activity? : Int) -> Self
 
+pub struct SimpleTextRenderer {
+  name : String
+}
+pub fn SimpleTextRenderer::new() -> Self
+
 pub struct SizeInfo {
   node_id : String
   self_size : Int
   transitive_size : Int
 } derive(@debug.Debug)
 pub fn SizeInfo::new(String, Int, Int) -> Self
+
+pub struct TerminalRenderer {
+}
 
 pub struct Version {
   major : Int
@@ -198,4 +270,6 @@ pub struct Version {
 // Type aliases
 
 // Traits
-
+pub trait ReportRenderer {
+  fn render(Self, AnalysisReport, @graph.DependencyGraph, String) -> String
+}

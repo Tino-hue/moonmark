@@ -38,4 +38,3 @@ pub fn Diagnostic::with_suggestion(Self, String) -> Self
 // Type aliases
 
 // Traits
-

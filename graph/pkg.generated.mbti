@@ -50,4 +50,3 @@ pub fn GraphBuilder::new_with_max_depth(Int) -> Self
 // Type aliases
 
 // Traits
-

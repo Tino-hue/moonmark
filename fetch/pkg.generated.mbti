@@ -30,4 +30,3 @@ pub fn Registry::with_defaults(Self) -> Self
 // Type aliases
 
 // Traits
-
