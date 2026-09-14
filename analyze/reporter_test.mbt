@@ -230,3 +230,24 @@ test "reporter all info diagnostics" {
 
   assert_true(s.contains("Summary: 0 critical, 0 warnings, 3 info"))
 }
+
+// ---------- A5: 输出格式扩展名推断 ----------
+
+///|
+test "infer_format_from_extension maps common extensions" {
+  assert_true(infer_format_from_extension("report.html") == Some("html"))
+  assert_true(infer_format_from_extension("report.htm") == Some("html"))
+  assert_true(infer_format_from_extension("report.json") == Some("json"))
+  assert_true(infer_format_from_extension("report.sarif") == Some("sarif"))
+  assert_true(infer_format_from_extension("report.md") == Some("markdown"))
+  assert_true(
+    infer_format_from_extension("report.markdown") == Some("markdown"),
+  )
+}
+
+///|
+test "infer_format_from_extension unknown returns none" {
+  assert_true(infer_format_from_extension("report.txt") is None)
+  assert_true(infer_format_from_extension("report") is None)
+  assert_true(infer_format_from_extension("") is None)
+}

@@ -35,9 +35,9 @@ test "report returns 0" {
 }
 
 ///|
-test "invalid args returns 1" {
+test "invalid args returns 2" {
   let code = @cli.run_cli_with_args(["audit", "--unknown-flag"])
-  assert_true(code == 1)
+  assert_true(code == 2)
 }
 
 ///|
@@ -259,4 +259,62 @@ test "parse_args baseline auto" {
     Ok(opts) => assert_true(opts.baseline == Some("auto"))
     Err(msg) => fail("Should parse baseline auto: " + msg)
   }
+}
+
+// ---------- A5: 输出格式自动推断 ----------
+
+///|
+test "parse_args infers html from -o extension" {
+  let args = ["report", "-o", "report.html"]
+  match @cli.parse_args(args) {
+    Ok(opts) => {
+      assert_true(opts.command == "report")
+      assert_true(opts.output == Some("report.html"))
+      assert_true(opts.format == "html")
+    }
+    Err(msg) => fail("Should infer html from -o: " + msg)
+  }
+}
+
+///|
+test "parse_args infers sarif from -o extension" {
+  let args = ["audit", "-o", "results.sarif"]
+  match @cli.parse_args(args) {
+    Ok(opts) => assert_true(opts.format == "sarif")
+    Err(msg) => fail("Should infer sarif from -o: " + msg)
+  }
+}
+
+///|
+test "parse_args explicit --json wins over -o html" {
+  let args = ["audit", "--json", "-o", "report.html"]
+  match @cli.parse_args(args) {
+    Ok(opts) => assert_true(opts.format == "json")
+    Err(msg) => fail("Should keep explicit json: " + msg)
+  }
+}
+
+///|
+test "parse_args -o txt keeps default format" {
+  let args = ["audit", "-o", "out.txt"]
+  match @cli.parse_args(args) {
+    Ok(opts) =>
+      // .txt 不参与推断，保持默认 terminal 语义（audit 运行时转为 audit）
+      assert_true(opts.format == "terminal")
+    Err(msg) => fail("Should keep default format for txt: " + msg)
+  }
+}
+
+// ---------- B1/B2: 退出码语义化 ----------
+
+///|
+test "why without package returns 2" {
+  let code = @cli.run_cli_with_args(["why"])
+  assert_true(code == 2)
+}
+
+///|
+test "unknown command returns 2" {
+  let code = @cli.run_cli_with_args(["nonexistent-command"])
+  assert_true(code == 2)
 }

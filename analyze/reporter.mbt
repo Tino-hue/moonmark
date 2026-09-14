@@ -11,7 +11,6 @@ pub trait ReportRenderer {
     graph : @graph.DependencyGraph,
     root_id : String,
   ) -> String
-  fn file_ext(self : Self) -> String
 }
 
 // ========== Simple Text Renderer ==========
@@ -31,7 +30,7 @@ pub fn SimpleTextRenderer::new() -> SimpleTextRenderer {
 }
 
 ///|
-extend SimpleTextRenderer with ReportRenderer::{render, file_ext}
+extend SimpleTextRenderer with ReportRenderer::{render}
 
 ///|
 impl ReportRenderer for SimpleTextRenderer with fn render(
@@ -40,6 +39,7 @@ impl ReportRenderer for SimpleTextRenderer with fn render(
   graph,
   root_id,
 ) {
+  let _ = self
   let _ = graph
   let _ = root_id
   let buf = StringBuilder()
@@ -100,11 +100,6 @@ impl ReportRenderer for SimpleTextRenderer with fn render(
   }
 
   buf.to_string()
-}
-
-///|
-impl ReportRenderer for SimpleTextRenderer with fn file_ext(self) {
-  "txt"
 }
 
 ///|
@@ -175,5 +170,25 @@ pub fn format_extension(format : String) -> String {
     "txt"
   } else {
     ""
+  }
+}
+
+///|
+/// 根据输出文件扩展名推断报告格式（未显式指定 --json/--html 等时使用）。
+///
+/// `.html/.htm → html`，`.sarif → sarif`，`.json → json`，
+/// `.md/.markdown → markdown`；其余（含 `.txt`）返回 `None`，
+/// 避免改变 audit 命令的默认渲染格式。
+pub fn infer_format_from_extension(path : String) -> String? {
+  if path.has_suffix(".html") || path.has_suffix(".htm") {
+    Some("html")
+  } else if path.has_suffix(".sarif") {
+    Some("sarif")
+  } else if path.has_suffix(".json") {
+    Some("json")
+  } else if path.has_suffix(".md") || path.has_suffix(".markdown") {
+    Some("markdown")
+  } else {
+    None
   }
 }
