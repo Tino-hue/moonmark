@@ -8,7 +8,7 @@ MoonBit Depsight 是一个模块化的依赖健康诊断工具，采用分层架
 ┌─────────────────────────────────────────────────────────────┐
 │                        CLI Layer                            │
 │  ┌──────────────────────────────────────────────────────┐   │
-│  │  main.mbt → cli/cli.mbt (参数解析 + 命令分发)        │   │
+│  │  main.mbt → cli/ (参数解析 + 命令分发，按职责拆分)   │   │
 │  └──────────────────────────────────────────────────────┘   │
 └─────────────────────────────────────────────────────────────┘
                               │
@@ -96,6 +96,7 @@ moon.mod
 **职责**：解析 `moon.mod` 和 `.depsight.toml` 配置文件
 
 **核心数据结构**：
+
 ```moonbit
 pub struct Module {
   name : String
@@ -108,6 +109,7 @@ pub struct Module {
 ```
 
 **关键函数**：
+
 - `parse_mod_json(content : String) -> Result[Module, String]`
 - `parse_mod_toml(content : String) -> Result[Module, String]`
 - `parse_config_toml(content : String) -> Map[String, String]`
@@ -136,6 +138,7 @@ impl Registry {
 ```
 
 **网络策略**：
+
 1. 优先使用预定义映射（7 个官方包）
 2. 智能推断：`owner/repo` 格式 → 直接作为 GitHub 仓库
 3. 命名空间回退：`moonbitlang/` → `moonbit-community/`
@@ -147,6 +150,7 @@ impl Registry {
 **职责**：构建依赖图、检测循环、拓扑排序
 
 **核心数据结构**：
+
 ```moonbit
 pub struct DependencyGraph {
   nodes : Map[String, DependencyNode]
@@ -162,6 +166,7 @@ pub struct DependencyNode {
 ```
 
 **关键算法**：
+
 - **DFS 递归构建**：`GraphBuilder::build()`
 - **拓扑排序**：Kahn 算法 `topological_sort()`
 - **循环检测**：DFS 三色标记 `find_cycle()`
@@ -171,6 +176,7 @@ pub struct DependencyNode {
 **职责**：五维健康评分 + 诊断生成
 
 **评分模型**：
+
 ```
 Total = Freshness × 25%
       + Compliance × 20%
@@ -181,30 +187,42 @@ Total = Freshness × 25%
 
 **维度打分规则**：
 
-| 维度 | 评分规则 |
-|------|----------|
-| Freshness | 最新版=100, 次新版=95, 小版本差=80, 大版本差=60 |
-| Compliance | 无许可证=80, 高风险=0, 其他=100 |
-| DeprecatedDensity | 无废弃=100, <10%=90, <30%=70, <50%=50, >50%=20 |
-| SizeReasonableness | <10KB=100, <100KB=90, <1MB=70, <5MB=50, >5MB=20 |
-| Activity | ≤30天=100, ≤90天=80, ≤180天=60, ≤365天=40, >365天=20 |
+| 维度               | 评分规则                                             |
+| ------------------ | ---------------------------------------------------- |
+| Freshness          | 最新版=100, 次新版=95, 小版本差=80, 大版本差=60      |
+| Compliance         | 无许可证=80, 高风险=0, 其他=100                      |
+| DeprecatedDensity  | 无废弃=100, <10%=90, <30%=70, <50%=50, >50%=20       |
+| SizeReasonableness | <10KB=100, <100KB=90, <1MB=70, <5MB=50, >5MB=20      |
+| Activity           | ≤30天=100, ≤90天=80, ≤180天=60, ≤365天=40, >365天=20 |
 
 ### 5. Output Layer (`analyze/`)
 
 **职责**：生成多种格式的报告
 
-| 格式 | 函数 | 用途 |
-|------|------|------|
-| Terminal | `render_terminal_report()` | 终端彩色输出 |
-| HTML | `render_html_report()` | 交互式 Web 报告 |
-| JSON | `render_audit_json()` | CI/CD 集成 |
-| SARIF | `render_sarif_report()` | GitHub Code Scanning |
+| 格式     | 函数                       | 用途                 |
+| -------- | -------------------------- | -------------------- |
+| Terminal | `render_terminal_report()` | 终端彩色输出         |
+| HTML     | `render_html_report()`     | 交互式 Web 报告      |
+| JSON     | `render_audit_json()`      | CI/CD 集成           |
+| SARIF    | `render_sarif_report()`    | GitHub Code Scanning |
 
 ### 6. CLI Layer (`cli/`)
 
 **职责**：参数解析、命令分发、CI 退出码
 
+**文件拆分**（按单一职责原则，`cli/cli.mbt` 已从约 2000 行拆分为 6 个文件）：
+
+```
+cli/cli.mbt          # 入口 run_cli / run_cli_with_args、CliOptions、命令分发、诊断过滤
+cli/options.mbt      # 参数解析 parse_args、.depsight.toml 加载、parse_int/split_comma_list
+cli/graph_build.mbt  # 依赖图构建 build_full_graph*、NodeMeta 生成、mock 图
+cli/commands.mbt     # 各命令实现 run_tree/audit/report/workspace/outdated/why/check/stats
+cli/help.mbt         # 帮助文案 help_text / tree/audit/report_help_text
+cli/util.mbt         # 通用小工具 split_node_id / is_major_update / pad_right 等
+```
+
 **命令体系**：
+
 ```
 depsight
 ├── tree [package]     # 依赖树可视化
@@ -222,20 +240,23 @@ depsight
 
 ```
 main.mbt
-  └── cli/cli.mbt
+  └── cli/ (cli.mbt + options.mbt + graph_build.mbt + commands.mbt + help.mbt + util.mbt)
         ├── parse/module.mbt
         ├── fetch/fetch.mbt
         ├── graph/graph.mbt
         │     └── graph/builder.mbt
         ├── analyze/analyzer.mbt
+        │     ├── analyze/version.mbt      (版本号单一来源)
         │     ├── analyze/semver.mbt
         │     ├── analyze/license.mbt
         │     ├── analyze/deprecated.mbt
         │     ├── analyze/deprecated_propagate.mbt
+        │     ├── analyze/unused.mbt       (UNUSED-001)
         │     ├── analyze/size.mbt
         │     └── analyze/health_score.mbt
         ├── analyze/reporter.mbt
         ├── analyze/html_reporter.mbt
+        ├── analyze/markdown_reporter.mbt
         ├── analyze/sarif_reporter.mbt
         ├── cache/cache.mbt
         └── report/diagnostic.mbt
@@ -244,16 +265,20 @@ main.mbt
 ## 设计原则
 
 ### 1. 单一职责
+
 每个模块只负责一个功能领域，边界清晰。
 
 ### 2. 依赖倒置
+
 高层模块不依赖低层模块，都依赖抽象（如 `Registry` 接口）。
 
 ### 3. 可测试性
+
 - 核心逻辑与 I/O 分离（网络、文件系统通过 FFI 注入）
 - Mock 数据支持离线测试
 
 ### 4. 可扩展性
+
 - 新增输出格式只需添加 `*_reporter.mbt`
 - 新增诊断维度只需在 `analyzer.mbt` 中添加检查
 
@@ -267,9 +292,9 @@ main.mbt
 
 ## 未来演进
 
-| 阶段 | 目标 | 依赖 |
-|------|------|------|
-| v0.5.0 | 接入 mooncakes.io 正式 API | 生态 API 稳定 |
-| v0.6.0 | 符号级体积归因 | 编译器体积数据接口 |
-| v0.7.0 | AST 级废弃 API 检测 | MoonBit parser 库 |
-| v1.0.0 | 并发 fetch + 增量分析 | MoonBit async 支持 |
+| 阶段   | 目标                       | 依赖               |
+| ------ | -------------------------- | ------------------ |
+| v0.5.0 | 接入 mooncakes.io 正式 API | 生态 API 稳定      |
+| v0.6.0 | 符号级体积归因             | 编译器体积数据接口 |
+| v0.7.0 | AST 级废弃 API 检测        | MoonBit parser 库  |
+| v1.0.0 | 并发 fetch + 增量分析      | MoonBit async 支持 |

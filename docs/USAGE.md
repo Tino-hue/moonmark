@@ -1,6 +1,6 @@
 # MoonBit Depsight — 操作文档
 
-> 依赖健康诊断器 | 版本：v0.5.1 | 许可证：Apache-2.0
+> 依赖健康诊断器 | 版本：v0.6.0 | 许可证：Apache-2.0
 
 ---
 
@@ -40,10 +40,10 @@ MoonBit Depsight 是一个面向 MoonBit 生态的依赖健康诊断 CLI 工具�
 
 ## 环境要求
 
-| 依赖 | 版本要求 | 说明 |
-|------|----------|------|
-| Node.js | 18+ | 运行编译后的 JS 产物 |
-| MoonBit CLI | 最新 | 仅从源码构建时需要 |
+| 依赖        | 版本要求 | 说明                 |
+| ----------- | -------- | -------------------- |
+| Node.js     | 18+      | 运行编译后的 JS 产物 |
+| MoonBit CLI | 最新     | 仅从源码构建时需要   |
 
 ---
 
@@ -70,6 +70,7 @@ node _build/js/debug/build/depsight.js --version
 ```
 
 构建完成后，可执行文件位于：
+
 ```
 _build/js/debug/build/depsight.js
 ```
@@ -96,6 +97,7 @@ open report.html     # macOS
 ```
 
 输出示例：
+
 ```
 ╔══ MoonBit Depsight Audit ══╗
 
@@ -132,6 +134,7 @@ depsight tree --verbose
 ```
 
 **输出示例：**
+
 ```
 my-project@1.0.0
 ├── moonbitlang/core@0.1.0
@@ -181,6 +184,7 @@ depsight audit --ignore "LICENSE-002"
 ```
 
 **终端输出结构：**
+
 ```
 ╔══ MoonBit Depsight Audit ══╗
   Nodes: 12  |  Overall: 78/100
@@ -225,10 +229,14 @@ depsight report --markdown -o report.md
 ```
 
 **HTML 报告特性：**
+
 - 交互式依赖树（点击展开/折叠）
+- 交互式依赖图（canvas 力导向布局，可视化节点与边）
 - 健康分仪表盘（颜色编码：≥80 绿色，50-79 黄色，<50 红色）
 - 诊断卡片（含代码、消息、路径、修复建议）
 - 零外部依赖，浏览器直接打开
+
+> **格式自动推断**：未显式指定 `--json/--html/--sarif/--markdown` 时，Depsight 会根据 `-o` 输出文件扩展名自动推断格式（如 `-o report.html` → HTML）。`.txt` 不参与推断，保持默认终端格式。
 
 ---
 
@@ -241,6 +249,7 @@ depsight outdated
 ```
 
 **输出示例：**
+
 ```
 Package                        Current    Latest     Breaking
 ------------------------------ ------------ ------------ --------
@@ -261,6 +270,7 @@ depsight why moonbitlang/core
 ```
 
 **输出示例：**
+
 ```
 moonbitlang/core is required by:
 
@@ -279,6 +289,7 @@ depsight check
 ```
 
 **输出示例：**
+
 ```
 PASS  92/100  0 critical, 1 warnings
 ```
@@ -289,16 +300,16 @@ PASS  92/100  0 critical, 1 warnings
 
 ## 全局选项
 
-| 选项 | 说明 |
-|------|------|
-| `-h, --help` | 显示帮助信息 |
-| `-v, --version` | 显示版本号 |
-| `--offline` | 仅使用本地缓存，不请求网络 |
+| 选项                | 说明                                        |
+| ------------------- | ------------------------------------------- |
+| `-h, --help`        | 显示帮助信息                                |
+| `-v, --version`     | 显示版本号                                  |
+| `--offline`         | 仅使用本地缓存，不请求网络                  |
 | `--cache-dir <dir>` | 自定义缓存目录（默认 `~/.depsight/cache/`） |
-| `--dry-run` | 模拟运行，不写文件、不写缓存 |
-| `--verbose` | 显示详细的网络拉取和活跃度查询进度 |
-| `--quiet` | 抑制非必要输出（CI 友好） |
-| `--workspace` | 扫描工作区中所有 `moon.mod` 所在的子目录 |
+| `--dry-run`         | 模拟运行，不写文件、不写缓存                |
+| `--verbose`         | 显示详细的网络拉取和活跃度查询进度          |
+| `--quiet`           | 抑制非必要输出（CI 友好）                   |
+| `--workspace`       | 扫描工作区中所有 `moon.mod` 所在的子目录    |
 
 ---
 
@@ -349,13 +360,13 @@ DEPRECATED-001 = "info"
 
 Depsight 从 5 个维度评估每个依赖的健康度（0-100 分）：
 
-| 维度 | 默认权重 | 评分规则 |
-|------|----------|----------|
-| 版本新鲜度 | 25% | 主版本落后 → 60 分；次版本落后 → 80 分；补丁落后 → 95 分；最新 → 100 分 |
-| 许可证合规 | 20% | 高风险许可证（GPL/AGPL/SSPL）→ 0 分；其他 → 100 分；未声明 → 80 分 |
-| 废弃 API 密度 | 25% | 无废弃 → 100 分；≤10% → 90 分；≤30% → 70 分；≤50% → 50 分；>50% → 20 分 |
-| 体积合理性 | 20% | <10KB → 100 分；<100KB → 90 分；<1MB → 70 分；<5MB → 50 分；>5MB → 20 分 |
-| 活跃度 | 10% | ≤30天 → 100 分；≤90天 → 80 分；≤180天 → 60 分；≤365天 → 40 分；>365天 → 20 分 |
+| 维度          | 默认权重 | 评分规则                                                                      |
+| ------------- | -------- | ----------------------------------------------------------------------------- |
+| 版本新鲜度    | 25%      | 主版本落后 → 60 分；次版本落后 → 80 分；补丁落后 → 95 分；最新 → 100 分       |
+| 许可证合规    | 20%      | 高风险许可证（GPL/AGPL/SSPL）→ 0 分；其他 → 100 分；未声明 → 80 分            |
+| 废弃 API 密度 | 25%      | 无废弃 → 100 分；≤10% → 90 分；≤30% → 70 分；≤50% → 50 分；>50% → 20 分       |
+| 体积合理性    | 20%      | <10KB → 100 分；<100KB → 90 分；<1MB → 70 分；<5MB → 50 分；>5MB → 20 分      |
+| 活跃度        | 10%      | ≤30天 → 100 分；≤90天 → 80 分；≤180天 → 60 分；≤365天 → 40 分；>365天 → 20 分 |
 
 **整体健康分** = 所有节点得分的算术平均值
 
@@ -365,12 +376,18 @@ Depsight 从 5 个维度评估每个依赖的健康度（0-100 分）：
 
 ## 诊断代码说明
 
-| 代码 | 级别 | 说明 | 修复建议 |
-|------|------|------|----------|
-| `CYCLE-001` | Critical | 检测到循环依赖 | 检查依赖链，移除其中一条边以打破循环 |
-| `LICENSE-001` | Warning | 高风险许可证 | 替换为 MIT、Apache-2.0 或 BSD-3-Clause |
-| `LICENSE-002` | Info | 未声明许可证 | 在 `moon.mod` 中添加 `license` 字段 |
-| `DEPRECATED-001` | Warning | 包含废弃 API | 升级到最新版本，参考包的 changelog 迁移 |
+| 代码             | 级别           | 说明                                                  | 修复建议                                |
+| ---------------- | -------------- | ----------------------------------------------------- | --------------------------------------- |
+| `CYCLE-001`      | Critical       | 检测到循环依赖                                        | 检查依赖链，移除其中一条边以打破循环    |
+| `LICENSE-001`    | Warning        | 高风险许可证                                          | 替换为 MIT、Apache-2.0 或 BSD-3-Clause  |
+| `LICENSE-002`    | Info           | 未声明许可证                                          | 在 `moon.mod` 中添加 `license` 字段     |
+| `DEPRECATED-001` | Warning        | 包含废弃 API                                          | 升级到最新版本，参考包的 changelog 迁移 |
+| `DEPRECATED-002` | Warning        | 间接传递暴露废弃 API                                  | 升级传播链源头的包                      |
+| `OUTDATED-001`   | Warning / Info | 存在更新版本可用（主版本落后为 Warning，其余为 Info） | 执行 `depsight outdated` 查看升级清单   |
+| `DUPLICATE-001`  | Warning        | 同名包出现多个版本                                    | 统一版本约束到单一版本                  |
+| `UNUSED-001`     | Warning        | 声明了但从未 import 的依赖                            | 从 `moon.mod` 移除冗余依赖              |
+
+> 完整触发条件、影响与修复说明见 [docs/DIAGNOSTICS.md](DIAGNOSTICS.md)。
 
 ---
 
@@ -389,7 +406,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: "18"
       - name: Install MoonBit
         run: curl -fsSL https://moonbitlang.com/install.sh | bash
       - name: Build Depsight
@@ -443,6 +460,7 @@ depsight audit --offline --cache-dir ./my-cache
 ### Q: 运行时报 "No such file or directory: prelude.mi"
 
 A: MoonBit core 标准库未安装。运行官方安装脚本：
+
 ```bash
 curl -fsSL https://moonbitlang.com/install.sh | bash
 ```
@@ -450,6 +468,7 @@ curl -fsSL https://moonbitlang.com/install.sh | bash
 ### Q: 运行时报 "extern 'js' is unsupported in wasm-gc backend"
 
 A: 需要使用 JS target 构建：
+
 ```bash
 moon build --target js
 ```
@@ -457,6 +476,7 @@ moon build --target js
 ### Q: 网络请求超时
 
 A: 可能是网络环境问题。尝试：
+
 1. 使用 `--offline` 模式（需要先联网运行一次以生成缓存）
 2. 配置网络代理
 3. 增加 Node.js 超时时间
@@ -464,6 +484,7 @@ A: 可能是网络环境问题。尝试：
 ### Q: 如何忽略某个诊断？
 
 A: 两种方式：
+
 ```bash
 # 命令行临时忽略
 depsight audit --ignore "LICENSE-002"
@@ -476,9 +497,11 @@ ignore = "LICENSE-002, DEPRECATED-001@legacy-pkg@1.0.0"
 ### Q: 健康分突然变低了？
 
 A: 运行基线对比查看变化：
+
 ```bash
 depsight audit --baseline auto
 ```
+
 会显示新增/已修复的诊断和健康分变化。
 
 ---
