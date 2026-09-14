@@ -377,7 +377,7 @@ fn join_strings_with_arrow(arr : Array[String]) -> String {
 pub struct TerminalRenderer {}
 
 ///|
-extend TerminalRenderer with ReportRenderer::{render, file_ext}
+extend TerminalRenderer with ReportRenderer::{render}
 
 ///|
 impl ReportRenderer for TerminalRenderer with fn render(
@@ -388,10 +388,4 @@ impl ReportRenderer for TerminalRenderer with fn render(
 ) {
   let _ = self
   render_terminal_report(report, graph, root_id)
-}
-
-///|
-impl ReportRenderer for TerminalRenderer with fn file_ext(self) {
-  let _ = self
-  "txt"
 }

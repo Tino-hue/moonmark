@@ -284,7 +284,7 @@ pub fn parse_audit_json(content : String) -> Result[AnalysisReport, String] {
 pub struct AuditRenderer {}
 
 ///|
-extend AuditRenderer with ReportRenderer::{render, file_ext}
+extend AuditRenderer with ReportRenderer::{render}
 
 ///|
 impl ReportRenderer for AuditRenderer with fn render(
@@ -300,17 +300,11 @@ impl ReportRenderer for AuditRenderer with fn render(
 }
 
 ///|
-impl ReportRenderer for AuditRenderer with fn file_ext(self) {
-  let _ = self
-  "txt"
-}
-
-///|
 /// JSON 渲染器
 pub struct JsonRenderer {}
 
 ///|
-extend JsonRenderer with ReportRenderer::{render, file_ext}
+extend JsonRenderer with ReportRenderer::{render}
 
 ///|
 impl ReportRenderer for JsonRenderer with fn render(
@@ -323,10 +317,4 @@ impl ReportRenderer for JsonRenderer with fn render(
   let _ = graph
   let _ = root_id
   render_audit_json(report)
-}
-
-///|
-impl ReportRenderer for JsonRenderer with fn file_ext(self) {
-  let _ = self
-  "json"
 }

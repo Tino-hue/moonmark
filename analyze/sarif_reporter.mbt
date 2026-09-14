@@ -187,7 +187,7 @@ fn sarif_escape(s : String) -> String {
 pub struct SarifRenderer {}
 
 ///|
-extend SarifRenderer with ReportRenderer::{render, file_ext}
+extend SarifRenderer with ReportRenderer::{render}
 
 ///|
 impl ReportRenderer for SarifRenderer with fn render(
@@ -198,10 +198,4 @@ impl ReportRenderer for SarifRenderer with fn render(
 ) {
   let _ = self
   render_sarif_report(report, graph, root_id)
-}
-
-///|
-impl ReportRenderer for SarifRenderer with fn file_ext(self) {
-  let _ = self
-  "sarif"
 }
