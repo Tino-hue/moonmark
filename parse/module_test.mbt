@@ -229,3 +229,58 @@ test "parse_config_toml empty" {
   let map = @parse.parse_config_toml("")
   assert_true(map.is_empty())
 }
+
+// ---------- parse_mod_toml with import block (A4) ----------
+
+///|
+test "parse_mod_toml extracts versioned imports" {
+  let content =
+    #|name = "examples/outdated"
+    #|version = "1.0.0"
+    #|license = "MIT"
+    #|import {
+    #|  "moonbitlang/core",
+    #|  "moonbitlang/x@0.2.0",
+    #|}
+  let result = @parse.parse_mod_toml(content)
+  match result {
+    Ok(m) => {
+      assert_true(m.name == "examples/outdated")
+      assert_true(m.version == "1.0.0")
+      // 无版本 import（moonbitlang/core）无法确定版本，应被跳过
+      assert_true(m.deps.length() == 1)
+      match m.deps.get("moonbitlang/x") {
+        Some("0.2.0") => ()
+        _ => fail("Expected moonbitlang/x -> 0.2.0")
+      }
+    }
+    Err(msg) => fail("Should parse TOML import block: " + msg)
+  }
+}
+
+///|
+test "parse_mod_toml skips unversioned imports" {
+  let content =
+    #|name = "examples/healthy"
+    #|version = "1.0.0"
+    #|import {
+    #|  "moonbitlang/core",
+    #|}
+  let result = @parse.parse_mod_toml(content)
+  match result {
+    Ok(m) => assert_true(m.deps.is_empty())
+    Err(msg) => fail("Should parse TOML without versioned deps: " + msg)
+  }
+}
+
+///|
+test "parse_mod_toml no import block" {
+  let content =
+    #|name = "examples/simple"
+    #|version = "1.0.0"
+  let result = @parse.parse_mod_toml(content)
+  match result {
+    Ok(m) => assert_true(m.deps.is_empty())
+    Err(msg) => fail("Should parse TOML without import: " + msg)
+  }
+}

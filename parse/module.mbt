@@ -135,7 +135,10 @@ pub fn parse_mod_toml(content : String) -> Result[Module, String] {
   let mut description : String? = None
   let mut source : String? = None
   let keywords : Array[String] = []
-  let deps : Map[String, String] = Map([])
+  // 解析 import { "a/b@1.0.0" } 块中的版本化依赖。
+  // 无版本 import（如 "moonbitlang/core"）无法确定版本，暂不纳入 deps，
+  // 避免生成无法 fetch 的空版本节点（保持与旧行为一致）。
+  let deps = toml_parse_versioned_imports(content)
 
   let lines = toml_split_entries(content)
   for line in lines {
@@ -406,4 +409,85 @@ fn toml_parse_string_array(raw : String) -> Array[String] {
     }
   }
   result
+}
+
+///|
+/// 从 moon.mod (TOML) 的 import 块中提取带版本号的依赖（"name@version"）。
+/// 只处理 import { ... } 块内的引号字符串，避免误扫 name/repository 等字段。
+fn toml_parse_versioned_imports(content : String) -> Map[String, String] {
+  let deps : Map[String, String] = Map([])
+  let n = content.length()
+  let keyword = "import"
+  let mut i = 0
+  while i < n {
+    // 定位 "import" 关键字（moon.mod 中该词仅用于依赖导入块）
+    if content[i] == 'i' && toml_starts_at(content, i, keyword) {
+      let mut j = i + keyword.length()
+      // 跳过空白，期望下一个非空白字符为 '{'
+      while j < n &&
+            (
+              content[j] == ' ' ||
+              content[j] == '\t' ||
+              content[j] == '\n' ||
+              content[j] == '\r'
+            ) {
+        j = j + 1
+      }
+      if j < n && content[j] == '{' {
+        j = j + 1
+        // 扫描到 '}' 之前的所有引号字符串
+        while j < n && content[j] != '}' {
+          if content[j] == '"' {
+            j = j + 1
+            let start = j
+            while j < n && content[j] != '"' {
+              j = j + 1
+            }
+            let s = content[start:j].to_owned()
+            match toml_split_at_version(s) {
+              Some((name, ver)) => deps[name] = ver
+              None => ()
+            }
+            j = j + 1 // 跳过右引号
+          } else {
+            j = j + 1
+          }
+        }
+      }
+      i = j
+      continue
+    }
+    i = i + 1
+  }
+  deps
+}
+
+///|
+/// 在第一个 '@' 处拆分 "name@version"，两部分都非空才返回。
+fn toml_split_at_version(s : String) -> (String, String)? {
+  for i = 0; i < s.length(); i = i + 1 {
+    if s[i] == '@' {
+      let name = s[0:i].to_owned()
+      let ver = s[i + 1:s.length()].to_owned()
+      if name.length() > 0 && ver.length() > 0 {
+        return Some((name, ver))
+      }
+      return None
+    }
+  }
+  None
+}
+
+///|
+/// 判断 content 在位置 start 处是否与 keyword 完全匹配。
+fn toml_starts_at(content : String, start : Int, keyword : String) -> Bool {
+  if start + keyword.length() > content.length() {
+    return false
+  }
+  for i = 0; i < keyword.length(); i = i + 1 {
+    if content[start + i] != keyword[i] {
+      return false
+    }
+  }
+  true
 }
