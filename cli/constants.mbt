@@ -10,7 +10,8 @@
 
 ///|
 /// 语义化版本号（SemVer），对应发布到 mooncakes.io 和 Git tag。
-pub let version : String = "0.6.0"
+/// 单一来源在 analyze/version.mbt，这里转发以避免 analyze 反向依赖 cli。
+pub let version : String = @analyze.depsight_version
 
 ///|
 /// CLI `--version` 输出和帮助标题中的完整品牌名。

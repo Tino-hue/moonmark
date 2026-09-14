@@ -196,6 +196,33 @@ pub fn run_analysis(
       }
       diagnostics.push(diag)
     }
+
+    // OUTDATED-001：检测过时依赖
+    // 有 latest_version 且与当前版本不同时触发；major 升级为 Warning，
+    // 其余（minor/patch/prerelease）为 Info，不参与评分，仅提示可升级。
+    match meta.latest_version {
+      Some(latest) =>
+        if latest != version {
+          let breaking = is_major_version_bump(version, latest)
+          let outdated_diag = if breaking {
+            @report.Diagnostic::warning(
+              "OUTDATED-001",
+              id + " is outdated: " + version + " -> " + latest,
+              [id],
+            )
+          } else {
+            @report.Diagnostic::info(
+              "OUTDATED-001",
+              id + " is outdated: " + version + " -> " + latest,
+              [id],
+            )
+          }
+          diagnostics.push(
+            outdated_diag.with_suggestion("Upgrade " + id + " to " + latest),
+          )
+        }
+      None => ()
+    }
   }
 
   // ---------- 3. 跨包废弃 API 传播检测（F04 首创功能）----------
@@ -254,6 +281,32 @@ pub fn run_analysis(
     }
   }
 
+  // ---------- 4. 同名多版本冲突检测（DUPLICATE-001）----------
+  // 同一包名在图中出现多个不同版本时，说明版本约束冲突或依赖分叉，
+  // 统一到单一版本可减少重复体积与潜在安全隐患。
+  let versions_by_name : Map[String, Array[String]] = Map([])
+  for id3 in all_ids {
+    let (name3, _) = split_node_id(id3)
+    match versions_by_name.get(name3) {
+      Some(arr) => arr.push(id3)
+      None => versions_by_name[name3] = [id3]
+    }
+  }
+  for dup_pair in versions_by_name {
+    let (dup_name, dup_ids) = dup_pair
+    if dup_ids.length() > 1 {
+      diagnostics.push(
+        @report.Diagnostic::warning(
+          "DUPLICATE-001",
+          "Multiple versions of " + dup_name + " in dependency graph",
+          dup_ids,
+        ).with_suggestion(
+          "Unify version constraints to a single version of " + dup_name,
+        ),
+      )
+    }
+  }
+
   let overall = calculate_overall_score(scores)
   let top_offenders = if has_any_real_size {
     find_size_offenders(graph, self_sizes, 5)
@@ -284,4 +337,14 @@ fn join_deprecated_chain(chain : Array[String]) -> String {
     i = i + 1
   }
   s
+}
+
+///|
+/// 判断 latest 相对 current 是否发生 major 版本跨越
+/// 解析失败时保守返回 false（不提升为 Warning）。
+fn is_major_version_bump(current : String, latest : String) -> Bool {
+  match (parse_version(current), parse_version(latest)) {
+    (Ok(v1), Ok(v2)) => v1.major != v2.major
+    _ => false
+  }
 }
