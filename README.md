@@ -5,7 +5,7 @@
 [![Version](https://img.shields.io/badge/version-0.6.0-brightgreen.svg)](#changelog)
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![MoonBit](https://img.shields.io/badge/MoonBit-latest-blue.svg)](https://www.moonbitlang.cn/)
-[![Tests](https://img.shields.io/badge/tests-282%20passing-brightgreen.svg)](#development)
+[![Tests](https://img.shields.io/badge/tests-375%20passing-brightgreen.svg)](#development)
 [![Platforms](https://img.shields.io/badge/platforms-Ubuntu%20%7C%20Windows%20%7C%20macOS-orange.svg)](#compatibility)
 [![GitHub stars](https://img.shields.io/github/stars/Tino-hue/moonmark?style=social)](https://github.com/Tino-hue/moonmark/stargazers)
 
@@ -55,6 +55,9 @@ MoonBit Depsight analyzes your `moon.mod` and recursively inspects the entire tr
 - **License Compliance**: Automatic SPDX license identification for 12+ common licenses (MIT, Apache-2.0, BSD-2/3-Clause, GPL-3.0, AGPL-3.0, LGPL-3.0, MPL-2.0, ISC, SSPL-1.0, Unlicense, CC0-1.0) with high-risk copyleft flagging
 - **Deprecated API Scanner**: Extracts `@deprecated` annotations from doc comments on `fn`/`let`/`const`/`struct`/`enum`/`trait`
 - **Cross-Package Propagation**: Reverse-BFS tracking of deprecated API exposure across dependency layers (direct vs. indirect)
+- **Outdated Dependency Detection**: `OUTDATED-001` flags dependencies with newer versions available (major bump = warning, minor/patch = info)
+- **Duplicate Version Detection**: `DUPLICATE-001` flags the same package appearing at multiple versions in the graph
+- **Unused Dependency Detection**: `UNUSED-001` flags `moon.mod` dependencies never imported in any `moon.pkg` / `moon.pkg.json`
 - **Size Attribution**: Transitive size calculation with DFS + memoization, identifies top size offenders
 - **Health Scoring**: 5-dimension weighted model (freshness 25%, compliance 20%, deprecated density 25%, size 20%, activity 10%)
 - **Custom Scoring Weights**: Configurable via `.depsight.toml [scoring]` section
@@ -62,10 +65,11 @@ MoonBit Depsight analyzes your `moon.mod` and recursively inspects the entire tr
 ### Report Output
 
 - **Terminal Report** (`depsight audit`): Color-coded audit output grouped by Critical/Warning/Info, similar to `npm audit`
-- **HTML Report** (`depsight report --html`): Interactive single-file report with collapsible dependency tree, dashboard, and diagnostics
+- **HTML Report** (`depsight report --html`): Interactive single-file report with collapsible dependency tree, force-directed dependency graph (canvas), dashboard, and diagnostics
 - **JSON Output** (`depsight audit --json`): Structured data for CI/CD integration
 - **SARIF Output** (`depsight audit --sarif`): Standard v2.1.0 format for GitHub Code Scanning
 - **Markdown Output** (`depsight audit --markdown`): GitHub README / PR compatible format
+- **Format Auto-Inference**: `-o report.html` infers output format from the file extension when no explicit `--json/--html/--sarif/--markdown` is given
 - **Dependency Tree** (`depsight tree`): ASCII tree with `--depth` control and inline diagnostic badges
 
 ### CI/CD Integration
@@ -256,7 +260,7 @@ For detailed architecture design, see [docs/architecture.md](docs/architecture.m
 
 ## Compatibility
 
-Tested against MoonBit toolchain `moon 0.1.20260827` + `moonc v0.10.11` (2026-08). All **282 tests pass** across three platforms (Ubuntu / Windows / macOS) and `moon check --target js` is clean (0 errors, 0 warnings). We follow MoonBit's rolling `latest` channel; older versions may work but aren't part of the CI matrix.
+Tested against MoonBit toolchain `moon 0.1.20260827` + `moonc v0.10.11` (2026-08). All **375 tests pass** across three platforms (Ubuntu / Windows / macOS) and `moon check --target js` is clean (0 errors). We follow MoonBit's rolling `latest` channel; older versions may work but aren't part of the CI matrix.
 
 ## License
 

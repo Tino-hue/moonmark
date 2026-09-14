@@ -33,43 +33,34 @@ All notable changes to this project will be documented in this file.
 - 自审计健康分：**98 / 100**（`audit --offline`）
 - 示例回归：healthy（94 分无 critical）/ outdated（JSON 断言 ≥80）/ risky（离线 5 诊断码全触发，8 节点）三场景通过
 
-## [Unreleased]
+## [0.6.1] - Unreleased
+
+增量维护周期：诊断码扩充到 8 个（新增 OUTDATED-001 / DUPLICATE-001 / UNUSED-001）、`-o` 输出格式自动推断、HTML 交互式依赖图、版本号单一来源、退出码语义化。
+
+### Added
+
+- **OUTDATED-001 过时依赖诊断**：有 `latest_version` 且与当前版本不同时触发；主版本（major）落后为 Warning，其余（minor/patch/prerelease）为 Info，不参与评分。
+- **DUPLICATE-001 同名多版本冲突诊断**：同一包名在依赖图中出现多个不同版本时触发 Warning。
+- **UNUSED-001 未使用依赖诊断**：`moon.mod` 声明但源码 `moon.pkg`/`moon.pkg.json` 从未 import 的依赖（含子包前缀匹配）；仅在项目存在源码配置文件时启用，纯 fixture 项目自动跳过。
+- **`-o` 输出格式自动推断**：未显式指定 `--json/--html/--sarif/--markdown` 时按输出文件扩展名推断（`.html→html`、`.sarif→sarif`、`.json→json`、`.md→markdown`），显式指定优先，`.txt` 不参与推断。
+- **HTML 交互式依赖图**：`depsight report --html` 输出内联 `<canvas>` + 力导向布局脚本（无外部依赖），注入 `__NODES__`/`__EDGES__` 数据常量。
+- **版本号单一来源**：新增 `analyze/version.mbt`，`cli/constants.mbt` 与 Markdown 报告转发引用，消除硬编码 `v0.6.0`。
+- **退出码语义化**：参数解析错误 / 未知命令 / `why` 缺参数统一返回 2（`exit_args_error`），基线文件 IO / JSON 解析错误返回 4（`exit_io_error`）。
+- **根目录 `action.yml`**：composite GitHub Action，内置 MoonBit 镜像链安装 + 构建 + 审计。
+- **`docs/DIAGNOSTICS.md`**：8 个诊断码的完整触发条件 / 影响 / 修复建议参考。
 
 ### Changed
 
-- **README 重构**：`加 TL;DR + Quick Start (30s) + Prerequisites + Examples + Compatibility` 五段，明确「一句能说清 / 一眼能看懂 / 照着能复现」。Usage 段加上 “须先 cd 到项目根”的明确警示。
-- **工具链评估**：项目已在 v0.10.4 工具链下完整验证。CLI `moon 0.1.20260713 (75c7e1f)` + `moonc v0.10.4+2cc641edf (2026-07-15)`，本周下载即默认可用。
+- `parse_mod_toml` 支持解析 `import { ... }` 块中的版本化依赖（`name@version`），无版本 import（如 `moonbitlang/core`）仍跳过。
+- `cli/cli.mbt` 按单一职责拆分为 6 个文件（`cli.mbt` / `options.mbt` / `graph_build.mbt` / `commands.mbt` / `help.mbt` / `util.mbt`），消除约 2000 行单文件巨石。
+- 测试套件：**351 → 375 tests**（新增 OUTDATED/DUPLICATE/UNUSED/格式推断/HTML 依赖图/退出码/TOML import 解析/QuickCheck 属性/版本号同步用例）。
 
-### Verified (v0.10.4 toolchain, 2026-07-13)
+### Verified (2026-09-10)
 
-- `moon test --target js`: 267 / 267 通过, EXIT 0
-- `moon build --target js`: 9 tasks, EXIT 0
-- `moon check --target js --deny-warn`: 0 警告, EXIT 0
-- `moon check --target js --warn-list +73`: 0 警告, EXIT 0 (发现 + 修复 W0073)
-- `moon fmt --check`: EXIT 0
-- `moon info`: EXIT 0
-
-### Fixed
-
-- **W0073 `unnecessary_annotation`**: `test/ecosystem_test.mbt:225` 移除冗余的 `EcosystemReport::` struct 字面量前缀，与项目其他 10 处匿名 struct 字面量保持一致。v0.10.4 新警告，由 `--warn-list +73` 抓出。
-
-### Compatibility Audit (v0.10.4)
-
-下表汇总 v0.10.4 所有重点约束以及项目代码扫描结果（CI 表格补充于 Compatibility 报表后）：
-
-| v0.10.4 新约束                                       | 项目代码扫描                           | 影响      |
-| ---------------------------------------------------- | -------------------------------------- | --------- |
-| `extend` 语法（隐式方法挂载 W079 废弃）              | 0 处 `impl Trait for Type`             | ✅ 零影响 |
-| 空 `{}` 歧义警告 E0082                               | 60+ 处已全量修复为 `Map([])`           | ✅ 已适配 |
-| `moon.pkg.json` / `moon.mod.json` 移除               | 0 个 .json 残留                        | ✅ 已迁移 |
-| `.from_array(` 弃用                                  | 0 处                                   | ✅ 零影响 |
-| Iter 字面量 `[\| .. \|]`，旧 `[..]` 隐式转 Iter 废弃 | 0 处 `[..` 模式                        | ✅ 零影响 |
-| `lexmatch` → `lexscan`                               | 0 处 `lexmatch`                        | ✅ 零影响 |
-| prebuild / test 工作目录统一                         | 项目无 prebuild                        | ✅ 零影响 |
-| warnings `@` 符号弃用                                | CI 已用 `--deny-warn`                  | ✅ 已适配 |
-| `moon.pkg` `pkgtype` 声明                            | 已迁移为 `pkgtype(kind: "executable")` | ✅ 已适配 |
-
-**结论**：项目代码对 v0.10.4 零迁移成本，升级风险极低，可按团队节奏推进。
+- `moon test --target js`: **375 / 375 通过**
+- `moon check --target js`: 0 errors（9 个既有 `file_ext`/`self` 未使用 warning，CI 不用 `--deny-warn`）
+- HTML 依赖图脚本：`__NODES__` / `__EDGES__` 数据正确注入
+- 示例回归：risky 离线 6 种诊断码（新增 OUTDATED-001）、healthy/outdated 基线已重新生成
 
 ## [0.5.3] - 2026-07-10
 

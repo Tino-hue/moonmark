@@ -204,7 +204,7 @@ jobs:
         run: moon info
 
       # ------------------------------------------------------------
-      # 第 4 关：测试（282+ 用例，含 QuickCheck 属性测试）
+      # 第 4 关：测试（375+ 用例，含 QuickCheck 属性测试）
       # ------------------------------------------------------------
       - name: 4/6 Run tests (Unix)
         if: runner.os != 'Windows'
@@ -267,12 +267,12 @@ jobs:
           PY
 
           echo ""
-          echo "━━━ [6c] risky_project — 离线演示应触发 5+ 种诊断码 ━━━"
+          echo "━━━ [6c] risky_project — 离线演示应触发 6 种诊断码 ━━━"
           ( cd examples/risky_project && \
             node "${DEPSIGHT_BIN}" audit --offline --json -o /tmp/risky.json )
-          # 逐一验证 5 种诊断码（F06 增强）
+          # 逐一验证 6 种诊断码（F06 + OUTDATED-001）
           all_ok=true
-          for code in "LICENSE-002" "LICENSE-001" "DEPRECATED-001" "DEPRECATED-002" "CYCLE-001"; do
+          for code in "LICENSE-002" "LICENSE-001" "DEPRECATED-001" "DEPRECATED-002" "CYCLE-001" "OUTDATED-001"; do
             if grep -q "\"code\":\"${code}\"" /tmp/risky.json; then
               echo "  ✓ 检测到 ${code} 诊断码"
             else
@@ -287,7 +287,7 @@ jobs:
           fi
           # 验证 node 数（root + 7 mock 包 = 8）
           node_count=$(python3 -c "import json,sys; d=json.load(open('/tmp/risky.json')); print(d['node_count'])")
-          echo "  ✓ 共 ${node_count} 个节点，诊断码 5 种全部触发（含过时依赖 freshness 降级）"
+          echo "  ✓ 共 ${node_count} 个节点，诊断码 6 种全部触发（含过时依赖 freshness 降级）"
 
           echo ""
           echo "✅ 三个示例项目回归测试全部通过"
@@ -324,14 +324,14 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit 1 }
 
           Write-Host ""
-          Write-Host "━━━ [6c] risky_project — 离线演示应触发 5+ 种诊断码 ━━━"
+          Write-Host "━━━ [6c] risky_project — 离线演示应触发 6 种诊断码 ━━━"
           $riskyJson = Join-Path $env:TEMP "risky.json"
           Push-Location examples/risky_project
           node $DEPSIGHT_BIN audit --offline --json -o $riskyJson
           if ($LASTEXITCODE -ne 0) { Pop-Location; exit 1 }
           Pop-Location
           $allOk = $true
-          foreach ($code in @('LICENSE-002','LICENSE-001','DEPRECATED-001','DEPRECATED-002','CYCLE-001')) {
+          foreach ($code in @('LICENSE-002','LICENSE-001','DEPRECATED-001','DEPRECATED-002','CYCLE-001','OUTDATED-001')) {
             if (Select-String -Path $riskyJson -SimpleMatch "`"code`":`"$code`"" -Quiet) {
               Write-Host "  ✓ 检测到 $code 诊断码"
             } else {
@@ -345,7 +345,7 @@ jobs:
             exit 1
           }
           python -c "import json; d=json.load(open(r'$riskyJson')); print(d['node_count'])" | ForEach-Object {
-            Write-Host "  ✓ 共 $_ 个节点，诊断码 5 种全部触发（含过时依赖 freshness 降级）"
+            Write-Host "  ✓ 共 $_ 个节点，诊断码 6 种全部触发（含过时依赖 freshness 降级）"
           }
 
           Write-Host ""
