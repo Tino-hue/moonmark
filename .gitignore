@@ -14,6 +14,8 @@ Thumbs.db
 # MoonBit build artifacts
 target/
 *.wasm
+pkg.generated.mbti
+**/pkg.generated.mbti
 **/.mooncakes/*
 !.mooncakes/.gitkeep
 !examples/risky_project/.mooncakes/
