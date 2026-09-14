@@ -1,6 +1,9 @@
 name: MoonBit Depsight Audit
 description: Build MoonBit Depsight and run a dependency health audit against your moon.mod
 author: Tino-hue
+categories:
+  - Code quality
+  - Security
 branding:
   icon: shield
   color: green
