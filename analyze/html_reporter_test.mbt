@@ -107,3 +107,25 @@ test "render_html_report has interactive tree" {
   assert_true(html.contains("<details"))
   assert_true(html.contains("<summary>"))
 }
+
+///|
+test "render_html_report embeds interactive dependency graph" {
+  let graph = @graph.DependencyGraph::new()
+  graph.add_node("root", "1.0.0", 0)
+  graph.add_node("child", "1.0.0", 1)
+  graph.add_edge("root", "1.0.0", "child", "1.0.0")
+
+  let metas : Map[String, NodeMeta] = Map([])
+  let report = run_analysis(graph, metas)
+  let html = render_html_report(report, graph, "root@1.0.0")
+
+  // A6：canvas 元素 + 内联 force-directed 脚本 + 数据注入常量
+  assert_true(html.contains("Interactive Dependency Graph"))
+  assert_true(html.contains("<canvas id=\"dep-graph-canvas\""))
+  assert_true(html.contains("var nodes=__NODES__,edges=__EDGES__;"))
+  assert_true(html.contains("__NODES__"))
+  assert_true(html.contains("__EDGES__"))
+  // 节点与边数据应注入为 JSON 常量
+  assert_true(html.contains("\"root@1.0.0\""))
+  assert_true(html.contains("\"child@1.0.0\""))
+}

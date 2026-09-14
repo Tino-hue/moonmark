@@ -34,6 +34,8 @@ pub fn render_html_report(
   buf <+ "\n"
   buf.write_string(html_dependency_tree(graph, root_id))
   buf <+ "\n"
+  buf.write_string(html_dependency_graph(graph, root_id))
+  buf <+ "\n"
   buf.write_string(html_footer())
   buf <+ "\n  </div>\n"
   buf <+ "</body>\n"
@@ -290,6 +292,111 @@ fn html_dependency_tree(
   buf.to_string()
 }
 
+///|
+/// 交互式依赖图：canvas + 内联 force-directed 布局脚本（无外部依赖）。
+/// 数据通过 `__NODES__` / `__EDGES__` 两个 JS 常量注入。
+fn html_dependency_graph(
+  graph : @graph.DependencyGraph,
+  root_id : String,
+) -> String {
+  let _ = root_id
+  let nodes_json = graph_nodes_json(graph)
+  let edges_json = graph_edges_json(graph)
+  let buf = StringBuilder()
+  buf <+ "<section class=\"dep-graph\">\n"
+  buf <+ "<h2>Interactive Dependency Graph</h2>\n"
+  buf <+
+    "<canvas id=\"dep-graph-canvas\" width=\"800\" height=\"500\"></canvas>\n"
+  buf <+ "<script>\n"
+  buf <+ "var __NODES__="
+  buf.write_string(nodes_json)
+  buf <+ ";var __EDGES__="
+  buf.write_string(edges_json)
+  buf <+ ";\n"
+  buf <+ "(function(){"
+  buf <+ "var c=document.getElementById('dep-graph-canvas');if(!c)return;"
+  buf <+ "var nodes=__NODES__,edges=__EDGES__;"
+  buf <+ "var x=c.getContext('2d');var W=c.width=800,H=c.height=500;"
+  buf <+ "var pos={};"
+  buf <+
+    "nodes.forEach(function(n,i){var a=i/nodes.length*Math.PI*2,r=Math.min(W,H)*0.35;"
+  buf <+ "pos[n]={x:W/2+Math.cos(a)*r,y:H/2+Math.sin(a)*r,vx:0,vy:0};});"
+  buf <+ "for(var it=0;it<200;it++){"
+  buf <+ "for(var i=0;i<nodes.length;i++){for(var j=i+1;j<nodes.length;j++){"
+  buf <+
+    "var a=pos[nodes[i]],b=pos[nodes[j]],dx=a.x-b.x,dy=a.y-b.y,d2=dx*dx+dy*dy+0.01,d=Math.sqrt(d2),f=3000/d2;"
+  buf <+
+    "dx/=d;dy/=d;a.vx+=dx*f*0.05;a.vy+=dy*f*0.05;b.vx-=dx*f*0.05;b.vy-=dy*f*0.05;}}"
+  buf <+
+    "edges.forEach(function(e){var a=pos[e[0]],b=pos[e[1]];if(!a||!b)return;"
+  buf <+
+    "var dx=b.x-a.x,dy=b.y-a.y,d=Math.sqrt(dx*dx+dy*dy)||1,k=0.05*(d-80);dx/=d;dy/=d;"
+  buf <+ "a.vx+=dx*k;a.vy+=dy*k;b.vx-=dx*k;b.vy-=dy*k;});"
+  buf <+
+    "nodes.forEach(function(n){var p=pos[n];p.vx+=(W/2-p.x)*0.001;p.vy+=(H/2-p.y)*0.001;"
+  buf <+ "p.vx*=0.85;p.vy*=0.85;p.x+=p.vx;p.y+=p.vy;});}"
+  buf <+ "x.fillStyle='#0d1117';x.fillRect(0,0,W,H);"
+  buf <+
+    "edges.forEach(function(e){var a=pos[e[0]],b=pos[e[1]];if(!a||!b)return;"
+  buf <+
+    "x.strokeStyle='#30363d';x.lineWidth=1;x.beginPath();x.moveTo(a.x,a.y);x.lineTo(b.x,b.y);x.stroke();});"
+  buf <+
+    "nodes.forEach(function(n){var p=pos[n];x.fillStyle='#58a6ff';x.beginPath();"
+  buf <+
+    "x.arc(p.x,p.y,8,0,Math.PI*2);x.fill();x.fillStyle='#c9d1d9';x.font='11px monospace';"
+  buf <+ "x.fillText(n,p.x+10,p.y-6);});"
+  buf <+ "})();"
+  buf <+ "</script>\n"
+  buf <+ "</section>"
+  buf.to_string()
+}
+
+///|
+/// 图节点 ID 的 JSON 数组字符串，如 `["a@1.0.0","b@2.0.0"]`
+fn graph_nodes_json(graph : @graph.DependencyGraph) -> String {
+  let ids = graph.get_all_node_ids()
+  let buf = StringBuilder()
+  buf <+ "["
+  let mut first = true
+  for id in ids {
+    if !first {
+      buf <+ ","
+    }
+    buf <+ "\""
+    buf.write_string(id)
+    buf <+ "\""
+    first = false
+  }
+  buf <+ "]"
+  buf.to_string()
+}
+
+///|
+/// 图边的 JSON 数组字符串，如 `[["a@1.0.0","b@2.0.0"], ...]`
+fn graph_edges_json(graph : @graph.DependencyGraph) -> String {
+  let ids = graph.get_all_node_ids()
+  let buf = StringBuilder()
+  buf <+ "["
+  let mut first = true
+  for id in ids {
+    let (name, ver) = split_at_id(id)
+    let children = graph.get_children(name, ver)
+    for child in children {
+      if !first {
+        buf <+ ","
+      }
+      buf <+ "[\""
+      buf.write_string(id)
+      buf <+ "\",\""
+      buf.write_string(child)
+      buf <+ "\"]"
+      first = false
+    }
+  }
+  buf <+ "]"
+  buf.to_string()
+}
+
 // 递归渲染树节点（用 details/summary 做折叠）
 
 ///|
@@ -426,6 +533,9 @@ fn html_css() -> String {
   buf <+
     "ol.diag-chain .source-tag{color:#ff7b72;border:1px solid rgba(255,123,114,.4);background:rgba(255,123,114,.08);}"
   buf <+ ".dep-tree{margin-top:24px;}"
+  buf <+ ".dep-graph{margin-top:24px;}"
+  buf <+
+    "#dep-graph-canvas{width:100%;height:auto;background:var(--card);border:1px solid var(--border);border-radius:8px;}"
   buf <+
     ".tree-root{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px;}"
   buf <+
@@ -520,7 +630,7 @@ fn join_html_path(path : Array[String]) -> String {
 pub struct HtmlRenderer {}
 
 ///|
-extend HtmlRenderer with ReportRenderer::{render, file_ext}
+extend HtmlRenderer with ReportRenderer::{render}
 
 ///|
 impl ReportRenderer for HtmlRenderer with fn render(
@@ -531,10 +641,4 @@ impl ReportRenderer for HtmlRenderer with fn render(
 ) {
   let _ = self
   render_html_report(report, graph, root_id)
-}
-
-///|
-impl ReportRenderer for HtmlRenderer with fn file_ext(self) {
-  let _ = self
-  "html"
 }
